@@ -1,0 +1,162 @@
+/* 必须以css方式引入，否则会报错 */
+@import 'tailwindcss';
+/* 表单内*号换行问题解决方案 */
+strong {
+  display: inline-block;
+}
+/* 定制样式 */
+.receivable-tabs .arco-tabs-header-wrapper {
+  justify-content: center;
+}
+.table-summary .arco-table-td {
+  background-color: #f4f4f4;
+  font-weight: 700;
+}
+.table-summary-sum .arco-table-td {
+  background-color: #f4f4f4;
+}
+.search-input .arco-table-th-item {
+  height: 100%;
+  padding: 0;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(30px, -30px) rotate(90deg);
+  }
+  50% {
+    transform: translate(-20px, 20px) rotate(180deg);
+  }
+  75% {
+    transform: translate(20px, 30px) rotate(270deg);
+  }
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes move-lines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 30px 30px;
+  }
+}
+.login-elements {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.login-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.08), rgba(82, 183, 136, 0.04));
+  animation: float 25s infinite ease-in-out;
+}
+
+.login-circle1 {
+  width: 400px;
+  height: 400px;
+  top: -200px;
+  right: -200px;
+  animation-delay: 0s;
+}
+
+.login-circle2 {
+  width: 300px;
+  height: 300px;
+  bottom: -150px;
+  left: -150px;
+  animation-delay: 8s;
+}
+
+.login-circle3 {
+  width: 200px;
+  height: 200px;
+  top: 50%;
+  left: 10%;
+  animation-delay: 15s;
+}
+
+.login-dots {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+.login-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+}
+
+.login-dot1 {
+  top: 20%;
+  left: 15%;
+}
+.login-dot2 {
+  top: 30%;
+  left: 80%;
+}
+.login-dot3 {
+  top: 70%;
+  left: 25%;
+}
+.login-dot4 {
+  top: 80%;
+  left: 70%;
+}
+.login-logo-circle {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 50px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+.login-rotate {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  animation: rotate 20s linear infinite;
+}
+
+.login-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  animation: move-lines 20s linear infinite;
+}
+.login-submit {
+  border: none;
+  background: linear-gradient(135deg, #2a9d8f, #52b788);
+}
