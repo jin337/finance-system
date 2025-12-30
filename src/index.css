@@ -19,6 +19,20 @@ strong {
   height: 100%;
   padding: 0;
 }
+.balance-two {
+  position: relative;
+  padding: 0 16px !important;
+}
+.balance-two-line::after {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 48px;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-right: 1px solid var(--color-neutral-3);
+}
 
 @keyframes float {
   0%,

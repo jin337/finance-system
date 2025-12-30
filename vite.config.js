@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite' // tailwindcss 插件
 import autoImport from 'unplugin-auto-import/vite' // 自动引入
 import compression from 'vite-plugin-compression' // 代码压缩
 import imageTools from 'vite-plugin-image-tools' // 图片压缩
+import svgr from 'vite-plugin-svgr' // svg
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,6 +21,9 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    svgr({
+      include: '**/*.svg',
+    }),
     tailwindcss(),
     imageTools({
       quality: 70,

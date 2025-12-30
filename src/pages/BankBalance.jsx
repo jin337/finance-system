@@ -64,12 +64,14 @@ const BankBalance = () => {
       dataIndex: 'pdate',
       align: 'center',
       width: 140,
+      render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
     },
     {
       title: '业务日期',
       dataIndex: 'bdate',
       align: 'center',
       width: 140,
+      render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
     },
     {
       title: '摘要',
@@ -81,26 +83,24 @@ const BankBalance = () => {
       dataIndex: 'borrow',
       align: 'center',
       width: 130,
-      render: (_, record) => <div className='text-right'>{formatNumber(record.borrow)}</div>,
+      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '贷方',
       dataIndex: 'loan',
       align: 'center',
       width: 130,
-      render: (_, record) => <div className='text-right'>{formatNumber(record.loan)}</div>,
+      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
       dataIndex: 'balance',
       align: 'center',
       width: 180,
+      className: 'balance-two',
       render: (_, record) => (
         <div className='flex justify-between'>
-          <div className='relative pr-4'>
-            {record.direct}
-            <div className='absolute -top-3.5 right-0 h-10.25 w-px border-r border-neutral-200'></div>
-          </div>
+          <div className='balance-two-line'>{record.direct}</div>
           <div>{formatNumber(record.balance)}</div>
         </div>
       ),
@@ -182,7 +182,7 @@ const BankBalance = () => {
     if (code === 200) {
       const list = (data?.list || []).map((e) => ({
         ...e,
-        selectData: [dayjs(), dayjs()],
+        selectData: [dayjs().format('YYYY-MM-DD'), dayjs().format('YYYY-MM-DD')],
       }))
       setTitleData(list)
       // 默认点击第一项

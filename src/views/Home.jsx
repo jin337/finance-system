@@ -100,17 +100,17 @@ const HomeList = [
           {
             key: '9-1-1',
             title: '应收票据',
-            pathName: '/detail/receivable',
+            pathName: '/detail/bill-receive',
           },
           {
             key: '9-1-2',
             title: '应收账款',
-            pathName: '/detail/inventory',
+            pathName: '/detail/account-receive',
           },
           {
             key: '9-1-3',
             title: '其他应收款',
-            pathName: '/detail/otherReceivable',
+            pathName: '/detail/ohter-receive',
           },
           {
             key: '9-1-4',
@@ -141,12 +141,12 @@ const HomeList = [
           {
             key: '9-1-6',
             title: '长期待摊费用',
-            pathName: '/detail/longTermDepreciation',
+            pathName: '/detail/longterm',
           },
           {
             key: '9-1-7',
             title: '固定资产折旧',
-            pathName: '/detail/fixedAssetsDepreciation',
+            pathName: '/detail/depreciation',
           },
         ],
       },
@@ -157,22 +157,27 @@ const HomeList = [
           {
             key: '9-2-1',
             title: '短期借款',
+            pathName: '/detail/shortbrrow',
           },
           {
             key: '9-2-2',
             title: '应付票据',
+            pathName: '/detail/bill-pay',
           },
           {
             key: '9-2-3',
             title: '应付账款',
+            pathName: '/detail/account-pay',
           },
           {
             key: '9-2-4',
             title: '预收账款',
+            pathName: '/detail/account-receive',
           },
           {
             key: '9-2-5',
             title: '应付工资',
+            pathName: '/detail/wages-pay',
           },
           {
             key: '9-2-6',
@@ -185,18 +190,22 @@ const HomeList = [
                   {
                     key: '9-2-6-1-1',
                     title: '应交增值税',
+                    pathName: '/detail/taxes',
                   },
                   {
                     key: '9-2-6-1-2',
                     title: '应交增值税-销项-简易征收',
+                    pathName: '/detail/taxes/addtaxin',
                   },
                   {
                     key: '9-2-6-1-3',
                     title: '应交增值税-销项-一般征收',
+                    pathName: '/detail/taxes/addtaxin-jy',
                   },
                   {
                     key: '9-2-6-1-4',
                     title: '应交增值税-进项',
+                    pathName: '/detail/taxes/addtaxout',
                   },
                 ],
               },
@@ -243,18 +252,22 @@ const HomeList = [
           {
             key: '9-3-1',
             title: '销售费用',
+            pathName: '/detail/expense-sell',
           },
           {
             key: '9-3-2',
             title: '管理费用',
+            pathName: '/detail/expense-manage',
           },
           {
             key: '9-3-3',
             title: '研发费用',
+            pathName: '/detail/expense-develop',
           },
           {
             key: '9-3-4',
             title: '财务费用',
+            pathName: '/detail/expense-exp',
           },
         ],
       },
@@ -669,7 +682,7 @@ const Home = () => {
                         )
                       } else {
                         return (
-                          <Menu.Item key={menuItem.key} className='leading-9!'>
+                          <Menu.Item key={menuItem.key} className='leading-9!' disabled={!menuItem?.pathName}>
                             {menuItem.title}
                           </Menu.Item>
                         )

@@ -5,7 +5,7 @@ import { Button, DatePicker, Form, Layout, Table, Tabs } from '@arco-design/web-
 import { useSelector } from 'react-redux'
 
 // 公共方法
-import { formatNumber } from 'src/utils/common'
+import { downloadFile, formatNumber } from 'src/utils/common'
 
 // 组件
 import VoucherInfo from 'src/components/VoucherInfo'
@@ -17,9 +17,9 @@ const list = [
     sub: '应付余额',
     list: '/inout/supplier/list',
     detail: '/inout/supplier/detail',
+    export: '/inout/supplier/export',
     datelimit: {},
     listInfo: [],
-    detailInfo: [],
   },
   {
     key: '2',
@@ -27,9 +27,9 @@ const list = [
     sub: '应收余额',
     list: '/inout/customer/list',
     detail: '/inout/customer/detail',
+    export: '/inout/customer/export',
     datelimit: {},
     listInfo: [],
-    detailInfo: [],
   },
   {
     key: '3',
@@ -37,9 +37,9 @@ const list = [
     sub: '来往余额',
     list: '/inout/person/list',
     detail: '/inout/person/detail',
+    export: '/inout/person/export',
     datelimit: {},
     listInfo: [],
-    detailInfo: [],
   },
 ]
 
@@ -96,12 +96,14 @@ const Receivable = () => {
       dataIndex: 'pdate',
       align: 'center',
       width: 140,
+      render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
     },
     {
       title: '业务日期',
       dataIndex: 'bdate',
       align: 'center',
       width: 140,
+      render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
     },
     {
       title: '科目名称',
@@ -118,26 +120,24 @@ const Receivable = () => {
       dataIndex: 'borrow',
       align: 'center',
       width: 140,
-      render: (_, record) => <div className='text-right'>{formatNumber(record.borrow)}</div>,
+      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '贷方',
       dataIndex: 'loan',
       align: 'center',
       width: 140,
-      render: (_, record) => <div className='text-right'>{formatNumber(record.loan)}</div>,
+      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
       dataIndex: 'balance',
       align: 'center',
       width: 180,
+      className: 'balance-two',
       render: (_, record) => (
         <div className='flex justify-between'>
-          <div className='relative pr-4'>
-            {record.direct}
-            <div className='absolute -top-3.5 right-0 h-10.25 w-px border-r border-neutral-200'></div>
-          </div>
+          <div className='balance-two-line'>{record.direct}</div>
           <div>{formatNumber(record.balance)}</div>
         </div>
       ),
@@ -153,7 +153,24 @@ const Receivable = () => {
   }
 
   // 导出
-  const onExport = () => {}
+  const onExport = async (item) => {
+    const begin = dayjs(item.selectData[0]).format('YYYY-MM').split('-')
+    const end = dayjs(item.selectData[1]).format('YYYY-MM').split('-')
+
+    const params = {
+      groupid: currentCompany?.id,
+      itemcode: item.itemcode,
+      beginyear: Number(begin[0]),
+      beginmonth: Number(begin[1]),
+      endyear: Number(end[0]),
+      endmonth: Number(end[1]),
+    }
+    const result = await Http.post(item.export, params, {
+      responseType: 'blob',
+    })
+
+    downloadFile(result, item.itemname + '-应收应付查询', 'xlsx')
+  }
 
   // 查询
   const onSearch = async (item) => {
@@ -201,10 +218,9 @@ const Receivable = () => {
       item.datelimit = data?.datelimit || {}
       item.listInfo = (data?.list || []).map((e) => ({
         ...e,
-        sub: item.sub,
-        detail: item.detail,
+        ...item,
         disabledDate: `${item.datelimit.beginyear}-${item.datelimit.beginmonth}-01`,
-        selectData: [`${item.datelimit.beginyear}-${item.datelimit.beginmonth}-01`, dayjs()],
+        selectData: [`${item.datelimit.beginyear}-${item.datelimit.beginmonth}-01`, dayjs().format('YYYY-MM-DD')],
       }))
       setReceivableList((prev) => prev.map((prevItem) => (prevItem.key === key ? { ...prevItem, ...item } : prevItem)))
 
@@ -269,7 +285,7 @@ const Receivable = () => {
                 </Button>
               </Form.Item>
               <Form.Item>
-                <Button type='primary' onClick={() => onExport(selectInfo)} disabled>
+                <Button type='primary' onClick={() => onExport(selectInfo)}>
                   导出
                 </Button>
               </Form.Item>

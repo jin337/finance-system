@@ -61,7 +61,7 @@ const CashFlow = () => {
       dataIndex: 'pdate',
       width: 140,
       align: 'center',
-      render: (text) => <div className='text-center'>{dayjs(text).format('YYYY-MM-DD')}</div>,
+      render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
     },
     {
       title: '凭证类型号',

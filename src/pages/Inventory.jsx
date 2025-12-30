@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 
-import { Input, Layout, Menu, ResizeBox, Select, Table, Tabs } from '@arco-design/web-react'
+import { Button, Form, Input, Layout, Menu, ResizeBox, Select, Table, Tabs } from '@arco-design/web-react'
 import { useSelector } from 'react-redux'
 
 // 公共方法
-import { formatNumber } from 'src/utils/common'
+import { downloadFile, formatNumber } from 'src/utils/common'
 
 // 组件
+import dayjs from 'dayjs'
 import VoucherInfo from 'src/components/VoucherInfo'
 
 const Inventory = () => {
@@ -41,13 +42,13 @@ const Inventory = () => {
           title: '借方',
           dataIndex: 'qc_borrow',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'qc_loan',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -58,13 +59,13 @@ const Inventory = () => {
           title: '借方',
           dataIndex: 'bq_borrow',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'bq_loan',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -75,13 +76,13 @@ const Inventory = () => {
           title: '借方',
           dataIndex: 'qm_borrow',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'qm_loan',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -94,7 +95,7 @@ const Inventory = () => {
       dataIndex: 'bdate',
       align: 'center',
       width: 120,
-      render: (text) => <>{text?.slice(0, 10)}</>,
+      render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
     },
     {
       title: '凭证号',
@@ -109,13 +110,13 @@ const Inventory = () => {
           title: '入库金额',
           dataIndex: 'in_money',
           align: 'center',
-          render: (text) => <>{formatNumber(text)}</>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '回冲金额',
           dataIndex: 'in_ch_money',
           align: 'center',
-          render: (text) => <>{formatNumber(text)}</>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -126,13 +127,13 @@ const Inventory = () => {
           title: '出库金额',
           dataIndex: 'out_money',
           align: 'center',
-          render: (text) => <>{formatNumber(text)}</>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '回冲金额',
           dataIndex: 'out_ch_money',
           align: 'center',
-          render: (text) => <>{formatNumber(text)}</>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -148,7 +149,7 @@ const Inventory = () => {
       dataIndex: 'bdate',
       align: 'center',
       width: 120,
-      render: (text) => <>{text?.slice(0, 10)}</>,
+      render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
     },
     {
       title: '凭证号',
@@ -162,6 +163,7 @@ const Inventory = () => {
         {
           title: '发票日期',
           dataIndex: 'fpdate',
+          render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
         },
         {
           title: '发票号码',
@@ -171,7 +173,7 @@ const Inventory = () => {
           title: '入库金额',
           dataIndex: 'in_money',
           align: 'center',
-          render: (text) => <>{formatNumber(text)}</>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -182,19 +184,19 @@ const Inventory = () => {
           title: '回冲金额',
           dataIndex: 'in_ch_money',
           align: 'center',
-          render: (text) => <>{formatNumber(text)}</>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '出库金额',
           dataIndex: 'out_money',
           align: 'center',
-          render: (text) => <>{formatNumber(text)}</>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '回冲金额',
           dataIndex: 'out_ch_money',
           align: 'center',
-          render: (text) => <>{formatNumber(text)}</>,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -202,7 +204,7 @@ const Inventory = () => {
       title: '库存余额',
       dataIndex: 'balance',
       align: 'center',
-      render: (text) => <>{formatNumber(text)}</>,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
   ]
 
@@ -228,6 +230,19 @@ const Inventory = () => {
     setTableLoading(false)
   }
 
+  // 导出
+  const onExport = async (key, id) => {
+    const params = {
+      groupid: currentCompany?.id,
+      project_code: key,
+      supplier_code: id,
+    }
+    const result = await Http.post('/query/stock/export2', params, {
+      responseType: 'blob',
+    })
+
+    downloadFile(result, supplierKeys.supplier_name, 'xlsx')
+  }
   // 选择项目
   const changeProject = async (key, id) => {
     setProjectKey(key)
@@ -306,15 +321,21 @@ const Inventory = () => {
             />
           ) : (
             <>
-              <div className='flex w-full items-center'>
-                项目：
-                <Select
-                  className='w-62.5!'
-                  options={supplierKeys?.projectList}
-                  value={projectKey}
-                  onChange={(e) => changeProject(e, supplierKeys?.supplier_code)}
-                />
-              </div>
+              <Form autoComplete='off' layout='inline' size='small'>
+                <Form.Item label=' 项目'>
+                  <Select
+                    className='w-62.5!'
+                    options={supplierKeys?.projectList}
+                    value={projectKey}
+                    onChange={(e) => changeProject(e, supplierKeys?.supplier_code)}
+                  />
+                </Form.Item>
+                <Form.Item>
+                  <Button type='primary' onClick={() => onExport(projectKey, supplierKeys?.supplier_code)}>
+                    导出
+                  </Button>
+                </Form.Item>
+              </Form>
               <ResizeBox.Split
                 id='page-inventory'
                 className='h-[calc(100%-70px)] py-5'

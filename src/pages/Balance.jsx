@@ -196,7 +196,7 @@ const Balance = () => {
       dataIndex: 'pdate',
       width: 140,
       align: 'center',
-      render: (text) => <div className='text-center'>{text && dayjs(text).format('YYYY-MM-DD')}</div>,
+      render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
     },
     {
       title: '凭证类型号',
@@ -231,12 +231,10 @@ const Balance = () => {
       dataIndex: 'balance',
       width: 180,
       align: 'center',
+      className: 'balance-two',
       render: (_, record) => (
         <div className='flex justify-between'>
-          <div className='relative pr-4'>
-            {record.direct}
-            <div className='absolute -top-3.5 right-0 h-10.25 w-px border-r border-neutral-200'></div>
-          </div>
+          <div className='balance-two-line'>{record.direct}</div>
           <div>{formatNumber(record.balance)}</div>
         </div>
       ),
@@ -307,7 +305,7 @@ const Balance = () => {
   // 默认执行
   useEffect(() => {
     if (currentCompany) {
-      onChangeYear(dayjs().year())
+      onChangeYear(dayjs().format('YYYY'))
     }
   }, [currentCompany])
 

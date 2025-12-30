@@ -69,7 +69,9 @@ export const formatNumber = (num) => {
   if (typeof num !== 'number' || isNaN(num) || !isFinite(num)) {
     return ''
   }
-  return num !== 0 ? num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''
+
+  // 先保留两位小数，然后进行千位分割
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
 // 下载文件
