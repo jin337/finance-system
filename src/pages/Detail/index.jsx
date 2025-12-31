@@ -104,7 +104,7 @@ const list = [
   },
 ]
 // 组件
-const TemplateOne = () => {
+const Detail = () => {
   const location = useLocation()
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
 
@@ -309,4 +309,4 @@ const TemplateOne = () => {
     </>
   )
 }
-export default TemplateOne
+export default Detail

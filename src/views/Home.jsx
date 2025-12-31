@@ -39,12 +39,6 @@ const HomeList = [
     siderWidth: 0,
   },
   {
-    title: '财务文档',
-    key: '5',
-    pathName: '/document',
-    siderWidth: 0,
-  },
-  {
     title: '辅助账查询',
     key: '6',
     pathName: '/auxiliary',

@@ -146,7 +146,7 @@ const CashFlow = () => {
   // 默认执行
   useEffect(() => {
     if (currentCompany) {
-      onChangeYear(dayjs().year())
+      onChangeYear(dayjs().format('YYYY'))
     }
   }, [currentCompany])
 

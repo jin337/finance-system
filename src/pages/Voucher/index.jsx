@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux'
 
 import status from 'src/assets/images/status.png'
 
-const Bank = () => {
+const Voucher = () => {
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
   const [rangeValue, setRangeValue] = useState({})
   const [monthList, setMonthList] = useState([])
@@ -22,7 +22,7 @@ const Bank = () => {
     setRangeValue((prev) => ({ ...prev, year: value }))
 
     const params = {
-      catid: 4,
+      catid: 2,
       groupid: currentCompany?.id,
       year: Number(value),
     }
@@ -70,4 +70,4 @@ const Bank = () => {
     </Layout>
   )
 }
-export default Bank
+export default Voucher

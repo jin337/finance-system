@@ -16,23 +16,19 @@ import Bank from 'src/pages/Bank'
 import BankBalance from 'src/pages/BankBalance'
 import CashFlow from 'src/pages/CashFlow'
 
-// 综合询析
 import Assetliab from 'src/pages/Comprehensive/Assetliab'
 import Expense from 'src/pages/Comprehensive/Expense'
 import ProjectActualPerformance from 'src/pages/Comprehensive/ProjectActualPerformance'
 import ProjectInventory from 'src/pages/Comprehensive/ProjectInventory'
 import ProjectTotal from 'src/pages/Comprehensive/ProjectTotal'
 
-import TemplateOne from 'src/pages/Detail/TemplateOne'
-
+import Detail from 'src/pages/Detail'
 import DetailStock from 'src/pages/Detail/Stock'
 import DetailStockIn from 'src/pages/Detail/Stock/StockIn'
 import DetailStockOut from 'src/pages/Detail/Stock/StockOut'
+import DetailTaxes from 'src/pages/Detail/Taxes'
+import DetailAddTax from 'src/pages/Detail/Taxes/AddTax'
 
-import Taxes from 'src/pages/Detail/Taxes'
-import AddTax from 'src/pages/Detail/Taxes/AddTax'
-
-import Document from 'src/pages/Document'
 import Inventory from 'src/pages/Inventory'
 import Receivable from 'src/pages/Receivable'
 import Report from 'src/pages/Report'
@@ -84,10 +80,6 @@ export const router = createBrowserRouter([
         element: <Bank />,
       },
       {
-        path: '/document',
-        element: <Document />,
-      },
-      {
         path: '/auxiliary',
         element: <Auxiliary />,
       },
@@ -125,27 +117,27 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '/detail/bill-receive',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/account-receive',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/ohter-receive',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/prepay',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/longterm',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/depreciation',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/stock',
@@ -161,55 +153,55 @@ export const router = createBrowserRouter([
           },
           {
             path: '/detail/shortbrrow',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/bill-pay',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/account-pay',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/account-receive',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/wages-pay',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/expense-sell',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/expense-manage',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/expense-develop',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/expense-exp',
-            element: <TemplateOne />,
+            element: <Detail />,
           },
           {
             path: '/detail/taxes',
-            element: <Taxes />,
+            element: <DetailTaxes />,
           },
           {
             path: '/detail/taxes/addtaxin',
-            element: <AddTax />,
+            element: <DetailAddTax />,
           },
           {
             path: '/detail/taxes/addtaxin-jy',
-            element: <AddTax />,
+            element: <DetailAddTax />,
           },
           {
             path: '/detail/taxes/addtaxout',
-            element: <AddTax />,
+            element: <DetailAddTax />,
           },
         ],
       },
