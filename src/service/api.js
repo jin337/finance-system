@@ -21,13 +21,8 @@ Http.interceptors.request.use(
 // 响应拦截器
 Http.interceptors.response.use(
   (response) => {
-    const { data, request } = response
-    if (data.code === 200 || request.responseType === 'blob') {
-      return Promise.resolve(data)
-    } else {
-      console.log(data.message || data.error)
-      return Promise.reject(data.message || data.error)
-    }
+    const { data } = response
+    return Promise.resolve(data)
   },
   (error) => {
     const { response } = error

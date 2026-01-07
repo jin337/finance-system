@@ -12,6 +12,10 @@ strong {
   background-color: #f4f4f4;
   font-weight: 700;
 }
+.table-summary-all .arco-table-td {
+  background-color: #ecefff;
+  font-weight: 700;
+}
 .table-summary-sum .arco-table-td {
   background-color: #f4f4f4;
 }
@@ -173,4 +177,9 @@ strong {
 .login-submit {
   border: none;
   background: linear-gradient(135deg, #2a9d8f, #52b788);
+}
+
+/* 隐藏月份选择器的年份选择器 */
+.hideYear .arco-picker-header {
+  display: none;
 }

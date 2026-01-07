@@ -239,7 +239,7 @@ const Receivable = () => {
   return (
     <>
       <Layout className='h-full w-full'>
-        <Layout.Sider width={260} className='h-full border-r border-neutral-200'>
+        <Layout.Sider width={260} className='h-full border-r border-neutral-200' resizeDirections={['right']}>
           <Tabs className='receivable-tabs h-full' justify defaultActiveTab='1' onChange={onChangeTab}>
             {receivableList.map((item) => (
               <Tabs.TabPane

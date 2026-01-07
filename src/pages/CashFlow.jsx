@@ -10,6 +10,7 @@ import { formatNumber } from 'src/utils/common'
 import status from 'src/assets/images/status.png'
 
 const CashFlow = () => {
+  const { menuSelect } = useSelector((state) => state.homeReducer)
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
   const [rangeValue, setRangeValue] = useState({})
   const [monthList, setMonthList] = useState([])
@@ -114,7 +115,7 @@ const CashFlow = () => {
     setTableLoading(true)
     setRangeValue((prev) => ({ ...prev, month: value }))
     const params = {
-      catid: 2,
+      catid: menuSelect.catid,
       groupid: currentCompany?.id,
       year: Number(year),
       month: Number(value),
@@ -131,7 +132,7 @@ const CashFlow = () => {
     setRangeValue((prev) => ({ ...prev, year: value }))
 
     const params = {
-      catid: 2,
+      catid: menuSelect.catid,
       groupid: currentCompany?.id,
       year: Number(value),
     }

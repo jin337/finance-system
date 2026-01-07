@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router'
 
+import ExcelView from 'src/views/ExcelView'
 import Home from 'src/views/Home'
 import Login from 'src/views/Login'
 import NotAuth from 'src/views/NotAuth'
@@ -12,9 +13,10 @@ import UserManagement from 'src/pages/UserManagement'
 // 主页
 import Auxiliary from 'src/pages/Auxiliary'
 import Balance from 'src/pages/Balance'
-import Bank from 'src/pages/Bank'
 import BankBalance from 'src/pages/BankBalance'
 import CashFlow from 'src/pages/CashFlow'
+
+import BankStatement from 'src/pages/BankStatement'
 
 import Assetliab from 'src/pages/Comprehensive/Assetliab'
 import Expense from 'src/pages/Comprehensive/Expense'
@@ -31,9 +33,7 @@ import DetailAddTax from 'src/pages/Detail/Taxes/AddTax'
 
 import Inventory from 'src/pages/Inventory'
 import Receivable from 'src/pages/Receivable'
-import Report from 'src/pages/Report'
 import RestrictedFunds from 'src/pages/RestrictedFunds'
-import TaxReport from 'src/pages/TaxReport'
 import Voucher from 'src/pages/Voucher'
 
 export const router = createBrowserRouter([
@@ -44,6 +44,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/excel/view/:id',
+    element: <ExcelView />,
   },
   {
     path: '/',
@@ -69,15 +73,15 @@ export const router = createBrowserRouter([
       },
       {
         path: '/report',
-        element: <Report />,
+        element: <BankStatement />,
       },
       {
         path: '/taxReport',
-        element: <TaxReport />,
+        element: <BankStatement />,
       },
       {
         path: '/bank',
-        element: <Bank />,
+        element: <BankStatement />,
       },
       {
         path: '/auxiliary',

@@ -19,24 +19,28 @@ const HomeList = [
     key: '1',
     pathName: '/voucher',
     siderWidth: 0,
+    catid: 2,
   },
   {
     title: '财务报表',
     key: '2',
     pathName: '/report',
     siderWidth: 0,
+    catid: 1,
   },
   {
     title: '税务报表',
     key: '3',
     pathName: '/taxReport',
     siderWidth: 0,
+    catid: 3,
   },
   {
     title: '银行流水单',
     key: '4',
     pathName: '/bank',
     siderWidth: 0,
+    catid: 4,
   },
   {
     title: '辅助账查询',
@@ -49,6 +53,7 @@ const HomeList = [
     key: '7',
     pathName: '/balance',
     siderWidth: 0,
+    catid: 2,
   },
   {
     title: '综合询析',
@@ -290,6 +295,7 @@ const HomeList = [
     key: '13',
     pathName: '/cashFlow',
     siderWidth: 0,
+    catid: 2,
   },
   {
     title: '受限资金配置',
@@ -428,8 +434,24 @@ const Home = () => {
     }
   }
 
-  // 返回首页-默认跳转页面
+  // 跳转首页
   const onBackHome = () => {
+    const targetList = HomeList
+    let selectedItem = targetList[0]
+
+    if (!selectedItem) return
+    dispatch(setMenuList(targetList))
+
+    const childrenItem = flatArr(targetList).find((e) => e.pathName === selectedItem.pathName)
+
+    selectedItem = {
+      ...selectedItem,
+      childrenSelect: selectedItem?.children?.length > 0 ? childrenItem : null,
+    }
+    onMenuSelect(selectedItem)
+  }
+  // 默认跳转页面
+  const onBackPage = () => {
     const pathname = location.pathname || ''
     if (!pathname.startsWith('/')) return // 防止路径遍历攻击
 
@@ -452,7 +474,7 @@ const Home = () => {
   }
 
   useEffect(() => {
-    onBackHome()
+    onBackPage()
   }, [])
 
   // 导航切换

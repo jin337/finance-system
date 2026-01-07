@@ -14,6 +14,7 @@ import VoucherInfo from 'src/components/VoucherInfo'
 
 const Balance = () => {
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
+  const { menuSelect } = useSelector((state) => state.homeReducer)
   const [rangeValue, setRangeValue] = useState({})
   const [monthList, setMonthList] = useState([])
 
@@ -35,7 +36,7 @@ const Balance = () => {
     const params = {
       iscurrent: iscurrent,
       acccode: value,
-      catid: 2,
+      catid: menuSelect.catid,
       groupid: currentCompany?.id,
       year: Number(rangeValue.year),
       month: Number(rangeValue.month),
@@ -55,7 +56,7 @@ const Balance = () => {
     const params = {
       iscurrent: e,
       acccode: null,
-      catid: 2,
+      catid: menuSelect.catid,
       groupid: currentCompany?.id,
       year: Number(rangeValue.year),
       month: Number(rangeValue.month),
@@ -252,7 +253,7 @@ const Balance = () => {
   const onRowClick = async (record) => {
     setVisibleDrawer(true)
     const params = {
-      catid: 2,
+      catid: menuSelect.catid,
       groupid: currentCompany?.id,
       year: Number(rangeValue.year),
       month: Number(rangeValue.month),
@@ -272,7 +273,7 @@ const Balance = () => {
     const params = {
       iscurrent: iscurrent,
       acccode: null,
-      catid: 2,
+      catid: menuSelect.catid,
       groupid: currentCompany?.id,
       year: Number(year),
       month: Number(value),
@@ -289,7 +290,7 @@ const Balance = () => {
     setRangeValue((prev) => ({ ...prev, year: value }))
 
     const params = {
-      catid: 2,
+      catid: menuSelect.catid,
       groupid: currentCompany?.id,
       year: Number(value),
     }

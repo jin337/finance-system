@@ -149,7 +149,7 @@ const UserManagement = () => {
 
   return (
     <>
-      <div className='px-5 py-4 border-b border-neutral-200'>
+      <div className='border-b border-neutral-200 px-5 py-4'>
         <Button shape='round' type='primary' icon={<IconPlus />} onClick={() => openEdit()}>
           新建用户
         </Button>

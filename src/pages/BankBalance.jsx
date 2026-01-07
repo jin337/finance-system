@@ -200,7 +200,7 @@ const BankBalance = () => {
   return (
     <>
       <Layout className='h-full w-full'>
-        <Layout.Sider width={260} className='h-full border-r border-neutral-200'>
+        <Layout.Sider width={260} className='h-full border-r border-neutral-200' resizeDirections={['right']}>
           <Tabs className='receivable-tabs h-full' justify defaultActiveTab='1'>
             <Tabs.TabPane key='1' title='银行账户' className='overflow-y-auto px-4' style={{ height: pageHeight - 70 + 'px' }}>
               <Table

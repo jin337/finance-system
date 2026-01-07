@@ -9,12 +9,15 @@ import status from 'src/assets/images/status.png'
 
 const Voucher = () => {
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
+  const { menuSelect } = useSelector((state) => state.homeReducer)
   const [rangeValue, setRangeValue] = useState({})
   const [monthList, setMonthList] = useState([])
 
   // 月份切换
   const onSelectMonth = async (value, year) => {
     setRangeValue((prev) => ({ ...prev, month: value }))
+
+    console.log(year)
   }
 
   // 年份切换
@@ -22,7 +25,7 @@ const Voucher = () => {
     setRangeValue((prev) => ({ ...prev, year: value }))
 
     const params = {
-      catid: 2,
+      catid: menuSelect.catid,
       groupid: currentCompany?.id,
       year: Number(value),
     }
