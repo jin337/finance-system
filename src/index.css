@@ -183,3 +183,12 @@ strong {
 .hideYear .arco-picker-header {
   display: none;
 }
+
+/* 隐藏模态框的标题栏 */
+.hideModalTitle .arco-modal-title {
+  display: none;
+}
+/* 模态框的底部对齐右 */
+.hideModalTitle .arco-modal-footer {
+  text-align: right;
+}

@@ -155,7 +155,10 @@ const Assetliab = () => {
         <Layout.Header className='px-5 pt-5 pb-3'>
           <Form autoComplete='off' layout='inline' size='small' form={searchForm}>
             <Form.Item label='查询区间' field='date_range'>
-              <DatePicker.RangePicker style={{ width: 250 }} />
+              <DatePicker.RangePicker
+                style={{ width: 250 }}
+                disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+              />
             </Form.Item>
             <Form.Item label='综合查询' field='search_key'>
               <Input allowClear placeholder='请输入' onClear={() => setTableList([])} />

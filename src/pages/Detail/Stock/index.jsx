@@ -149,7 +149,7 @@ const Stock = () => {
               style={{ width: 200 }}
               allowClear={false}
               value={selectInfo?.selectData}
-              disabledDate={(e) => e.isBefore(dayjs(selectInfo?.disabledDate))}
+              disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(selectInfo?.disabledDate))}
               onChange={onChangeData}
             />
           </Form.Item>

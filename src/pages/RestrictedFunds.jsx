@@ -218,7 +218,11 @@ const RestrictedFunds = () => {
     <>
       <Layout.Header className='flex items-center justify-between border-b border-neutral-200 px-5 py-4'>
         <Space size='large'>
-          <DatePicker.YearPicker value={time?.year} onChange={(e) => changeTable(1, { year: e })} />
+          <DatePicker.YearPicker
+            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+            value={time?.year}
+            onChange={(e) => changeTable(1, { year: e })}
+          />
           <DatePicker.MonthPicker
             triggerProps={{
               className: 'hideYear',
@@ -242,7 +246,11 @@ const RestrictedFunds = () => {
             position='br'
             content={
               <Space>
-                <DatePicker.YearPicker size='small' onChange={(e) => setYear(e)} />
+                <DatePicker.YearPicker
+                  size='small'
+                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+                  onChange={(e) => setYear(e)}
+                />
                 <Button type='primary' size='small' onClick={createBuild}>
                   确定生成年初数
                 </Button>
@@ -295,7 +303,11 @@ const RestrictedFunds = () => {
           </Form.Item>
           <div className='flex'>
             <Form.Item label='年' field='year' rules={[{ required: true }]}>
-              <DatePicker.YearPicker style={{ width: '100%' }} allowClear />
+              <DatePicker.YearPicker
+                disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+                style={{ width: '100%' }}
+                allowClear
+              />
             </Form.Item>
             <Form.Item label='月' field='month'>
               <DatePicker.MonthPicker

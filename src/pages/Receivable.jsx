@@ -273,7 +273,7 @@ const Receivable = () => {
                   mode='month'
                   placeholder={['开始年月', '结束年月']}
                   style={{ width: 200 }}
-                  disabledDate={(e) => e.isBefore(dayjs(selectInfo?.disabledDate))}
+                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(selectInfo?.disabledDate))}
                   allowClear={false}
                   value={selectInfo?.selectData}
                   onChange={onChangeData}

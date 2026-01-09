@@ -1,11 +1,11 @@
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 
-import { Button, Checkbox, DatePicker, Drawer, Input, Layout, Menu, Table } from '@arco-design/web-react'
-import { IconCalendar } from '@arco-design/web-react/icon'
+import { Button, Checkbox, DatePicker, Drawer, Input, Layout, Menu, Modal, Table } from '@arco-design/web-react'
+import { IconCalendar, IconExport } from '@arco-design/web-react/icon'
 import { useSelector } from 'react-redux'
 
-import { formatNumber } from 'src/utils/common'
+import { downloadFile, formatNumber } from 'src/utils/common'
 
 import status from 'src/assets/images/status.png'
 
@@ -68,11 +68,34 @@ const Balance = () => {
     setTableLoading(false)
   }
 
+  // 导出
+  const onExport = (record) => {
+    Modal.confirm({
+      title: '提示',
+      content: '确定导出 ' + record.name + ' 余额明细？',
+      onOk: async () => {
+        const params = {
+          catid: menuSelect.catid,
+          groupid: currentCompany?.id,
+          year: Number(rangeValue.year),
+          month: Number(rangeValue.month),
+          acccode: record.code,
+        }
+        const result = await Http.post('/balance/detail/export', params, {
+          responseType: 'blob',
+        })
+
+        const fileName =
+          record.name + '(' + currentCompany.shortname + rangeValue.year + '年' + rangeValue.month + '月' + ')' + '余额明细'
+        downloadFile(result, fileName, 'xlsx')
+      },
+    })
+  }
+
   // 表头
   const columns = [
     {
       title: '科目代码',
-      width: 150,
       children: [
         {
           title: (
@@ -86,29 +109,40 @@ const Balance = () => {
           ),
           dataIndex: 'code',
           className: 'search-input',
+          width: 150,
         },
       ],
     },
     {
       title: '科目名称',
       dataIndex: 'name',
+      width: 150,
       ellipsis: true,
+      render: (text, record) => (
+        <div className='group flex items-center justify-between gap-1 text-left'>
+          {text}
+          <span className='translate-x-2 cursor-pointer text-base text-blue-500 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100'>
+            <IconExport onClick={() => onExport(record)} />
+          </span>
+        </div>
+      ),
     },
     {
       title: '年初余额',
-      width: 190,
       children: [
         {
           title: '借方',
           dataIndex: 'nc_borrow',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'nc_loan',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -120,13 +154,15 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'qc_borrow',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'qc_loan',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -143,13 +179,15 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'bq_borrow',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'bq_loan',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -161,13 +199,15 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'bn_borrow',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'bn_loan',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -179,13 +219,15 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'qm_borrow',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'qm_loan',
           align: 'center',
-          render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -218,14 +260,16 @@ const Balance = () => {
       dataIndex: 'borrow',
       width: 130,
       align: 'center',
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      ellipsis: true,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '贷方',
       dataIndex: 'loan',
       width: 160,
       align: 'center',
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      ellipsis: true,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
@@ -316,7 +360,8 @@ const Balance = () => {
         <Layout.Sider width={114} className='h-full border-r border-neutral-200'>
           <DatePicker.YearPicker
             onChange={onChangeYear}
-            disabledDate={(e) => e.isAfter(dayjs())}
+            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+            value={String(rangeValue?.year)}
             triggerElement={
               <Button long>
                 <IconCalendar />

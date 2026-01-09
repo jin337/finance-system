@@ -137,7 +137,10 @@ const Expense = () => {
         <Layout.Header className='px-5 pt-5 pb-3'>
           <Form autoComplete='off' layout='inline' size='small' form={searchForm}>
             <Form.Item label='区间' field='date_range'>
-              <DatePicker.RangePicker style={{ width: 250 }} />
+              <DatePicker.RangePicker
+                style={{ width: 250 }}
+                disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+              />
             </Form.Item>
             <Form.Item label='经办人' field='receiver'>
               <Input allowClear placeholder='请输入' style={{ width: 80 }} />

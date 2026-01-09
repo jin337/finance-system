@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
-import { Button, Checkbox, DatePicker, Drawer, Form, Layout, Message, Select, Table } from '@arco-design/web-react'
-import { IconSearch } from '@arco-design/web-react/icon'
+import { Button, Checkbox, DatePicker, Drawer, Form, Layout, Message, Modal, Select, Table } from '@arco-design/web-react'
+import { IconExport, IconSearch } from '@arco-design/web-react/icon'
 // 公共方法
-import { formatNumber } from 'src/utils/common'
+import { downloadFile, formatNumber } from 'src/utils/common'
 
 // 组件
 import dayjs from 'dayjs'
@@ -176,13 +176,32 @@ const Auxiliary = () => {
     }
     const { code, data, message } = await Http.post('/check/detail/list', params)
     if (code === 200) {
-      setTable(data?.list || [])
+      const list = (data?.list || []).map((e, index) => ({ ...e, index_id: index }))
+      setTable(list)
     } else {
       Message.error(message)
     }
     setTableLoading(false)
   }
 
+  // 导出
+  const onExport = (record, e) => {
+    Modal.confirm({
+      title: '提示',
+      content: '确定导出当前辅助账明细？',
+      onOk: async () => {
+        const params = {
+          ...searchKey,
+          itemkey: record.id,
+        }
+        const result = await Http.post('/check/detail/export', params, {
+          responseType: 'blob',
+        })
+        const fileName = record[e.id]
+        downloadFile(result, fileName, 'xlsx')
+      },
+    })
+  }
   // 提交搜索
   const submitSearch = async () => {
     setSiderTableLoading(true)
@@ -212,12 +231,26 @@ const Auxiliary = () => {
           title: e.name,
           dataIndex: e.id,
           align: 'center',
-          render: (text) => <div className='text-left'>{text}</div>,
+          render: (text, record) => (
+            <div className='group flex items-center justify-between gap-1 text-left'>
+              {text}
+              <span className='translate-x-2 cursor-pointer text-base text-blue-500 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100'>
+                <IconExport onClick={() => onExport(record, e)} />
+              </span>
+            </div>
+          ),
         }))
         setSiderColumns(header)
 
         const list = data?.list || []
-        setSiderTable(list)
+        // 过滤掉没有数据的列
+        const headerIds = data.header.map((item) => item.id)
+        const filteredList = list.filter((item) => {
+          const itemKeys = Object.keys(item).filter((key) => key !== 'id')
+          return itemKeys.some((key) => headerIds.includes(parseInt(key)))
+        })
+
+        setSiderTable(filteredList)
 
         setVisibleSearch(false)
         setTable([])
@@ -369,6 +402,7 @@ const Auxiliary = () => {
           <div className='fixed right-6 bottom-6 z-10'>
             <Button type='primary' size='large' shape='circle' icon={<IconSearch />} onClick={() => openSearch()} />
           </div>
+
           <Drawer
             width='36%'
             zIndex={10}
@@ -393,6 +427,7 @@ const Auxiliary = () => {
                   mode='month'
                   placeholder={['开始年月', '结束年月']}
                   separator='至'
+                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
                 />
               </Form.Item>
               <Form.Item label='辅助帐' field='assist'>
