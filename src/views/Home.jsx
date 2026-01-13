@@ -20,6 +20,13 @@ const HomeList = [
     pathName: '/voucher',
     siderWidth: 0,
     catid: 2,
+    children: [
+      {
+        key: '1-1',
+        title: '凭证',
+        pathName: '/voucher/detail/:id',
+      },
+    ],
   },
   {
     title: '财务报表',
@@ -465,11 +472,13 @@ const Home = () => {
     dispatch(setMenuList(targetList))
 
     const childrenItem = flatArr(targetList).find((e) => e.pathName === pathname)
+    const childrenSelect = !selectedItem?.pathName ? childrenItem : null
 
     selectedItem = {
       ...selectedItem,
-      childrenSelect: selectedItem?.children?.length > 0 ? childrenItem : null,
+      childrenSelect,
     }
+
     onMenuSelect(selectedItem)
   }
 
@@ -484,7 +493,7 @@ const Home = () => {
     if (item) {
       item = {
         ...item,
-        childrenSelect: item?.children?.length > 0 ? findChildKey(item) : null,
+        childrenSelect: !item?.pathName ? findChildKey(item) : null,
       }
       onMenuSelect(item)
     }

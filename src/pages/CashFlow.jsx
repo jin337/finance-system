@@ -9,6 +9,8 @@ import { formatNumber } from 'src/utils/common'
 
 import status from 'src/assets/images/status.png'
 
+import CashInfo from 'src/components/CashInfo'
+
 const CashFlow = () => {
   const { menuSelect } = useSelector((state) => state.homeReducer)
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
@@ -20,6 +22,9 @@ const CashFlow = () => {
 
   const [visibleDrawer, setVisibleDrawer] = useState(false)
   const [drawerData, setDrawerData] = useState([])
+
+  const [visibleCash, setVisibleCash] = useState(false)
+  const [cashKey, setCashKey] = useState()
 
   const columns = [
     {
@@ -93,6 +98,11 @@ const CashFlow = () => {
     },
   ]
 
+  // 现金流量指定
+  const onRowDrawerClick = (record) => {
+    setCashKey(record.id)
+    setVisibleCash(true)
+  }
   // 行点击
   const onRowClick = async (record) => {
     if (record.accounts) {
@@ -156,6 +166,7 @@ const CashFlow = () => {
       <Layout className='h-full w-full'>
         <Layout.Sider width={114} className='h-full border-r border-neutral-200'>
           <DatePicker.YearPicker
+            value={String(rangeValue?.year)}
             onChange={onChangeYear}
             disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
             triggerElement={
@@ -213,8 +224,15 @@ const CashFlow = () => {
           data={drawerData}
           columns={columnsDrawer}
           pagination={false}
+          onRow={(record, index) => {
+            return {
+              onDoubleClick: () => onRowDrawerClick(record, index),
+            }
+          }}
         />
       </Drawer>
+
+      <CashInfo visible={visibleCash} cashKey={cashKey} onCancel={() => setVisibleCash(false)} />
     </>
   )
 }

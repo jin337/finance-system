@@ -1,7 +1,3 @@
-import dayjs from 'dayjs'
-import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
-
 import {
   Button,
   Checkbox,
@@ -28,6 +24,10 @@ import {
   IconUnorderedList,
   IconUpload,
 } from '@arco-design/web-react/icon'
+import dayjs from 'dayjs'
+import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { useLocation } from 'react-router'
 
 import { downloadFile } from 'src/utils/common'
 
@@ -36,9 +36,9 @@ import status from 'src/assets/images/status.png'
 import excel from 'src/assets/images/excel.png'
 import pdf from 'src/assets/images/pdf.png'
 import world from 'src/assets/images/world.png'
+import zip from 'src/assets/images/zip.png'
 
 // 上传组件
-import { useLocation } from 'react-router'
 import UploadModal from 'src/components/UploadModal'
 
 const BankStatement = () => {
@@ -62,8 +62,21 @@ const BankStatement = () => {
   const openPreview = (record) => {
     if (['pdf', '.pdf'].includes(record.fileext)) {
       window.open(record.filepathtrans + '?token=' + account.token, '_blank')
-    } else if (['pdf', '.pdf', 'xlsx', 'docx'].includes(record.fileext)) {
+    } else if (['xlsx', 'docx'].includes(record.fileext)) {
       window.open('/excel/view/' + record.id, '_blank')
+    } else if (['zip', 'rar'].includes(record.fileext)) {
+      Modal.confirm({
+        title: '提示',
+        content: '压缩文件预览,请先下载文件,是否继续?',
+        className: 'simpleModal',
+        okText: '下载',
+        onOk: async () => {
+          const files = [record.filepath + record.filename]
+          const result = await Http.post('/file/download', { files }, { responseType: 'blob' })
+          const title = record.title.split('.')[0]
+          downloadFile(result, title, 'zip')
+        },
+      })
     } else {
       setVisible(true)
     }
@@ -116,9 +129,12 @@ const BankStatement = () => {
         if (record.fileext === 'pdf' || record.fileext === '.pdf') {
           url = pdf
         }
+        if (record.fileext === 'zip' || record.fileext === 'rar') {
+          url = zip
+        }
         return (
           <Image
-            className={`h-8 w-8 border-neutral-200 ${['pdf', '.pdf', 'xlsx', 'docx'].includes(record.fileext) ? '' : 'border'}`}
+            className={`h-8 w-8 border-neutral-200 ${['pdf', '.pdf', 'xlsx', 'docx', 'rar', 'zip'].includes(record.fileext) ? '' : 'border'}`}
             onClick={() => openPreview(record)}
             preview={false}
             src={url}
@@ -148,6 +164,15 @@ const BankStatement = () => {
     setTableLoading(false)
   }
 
+  // 全选
+  const checkAll = (e) => {
+    if (e) {
+      setSelectList(tableData.map((item) => item.id))
+    } else {
+      setSelectList([])
+    }
+  }
+
   // 删除
   const deleteItem = () => {
     Modal.confirm({
@@ -156,6 +181,7 @@ const BankStatement = () => {
       okButtonProps: {
         status: 'danger',
       },
+      className: 'simpleModal',
       onOk: async () => {
         const params = {
           groupid: currentCompany?.id,
@@ -182,6 +208,7 @@ const BankStatement = () => {
       okButtonProps: {
         status: 'danger',
       },
+      className: 'simpleModal',
       onOk: async () => {
         const params = {
           groupid: currentCompany?.id,
@@ -208,7 +235,7 @@ const BankStatement = () => {
       })
     }
     const result = await Http.post('/file/download', { files }, { responseType: 'blob' })
-    downloadFile(result, '财务报表', 'zip')
+    downloadFile(result, menuSelect.title, 'zip')
 
     setSelectList([])
   }
@@ -230,8 +257,11 @@ const BankStatement = () => {
 
     const { code, data } = await Http.post('/file/list', params)
     if (code === 200) {
-      setTableData(data?.list || [])
-      const imgList = data?.list.map((item) => item.filepathtrans)
+      const list = data?.list || []
+      const imgList = list
+        .filter((item) => !['xlsx', 'docx', 'pdf', '.pdf', 'rar', 'zip'].includes(item.fileext))
+        .map((item) => item.filepathtrans)
+      setTableData(list)
       setSrcList(imgList)
     }
 
@@ -341,69 +371,77 @@ const BankStatement = () => {
             </Button.Group>
           </Layout.Header>
           <Layout.Content className='h-full overflow-hidden'>
-            {showType === 'list' && tableData.length > 0 && (
-              <div className='flex flex-wrap'>
-                <div className='w-full border-b border-neutral-200 p-2 select-none'>
-                  <Checkbox
-                    checked={selectList.length === tableData.length}
-                    indeterminate={selectList.length > 0 && tableData.length !== selectList.length}>
-                    全选
-                    <span className='ml-2 text-neutral-400'>
-                      ({selectList.length}/{tableData.length})
-                    </span>
-                  </Checkbox>
-                </div>
-                <Checkbox.Group value={selectList} onChange={(values) => setSelectList(values)}>
-                  {tableData.map((item) => {
-                    let url = item.filepaththumb
-                    if (item.fileext === 'docx') {
-                      url = world
-                    }
-                    if (item.fileext === 'xlsx') {
-                      url = excel
-                    }
-                    if (item.fileext === 'pdf' || item.fileext === '.pdf') {
-                      url = pdf
-                    }
-                    return (
-                      <Checkbox key={item.id} value={item.id}>
-                        {({ checked }) => {
-                          return (
-                            <div
-                              className={`relative mt-5 flex w-38 cursor-pointer flex-col items-center gap-2 border border-white px-5 py-3 hover:border-blue-500 hover:bg-blue-100 ${checked ? 'border-blue-500! bg-blue-100' : ''}`}>
-                              <img className='h-21 w-21' src={url} onClick={() => openPreview(item)} />
-                              <div className='max-w-full truncate text-center'>{item.name}</div>
-                              <div className='text-xs text-neutral-400'>{item.filesizecn}</div>
-                            </div>
-                          )
-                        }}
+            {tableData.length > 0 ? (
+              <>
+                {showType === 'list' && (
+                  <div className='flex flex-wrap'>
+                    <div className='w-full border-b border-neutral-200 p-2 select-none'>
+                      <Checkbox
+                        checked={selectList.length === tableData.length}
+                        indeterminate={selectList.length > 0 && tableData.length !== selectList.length}
+                        onChange={checkAll}>
+                        全选
+                        <span className='ml-2 text-neutral-400'>
+                          ({selectList.length}/{tableData.length})
+                        </span>
                       </Checkbox>
-                    )
-                  })}
-                </Checkbox.Group>
-              </div>
+                    </div>
+                    <Checkbox.Group value={selectList} onChange={(values) => setSelectList(values)}>
+                      {tableData.map((item) => {
+                        let url = item.filepaththumb
+                        if (item.fileext === 'docx') {
+                          url = world
+                        }
+                        if (item.fileext === 'xlsx') {
+                          url = excel
+                        }
+                        if (item.fileext === 'pdf' || item.fileext === '.pdf') {
+                          url = pdf
+                        }
+                        if (item.fileext === 'zip' || item.fileext === 'rar') {
+                          url = zip
+                        }
+                        return (
+                          <Checkbox key={item.id} value={item.id}>
+                            {({ checked }) => {
+                              return (
+                                <div
+                                  className={`relative mt-5 flex w-38 cursor-pointer flex-col items-center gap-2 border border-white px-5 py-3 hover:border-blue-500 hover:bg-blue-100 ${checked ? 'border-blue-500! bg-blue-100' : ''}`}>
+                                  <img className='h-21 w-21' src={url} onClick={() => openPreview(item)} />
+                                  <div className='max-w-full truncate text-center'>{item.name}</div>
+                                  <div className='text-xs text-neutral-400'>{item.filesizecn}</div>
+                                </div>
+                              )
+                            }}
+                          </Checkbox>
+                        )
+                      })}
+                    </Checkbox.Group>
+                  </div>
+                )}
+                {showType === 'table' && (
+                  <Table
+                    rowKey='id'
+                    size='small'
+                    border={{ wrapper: true, cell: true }}
+                    loading={tableLoading}
+                    data={tableData}
+                    columns={columns}
+                    pagination={false}
+                    scroll={{ y: pageHeight - 114 }}
+                    rowSelection={{
+                      type: 'checkbox',
+                      selectedRowKeys: selectList,
+                      onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
+                    }}
+                  />
+                )}
+              </>
+            ) : (
+              <Empty className='flex h-full items-center' description='暂无文件，请扫描或者上传' />
             )}
-            {showType === 'table' && (
-              <Table
-                rowKey='id'
-                size='small'
-                border={{ wrapper: true, cell: true }}
-                loading={tableLoading}
-                data={tableData}
-                columns={columns}
-                pagination={false}
-                scroll={{ y: pageHeight - 114 }}
-                rowSelection={{
-                  type: 'checkbox',
-                  selectedRowKeys: selectList,
-                  onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
-                }}
-              />
-            )}
-            <Image.PreviewGroup srcList={srcList} visible={visible} onVisibleChange={setVisible} />
 
-            {/* 暂无内容 */}
-            <Empty className='flex h-full items-center' description='暂无文件，请扫描或者上传' />
+            <Image.PreviewGroup srcList={srcList} visible={visible} onVisibleChange={setVisible} />
           </Layout.Content>
         </Layout>
       </Layout>

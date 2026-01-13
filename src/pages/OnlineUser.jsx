@@ -82,7 +82,8 @@ const OnlineUser = () => {
   const handleOffline = (record) => {
     Modal.confirm({
       title: '警告',
-      content: <div className='text-center'>是否确认把"{record.user_name}"的用户踢下线?</div>,
+      content: <>是否确认把 {record.user_name} 的用户踢下线?</>,
+      className: 'simpleModal',
       onOk: async () => {
         const { code } = await Http.post('/user/kickout', { login_id: record.login_id })
         if (code === 200) {

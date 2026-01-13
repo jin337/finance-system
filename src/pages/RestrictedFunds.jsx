@@ -147,7 +147,8 @@ const RestrictedFunds = () => {
 
     Modal.confirm({
       title: '警告',
-      content: <div className='text-center'>{`请确认自动生成${year}年的年初数?`}</div>,
+      content: <>{`请确认自动生成${year}年的年初数?`}</>,
+      className: 'simpleModal',
       onOk: async () => {
         const params = {
           groupid: currentCompany.id,
@@ -167,7 +168,8 @@ const RestrictedFunds = () => {
   const DeleteItems = () => {
     Modal.confirm({
       title: '警告',
-      content: <div className='text-center'>请确认是否删除?</div>,
+      content: '请确认是否删除?',
+      className: 'simpleModal',
       onOk: async () => {
         const params = {
           groupid: currentCompany.id,
@@ -270,7 +272,7 @@ const RestrictedFunds = () => {
           scroll={{ y: pageHeight - 114 }}
           data={tableData.list}
           onChange={(e) => changeTable(e.current)}
-          pagination={{ shshowTotal: true, pageSize: tableData.pageSize, current: tableData.page, total: tableData.total }}
+          pagination={{ showTotal: true, pageSize: tableData.pageSize, current: tableData.page, total: tableData.total }}
           rowSelection={{
             type: 'checkbox',
             selectedRowKeys: selectList,

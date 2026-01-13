@@ -189,6 +189,7 @@ const Auxiliary = () => {
     Modal.confirm({
       title: '提示',
       content: '确定导出当前辅助账明细？',
+      className: 'simpleModal',
       onOk: async () => {
         const params = {
           ...searchKey,

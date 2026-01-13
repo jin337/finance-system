@@ -1,8 +1,12 @@
-import { Drawer } from '@arco-design/web-react'
 import { useEffect, useState } from 'react'
 
+import { Button, Drawer, Space } from '@arco-design/web-react'
+
+import CashInfo from 'src/components/CashInfo'
 const VoucherInfo = ({ visible = false, voucherKey, onCancel }) => {
   const [visibleDrawer, setVisibleDrawer] = useState(false)
+
+  const [visibleCash, setVisibleCash] = useState(false)
 
   useEffect(() => {
     setVisibleDrawer(!!visible)
@@ -20,18 +24,29 @@ const VoucherInfo = ({ visible = false, voucherKey, onCancel }) => {
   }
 
   return (
-    <Drawer
-      width='80%'
-      title={null}
-      footer={null}
-      visible={visibleDrawer}
-      onOk={() => {
-        setVisibleDrawer(false)
-      }}
-      onCancel={handleCancel}>
-      <div>Here is an example text.</div>
-      <div>Here is an example text.</div>
-    </Drawer>
+    <>
+      <Drawer
+        width='70%'
+        title={
+          <Space>
+            <div>查看凭证</div>
+            <Button type='outline' onClick={() => setVisibleCash(true)}>
+              现金流量
+            </Button>
+          </Space>
+        }
+        footer={null}
+        visible={visibleDrawer}
+        onOk={() => {
+          setVisibleDrawer(false)
+        }}
+        onCancel={handleCancel}>
+        <div>VoucherInfo</div>
+      </Drawer>
+
+      {/* 现金流量指定 */}
+      <CashInfo visible={visibleCash} cashKey={voucherKey} onCancel={() => setVisibleCash(false)} />
+    </>
   )
 }
 

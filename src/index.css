@@ -19,6 +19,9 @@ strong {
 .table-summary-sum .arco-table-td {
   background-color: #f4f4f4;
 }
+.table-select .arco-table-td {
+  color: rgb(var(--primary-6));
+}
 .search-input .arco-table-th-item {
   height: 100%;
   padding: 0;
@@ -190,5 +193,12 @@ strong {
 }
 /* 模态框的底部对齐右 */
 .hideModalTitle .arco-modal-footer {
+  text-align: right;
+}
+
+.simpleModal .arco-modal-title {
+  text-align: left;
+}
+.simpleModal .arco-modal-footer {
   text-align: right;
 }

@@ -73,6 +73,7 @@ const Balance = () => {
     Modal.confirm({
       title: '提示',
       content: '确定导出 ' + record.name + ' 余额明细？',
+      className: 'simpleModal',
       onOk: async () => {
         const params = {
           catid: menuSelect.catid,

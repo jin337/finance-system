@@ -161,7 +161,7 @@ const UserManagement = () => {
         data={tableData.list}
         loading={tableLoading}
         onChange={(e) => changeTable(e.current)}
-        pagination={{ shshowTotal: true, pageSize: tableData.pageSize, current: tableData.page, total: tableData.total }}
+        pagination={{ showTotal: true, pageSize: tableData.pageSize, current: tableData.page, total: tableData.total }}
       />
 
       {/* 新建用户 */}
