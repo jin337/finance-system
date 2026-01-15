@@ -679,7 +679,7 @@ const Home = () => {
               <Breadcrumb.Item key='3'>{menuSelect?.title}</Breadcrumb.Item>
             </Breadcrumb>
           </Layout.Header>
-          <Layout className='h-[calc(100%-108px)] overflow-hidden border-y border-neutral-200'>
+          <Layout className='h-[calc(100%-108px)] flex-row! overflow-hidden border-y border-neutral-200'>
             <Layout.Sider width={170} className='h-full'>
               <Menu onClickMenuItem={onMenuItem} selectedKeys={[menuSelect?.key]}>
                 {menuList.map((item) => (

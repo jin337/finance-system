@@ -60,14 +60,14 @@ const Expense = () => {
       dataIndex: 'money',
       align: 'center',
       width: 130,
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
       dataIndex: 'balance',
       align: 'center',
       width: 130,
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '审批单号',

@@ -21,6 +21,7 @@ strong {
 }
 .table-select .arco-table-td {
   color: rgb(var(--primary-6));
+  background-color: #ecefff;
 }
 .search-input .arco-table-th-item {
   height: 100%;
@@ -199,6 +200,10 @@ strong {
 .simpleModal .arco-modal-title {
   text-align: left;
 }
+.simpleModal .arco-modal-header {
+  margin-bottom: 12px;
+}
 .simpleModal .arco-modal-footer {
   text-align: right;
+  margin-top: 12px;
 }

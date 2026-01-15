@@ -50,14 +50,14 @@ const CashFlow = () => {
       dataIndex: 'byvalue',
       width: 200,
       align: 'center',
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '本年数',
       dataIndex: 'bnvalue',
       width: 200,
       align: 'center',
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
   ]
 
@@ -94,7 +94,7 @@ const CashFlow = () => {
       dataIndex: 'money',
       width: 160,
       align: 'center',
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
   ]
 

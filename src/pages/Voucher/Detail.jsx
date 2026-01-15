@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 
+
+
 const VoucherDetail = () => {
   const params = useParams()
   const { id } = params

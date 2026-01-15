@@ -120,14 +120,14 @@ const Receivable = () => {
       dataIndex: 'borrow',
       align: 'center',
       width: 140,
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '贷方',
       dataIndex: 'loan',
       align: 'center',
       width: 140,
-      render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
@@ -135,10 +135,10 @@ const Receivable = () => {
       align: 'center',
       width: 180,
       className: 'balance-two',
-      render: (_, record) => (
+      render: (text, record) => (
         <div className='flex justify-between'>
           <div className='balance-two-line'>{record.direct}</div>
-          <div>{formatNumber(record.balance)}</div>
+          <div>{!!text && formatNumber(record.balance)}</div>
         </div>
       ),
     },

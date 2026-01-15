@@ -93,3 +93,10 @@ export const downloadFile = (response, name, suffix) => {
   document.body.removeChild(link)
   window.URL.revokeObjectURL(downloadUrl)
 }
+
+// UUID
+export const uuid = () => {
+  const timestamp = Date.now().toString()
+  const randomStr = Math.random().toString(36).substring(2, 15)
+  return CryptoJS.MD5(timestamp + randomStr).toString()
+}

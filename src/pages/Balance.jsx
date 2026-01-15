@@ -278,10 +278,10 @@ const Balance = () => {
       width: 180,
       align: 'center',
       className: 'balance-two',
-      render: (_, record) => (
+      render: (text, record) => (
         <div className='flex justify-between'>
           <div className='balance-two-line'>{record.direct}</div>
-          <div>{formatNumber(record.balance)}</div>
+          <div>{!!text && formatNumber(record.balance)}</div>
         </div>
       ),
     },

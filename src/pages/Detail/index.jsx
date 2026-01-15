@@ -176,10 +176,10 @@ const Detail = () => {
       align: 'center',
       width: 180,
       className: 'balance-two',
-      render: (_, record) => (
+      render: (text, record) => (
         <div className='flex justify-between'>
           <div className='balance-two-line'>{record.direct}</div>
-          <div>{!!record.balance && formatNumber(record.balance)}</div>
+          <div>{!!text && formatNumber(record.balance)}</div>
         </div>
       ),
     },
