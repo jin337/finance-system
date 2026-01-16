@@ -869,6 +869,11 @@ const Voucher = () => {
                 selectedRowKeys: selectList,
                 onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
               }}
+              onRow={(record) => {
+                return {
+                  onDoubleClick: () => onOpenEditView(2, record),
+                }
+              }}
             />
           </Layout.Content>
         </Layout>
@@ -906,7 +911,7 @@ const Voucher = () => {
         }}
       />
 
-      {/* 现金流量指定 */}
+      {/* 现金流量 */}
       <CashInfo
         visible={visibleCash}
         cashParams={itemInfo}

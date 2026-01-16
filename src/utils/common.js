@@ -100,3 +100,71 @@ export const uuid = () => {
   const randomStr = Math.random().toString(36).substring(2, 15)
   return CryptoJS.MD5(timestamp + randomStr).toString()
 }
+
+// 数字转中文大写金额
+export const numberToChinese = (num) => {
+  if (isNaN(num)) return ''
+
+  const digits = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
+  const units = ['', '拾', '佰', '仟']
+  const bigUnits = ['', '万', '亿']
+
+  // 处理整数和小数部分
+  const [integerPart, decimalPart] = num.toFixed(2).split('.')
+
+  // 转换整数部分
+  const convertInteger = (str) => {
+    let result = ''
+    const len = str.length
+
+    for (let i = 0; i < len; i++) {
+      const digit = parseInt(str[i])
+      const unitIndex = (len - 1 - i) % 4
+      const bigUnitIndex = Math.floor((len - 1 - i) / 4)
+
+      if (digit !== 0) {
+        result += digits[digit] + units[unitIndex]
+      } else {
+        // 处理零的情况
+        if (result && !result.endsWith('零')) {
+          // 如果不是连续的零，则添加零
+          if (i > 0 && parseInt(str[i - 1]) !== 0) {
+            result += '零'
+          }
+        }
+      }
+
+      // 添加大单位（万、亿）
+      if (unitIndex === 0 && bigUnitIndex > 0 && i < len - 1) {
+        if (parseInt(str.slice(len - 4 * (bigUnitIndex + 1), len - 4 * bigUnitIndex)) !== 0) {
+          result += bigUnits[bigUnitIndex]
+        }
+      }
+    }
+
+    // 清理多余的零
+    result = result.replace(/零+/g, '零')
+    result = result.replace(/零([万亿])/g, '$1')
+
+    return result
+  }
+
+  // 转换整数部分
+  let chineseResult = integerPart === '0' ? '零' : convertInteger(integerPart)
+
+  // 处理小数部分
+  if (decimalPart) {
+    const decimalDigits = decimalPart.split('')
+    if (decimalDigits[0] !== '0' || decimalDigits[1] !== '0') {
+      chineseResult += '点'
+      if (decimalDigits[0] !== '0') {
+        chineseResult += digits[parseInt(decimalDigits[0])] + '角'
+      }
+      if (decimalDigits[1] !== '0') {
+        chineseResult += digits[parseInt(decimalDigits[1])] + '分'
+      }
+    }
+  }
+
+  return chineseResult + '元整'
+}

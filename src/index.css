@@ -23,6 +23,19 @@ strong {
   color: rgb(var(--primary-6));
   background-color: #ecefff;
 }
+.arco-table-content-scroll {
+  overflow: inherit; /* 继承父元素的overflow值 */
+}
+.row-money .arco-table-th-item {
+  padding: 9px 0;
+}
+.row-blue {
+  border-left-color: #165dff66 !important;
+}
+.row-red {
+  border-left-color: #f53f3f66 !important;
+}
+
 .search-input .arco-table-th-item {
   height: 100%;
   padding: 0;

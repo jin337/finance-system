@@ -6,6 +6,7 @@ import Login from 'src/views/Login'
 import NotAuth from 'src/views/NotAuth'
 
 // 系统管理
+import Demo from 'src/pages/Demo'
 import OnlineUser from 'src/pages/OnlineUser'
 import SystemAuthorization from 'src/pages/SystemAuthorization'
 import UserManagement from 'src/pages/UserManagement'
@@ -54,6 +55,10 @@ export const router = createBrowserRouter([
     path: '/',
     element: <Home />,
     children: [
+      {
+        path: '/demo',
+        element: <Demo />,
+      },
       // 系统管理
       {
         path: '/userManagement',

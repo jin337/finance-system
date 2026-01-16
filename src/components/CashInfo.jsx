@@ -90,7 +90,6 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
         i === index ? { ...item, ...rest, money: rest.cashflow === 2 ? Math.abs(item.money) : -Math.abs(item.money) } : item
       )
     }
-
     setTableData(data)
     setVisibleProjectList(false)
 

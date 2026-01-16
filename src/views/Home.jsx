@@ -15,6 +15,13 @@ import { localClear, localGetItem } from 'src/utils/common'
 
 const HomeList = [
   {
+    title: 'demo',
+    key: '0',
+    pathName: '/demo',
+    siderWidth: 0,
+    catid: 1,
+  },
+  {
     title: '财务凭证',
     key: '1',
     pathName: '/voucher',
