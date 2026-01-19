@@ -30,7 +30,7 @@ const CashFlow = () => {
     {
       title: '序号',
       dataIndex: 'id',
-      width: 70,
+      width: 75,
       align: 'center',
       render: (text, record, index) => index + 1,
     },

@@ -333,7 +333,6 @@ const RestrictedFunds = () => {
           <Form.Item label='金额' field='money' rules={[{ required: true }]}>
             <InputNumber
               min={0}
-              max={1000000000}
               prefix='¥'
               allowClear
               formatter={(value) => {

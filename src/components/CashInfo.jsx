@@ -279,8 +279,6 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
       render: (_, record) => (
         <InputNumber
           value={record?.money}
-          min={-1000000000}
-          max={1000000000}
           prefix='¥'
           formatter={(value) => {
             return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')

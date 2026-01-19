@@ -624,7 +624,6 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
               <Form.Item label='金额' field='entrymoney' className='w-1/3! flex-1'>
                 <InputNumber
                   min={0}
-                  max={1000000000}
                   prefix='¥'
                   allowClear
                   formatter={(value) => {
