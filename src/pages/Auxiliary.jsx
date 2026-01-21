@@ -28,18 +28,17 @@ const Auxiliary = () => {
   const [accountList, setAccountList] = useState([])
 
   const [visibleSearch, setVisibleSearch] = useState(false)
-  const refWrapper = useRef()
+  const refAuxiliary = useRef()
 
   const [voucherVisible, setVoucherVisible] = useState(false)
-  const [voucherKey, setVoucherKey] = useState('')
+  const [voucherParams, setVoucherParams] = useState()
 
   // 表头
   const columns = [
     {
       title: '科目代码',
       dataIndex: 'code',
-      align: 'center',
-      width: 110,
+      width: 130,
     },
     {
       title: '科目名称',
@@ -88,14 +87,14 @@ const Auxiliary = () => {
       dataIndex: 'borrow',
       align: 'center',
       width: 140,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '贷方',
       dataIndex: 'loan',
       align: 'center',
       width: 140,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
@@ -106,7 +105,7 @@ const Auxiliary = () => {
       render: (text, record) => (
         <div className='flex justify-between'>
           <div className='balance-two-line'>{record.direct}</div>
-          <div>{!!text && formatNumber(record.balance)}</div>
+          <div className={`${text < 0 ? 'text-red-500' : ''}`}>{!!text && formatNumber(text)}</div>
         </div>
       ),
     },
@@ -147,7 +146,13 @@ const Auxiliary = () => {
   // 行点击
   const onRowClick = (record) => {
     if (record.sort === 1) {
-      setVoucherKey(record.pid)
+      setVoucherParams({
+        id: record.pid,
+        type: 2,
+        isdrawer: 1,
+        year: record.year,
+        month: record.month,
+      })
       setVoucherVisible(true)
     }
   }
@@ -379,7 +384,7 @@ const Auxiliary = () => {
 
   return (
     <>
-      <Layout className='relative h-full w-full' ref={refWrapper}>
+      <Layout className='auxiliary relative h-full w-full overflow-hidden' ref={refAuxiliary}>
         <Layout.Sider
           width={260}
           className='relative h-full border-r border-neutral-200'
@@ -390,7 +395,7 @@ const Auxiliary = () => {
             rowKey={'id'}
             pagination={false}
             border={{ wrapper: true, cell: true }}
-            scroll={{ y: pageHeight - 40 }}
+            scroll={{ y: pageHeight - 33 }}
             columns={siderColumns}
             data={siderTable}
             loading={siderTableLoading}
@@ -411,7 +416,7 @@ const Auxiliary = () => {
             placement='left'
             closable={false}
             visible={visibleSearch}
-            getPopupContainer={() => refWrapper && refWrapper.current}
+            getPopupContainer={() => refAuxiliary && refAuxiliary.current}
             onOk={submitSearch}
             onCancel={() => setVisibleSearch(false)}>
             <Form
@@ -423,6 +428,7 @@ const Auxiliary = () => {
               onValuesChange={onValuesChange}>
               <Form.Item label='会计期间' field='times'>
                 <DatePicker.RangePicker
+                  getPopupContainer={() => document.body}
                   className='w-full'
                   allowClear={false}
                   mode='month'
@@ -472,7 +478,7 @@ const Auxiliary = () => {
             </Form>
           </Drawer>
         </Layout.Sider>
-        <Layout.Content>
+        <Layout.Content className='overflow-y-hidden'>
           <Table
             size='small'
             rowKey={'index_id'}
@@ -481,7 +487,7 @@ const Auxiliary = () => {
             columns={columns}
             data={table}
             pagination={false}
-            scroll={{ x: true, y: pageHeight - 40 }}
+            scroll={{ x: true, y: pageHeight - 33 }}
             onRow={(record, index) => {
               return {
                 onDoubleClick: () => onRowClick(record, index),
@@ -498,7 +504,9 @@ const Auxiliary = () => {
         </Layout.Content>
       </Layout>
 
-      <VoucherInfo visible={voucherVisible} voucherKey={voucherKey} onCancel={() => setVoucherVisible(false)} />
+      <Drawer width='80%' title={null} footer={null} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+        <VoucherInfo voucherParams={voucherParams} />
+      </Drawer>
     </>
   )
 }

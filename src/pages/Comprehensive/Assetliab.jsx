@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Button, DatePicker, Form, Input, Layout, Message, Table } from '@arco-design/web-react'
+import { Button, DatePicker, Drawer, Form, Input, Layout, Message, Table } from '@arco-design/web-react'
 import { useSelector } from 'react-redux'
 
 // 公共方法
@@ -15,10 +15,11 @@ const Assetliab = () => {
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
 
   const [voucherVisible, setVoucherVisible] = useState(false)
-  const [voucherKey, setVoucherKey] = useState()
+  const [voucherParams, setVoucherParams] = useState()
 
   const [tableLoading, setTableLoading] = useState(false)
   const [tableList, setTableList] = useState([])
+  const [tableListContract, setTableListContract] = useState([])
 
   // 表头
   const columns = [
@@ -42,21 +43,21 @@ const Assetliab = () => {
           dataIndex: 'borrow',
           align: 'center',
           width: 130,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方金额',
           dataIndex: 'loan',
           align: 'center',
           width: 130,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '借方余额',
           dataIndex: 'balance',
           align: 'center',
-          width: 130,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 140,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -95,7 +96,13 @@ const Assetliab = () => {
   // 行点击
   const onRowClick = (record) => {
     if (record.sort === 1) {
-      setVoucherKey(record.pid)
+      setVoucherParams({
+        id: record.pid,
+        type: 2,
+        isdrawer: 1,
+        year: Number(record.year),
+        month: Number(record.month),
+      })
       setVoucherVisible(true)
     }
   }
@@ -144,6 +151,8 @@ const Assetliab = () => {
       if (code === 200) {
         const list = (data?.list || []).map((e, i) => ({ ...e, index_id: i }))
         setTableList(list)
+
+        setTableListContract((data?.contract || []).map((e, i) => ({ ...e, index_id: i })))
       }
       setTableLoading(false)
     })
@@ -152,7 +161,7 @@ const Assetliab = () => {
   return (
     <>
       <Layout className='h-full overflow-hidden'>
-        <Layout.Header className='px-5 pt-5 pb-3'>
+        <Layout.Header className='min-w-240 px-5 pt-5 pb-3'>
           <Form autoComplete='off' layout='inline' size='small' form={searchForm}>
             <Form.Item label='查询区间' field='date_range'>
               <DatePicker.RangePicker
@@ -184,17 +193,55 @@ const Assetliab = () => {
             columns={columns}
             data={tableList}
             pagination={false}
-            scroll={{ x: 1300, y: pageHeight - 136 }}
+            scroll={{ x: 1300, y: pageHeight - 420 }}
             onRow={(record, index) => {
               return {
                 onDoubleClick: () => onRowClick(record, index),
               }
             }}
           />
+          <div className='py-2 font-bold'>相关合同信息</div>
+          <Table
+            size='small'
+            rowKey={'index_id'}
+            loading={tableLoading}
+            border={{ wrapper: true, cell: true }}
+            scroll={{ y: 200 }}
+            columns={[
+              {
+                title: '合同号',
+                dataIndex: 'contract_no',
+              },
+              {
+                title: '计划项目',
+                dataIndex: 'project_name',
+              },
+              {
+                title: '供应商',
+                dataIndex: 'supplier_name',
+              },
+              {
+                title: '合同金额',
+                dataIndex: 'contract_money',
+                align: 'center',
+                width: 130,
+                render: (text) =>
+                  !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+              },
+              {
+                title: '审批单据号',
+                dataIndex: 'sericnum',
+              },
+            ]}
+            data={tableListContract}
+            pagination={false}
+          />
         </Layout.Content>
       </Layout>
 
-      <VoucherInfo visible={voucherVisible} voucherKey={voucherKey} onCancel={() => setVoucherVisible(false)} />
+      <Drawer width='80%' title={null} footer={null} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+        <VoucherInfo voucherParams={voucherParams} />
+      </Drawer>
     </>
   )
 }

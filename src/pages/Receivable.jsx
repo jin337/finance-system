@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 
-import { Button, DatePicker, Form, Layout, Table, Tabs } from '@arco-design/web-react'
+import { Button, DatePicker, Drawer, Form, Layout, Table, Tabs } from '@arco-design/web-react'
 import { useSelector } from 'react-redux'
 
 // 公共方法
@@ -54,7 +54,7 @@ const Receivable = () => {
   const [tableDetailLoading, setTableDetailLoading] = useState(false)
 
   const [voucherVisible, setVoucherVisible] = useState(false)
-  const [voucherKey, setVoucherKey] = useState()
+  const [voucherParams, setVoucherParams] = useState()
 
   // 表格列定义
   const columnsList = [
@@ -120,14 +120,14 @@ const Receivable = () => {
       dataIndex: 'borrow',
       align: 'center',
       width: 140,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '贷方',
       dataIndex: 'loan',
       align: 'center',
       width: 140,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
@@ -138,7 +138,7 @@ const Receivable = () => {
       render: (text, record) => (
         <div className='flex justify-between'>
           <div className='balance-two-line'>{record.direct}</div>
-          <div>{!!text && formatNumber(record.balance)}</div>
+          <div className={`${text < 0 ? 'text-red-500' : ''}`}>{!!text && formatNumber(text)}</div>
         </div>
       ),
     },
@@ -147,7 +147,14 @@ const Receivable = () => {
   // 行点击
   const onRowClick = (record) => {
     if (record.sort === 1) {
-      setVoucherKey(record.pid)
+      const time = record?.period?.split('.')
+      setVoucherParams({
+        id: record.pid,
+        type: 2,
+        isdrawer: 1,
+        year: Number(time[0]),
+        month: Number(time[1]),
+      })
       setVoucherVisible(true)
     }
   }
@@ -245,8 +252,8 @@ const Receivable = () => {
               <Tabs.TabPane
                 key={item.key}
                 title={item.title}
-                className='overflow-y-auto px-4'
-                style={{ height: pageHeight - 70 + 'px' }}>
+                className='overflow-y-auto px-4 pb-4'
+                style={{ height: pageHeight - 56 + 'px' }}>
                 <Table
                   size='small'
                   rowKey={'itemcode'}
@@ -266,7 +273,7 @@ const Receivable = () => {
           </Tabs>
         </Layout.Sider>
         <Layout className='h-full overflow-hidden'>
-          <Layout.Header className='px-5 pt-5 pb-3'>
+          <Layout.Header className='p-5 pb-3'>
             <Form autoComplete='off' layout='inline' size='small'>
               <Form.Item label='查询区间'>
                 <DatePicker.RangePicker
@@ -312,7 +319,9 @@ const Receivable = () => {
         </Layout>
       </Layout>
 
-      <VoucherInfo visible={voucherVisible} voucherKey={voucherKey} onCancel={() => setVoucherVisible(false)} />
+      <Drawer width='80%' title={null} footer={null} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+        <VoucherInfo voucherParams={voucherParams} />
+      </Drawer>
     </>
   )
 }

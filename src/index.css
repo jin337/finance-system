@@ -220,3 +220,6 @@ strong {
   text-align: right;
   margin-top: 12px;
 }
+.auxiliary .arco-layout-sider-children {
+  overflow: hidden !important;
+}

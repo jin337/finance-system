@@ -102,7 +102,7 @@ const ProjectTotal = () => {
         </Form>
       </Layout.Header>
       <Layout.Content className='px-5'>
-        <div className='overflow-y-auto border border-neutral-200' style={{ height: pageHeight - 84 }}>
+        <div className='overflow-y-auto border border-neutral-200' style={{ height: pageHeight - 88 }}>
           {fileUrl ? (
             <ExcelPreview url={fileUrl} />
           ) : (

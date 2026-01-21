@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Button, DatePicker, Form, Input, InputTag, Layout, Message, Select, Table } from '@arco-design/web-react'
+import { Button, DatePicker, Drawer, Form, Input, InputTag, Layout, Message, Select, Table } from '@arco-design/web-react'
 import { useSelector } from 'react-redux'
 
 // 公共方法
@@ -15,7 +15,7 @@ const Expense = () => {
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
 
   const [voucherVisible, setVoucherVisible] = useState(false)
-  const [voucherKey, setVoucherKey] = useState()
+  const [voucherParams, setVoucherParams] = useState()
 
   const [tableLoading, setTableLoading] = useState(false)
   const [tableList, setTableList] = useState([])
@@ -39,7 +39,7 @@ const Expense = () => {
       title: '凭证号',
       dataIndex: 'vno',
       align: 'center',
-      width: 130,
+      width: 140,
     },
     {
       title: '摘要',
@@ -60,26 +60,33 @@ const Expense = () => {
       dataIndex: 'money',
       align: 'center',
       width: 130,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
       dataIndex: 'balance',
       align: 'center',
       width: 130,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '审批单号',
       dataIndex: 'sericnum',
-      width: 160,
+      width: 190,
     },
   ]
 
   // 行点击
   const onRowClick = (record) => {
-    if (record.sort === 1) {
-      setVoucherKey(record.pid)
+    if (record?.vno) {
+      const time = record?.vno?.split('-')
+      setVoucherParams({
+        id: record.pid,
+        type: 2,
+        isdrawer: 1,
+        year: Number(time[1]),
+        month: Number(time[2]),
+      })
       setVoucherVisible(true)
     }
   }
@@ -134,7 +141,7 @@ const Expense = () => {
   return (
     <>
       <Layout className='h-full overflow-hidden'>
-        <Layout.Header className='px-5 pt-5 pb-3'>
+        <Layout.Header className='min-w-310 px-5 pt-5 pb-3'>
           <Form autoComplete='off' layout='inline' size='small' form={searchForm}>
             <Form.Item label='区间' field='date_range'>
               <DatePicker.RangePicker
@@ -179,7 +186,7 @@ const Expense = () => {
             columns={columns}
             data={tableList}
             pagination={false}
-            scroll={{ x: 1300, y: pageHeight - 104 }}
+            scroll={{ x: 1300, y: pageHeight - 120 }}
             onRow={(record, index) => {
               return {
                 onDoubleClick: () => onRowClick(record, index),
@@ -189,7 +196,9 @@ const Expense = () => {
         </Layout.Content>
       </Layout>
 
-      <VoucherInfo visible={voucherVisible} voucherKey={voucherKey} onCancel={() => setVoucherVisible(false)} />
+      <Drawer width='80%' title={null} footer={null} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+        <VoucherInfo voucherParams={voucherParams} />
+      </Drawer>
     </>
   )
 }

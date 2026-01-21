@@ -96,42 +96,42 @@ const StockOut = () => {
       dataIndex: 'cg_price',
       align: 'center',
       width: 150,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '采购金额（含税）',
       dataIndex: 'totalmoney',
       align: 'center',
       width: 150,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '采购单价（不含税）',
       dataIndex: 'cg_price_norate',
       align: 'center',
       width: 160,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '采购金额（不含税）',
       dataIndex: 'totalmoney_norate',
       align: 'center',
       width: 160,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '出库金额(含税)',
       dataIndex: 'ck_totalmoney',
       align: 'center',
       width: 160,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '出库金额(不含税)',
       dataIndex: 'ck_totalmoney_norate',
       align: 'center',
       width: 160,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '出库类型',
@@ -235,7 +235,7 @@ const StockOut = () => {
           columns={columns}
           data={tableData}
           pagination={false}
-          scroll={{ x: 1400, y: pageHeight - 180 }}
+          scroll={{ x: 1400, y: pageHeight - 120 }}
           rowClassName={(record) => (record.pid === 0 && record.sort === 2 ? 'table-summary' : '')}
         />
       </Layout.Content>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { Breadcrumb, Button, Dropdown, Form, Input, Layout, Menu, Message, Modal } from '@arco-design/web-react'
@@ -8,7 +8,7 @@ import Logo from 'src/assets/images/logo.png'
 
 import { useDispatch, useSelector } from 'react-redux'
 import { setAccount, setCompany, setPageHeight, setParmission, setSelectCompany } from 'src/store/reducers/common'
-import { setMenuList, setMenuSelect } from 'src/store/reducers/home'
+import { setCloseVoucherDetail, setMenuList, setMenuSelect } from 'src/store/reducers/home'
 
 // 公共方法
 import { localClear, localGetItem } from 'src/utils/common'
@@ -20,13 +20,6 @@ const HomeList = [
     pathName: '/voucher',
     siderWidth: 0,
     catid: 2,
-    children: [
-      {
-        key: '1-1',
-        title: '凭证',
-        pathName: '/voucher/detail/:id',
-      },
-    ],
   },
   {
     title: '财务报表',
@@ -365,9 +358,7 @@ const Home = () => {
   const navigation = useNavigate()
   const location = useLocation()
 
-  const PageContainer = useRef()
-
-  const { company, currentCompany, account } = useSelector((state) => state.commonReducer)
+  const { company, currentCompany, account, pageHeight } = useSelector((state) => state.commonReducer)
   const { menuSelect, menuList } = useSelector((state) => state.homeReducer)
   const [visible, setVisible] = useState(false)
 
@@ -415,21 +406,10 @@ const Home = () => {
   }, [account])
 
   // 监听窗口大小改变
-  useEffect(() => {
-    if (!PageContainer.current) return
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        dispatch(setPageHeight(entry.target.offsetHeight))
-      }
-    })
-
-    resizeObserver.observe(PageContainer.current)
-
-    return () => {
-      resizeObserver.disconnect()
-    }
-  }, [])
+  Hooks.useWindowResize(() => {
+    const windowHeight = window.innerHeight
+    dispatch(setPageHeight(windowHeight - 108))
+  }, [dispatch])
 
   // 页面跳转
   const onMenuSelect = (item) => {
@@ -497,6 +477,7 @@ const Home = () => {
       }
       onMenuSelect(item)
     }
+    dispatch(setCloseVoucherDetail(true))
   }
   const onChildrenItem = (e) => {
     const findItem = (arr, key) => {
@@ -679,7 +660,7 @@ const Home = () => {
               <Breadcrumb.Item key='3'>{menuSelect?.title}</Breadcrumb.Item>
             </Breadcrumb>
           </Layout.Header>
-          <Layout className='h-[calc(100%-108px)] flex-row! overflow-hidden border-y border-neutral-200'>
+          <Layout className='flex-row! overflow-hidden border-y border-neutral-200' style={{ maxHeight: pageHeight }}>
             <Layout.Sider width={170} className='h-full'>
               <Menu onClickMenuItem={onMenuItem} selectedKeys={[menuSelect?.key]}>
                 {menuList.map((item) => (
@@ -718,7 +699,7 @@ const Home = () => {
                 </Menu>
               </Layout.Sider>
             ) : null}
-            <Layout.Content ref={PageContainer} className='h-full overflow-hidden border-l border-neutral-200 bg-white'>
+            <Layout.Content className='h-full overflow-hidden border-l border-neutral-200 bg-white'>
               <Outlet />
             </Layout.Content>
           </Layout>

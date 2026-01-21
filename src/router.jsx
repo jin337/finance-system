@@ -35,7 +35,6 @@ import Inventory from 'src/pages/Inventory'
 import Receivable from 'src/pages/Receivable'
 import RestrictedFunds from 'src/pages/RestrictedFunds'
 import Voucher from 'src/pages/Voucher'
-import VoucherDetail from 'src/pages/Voucher/Detail'
 
 export const router = createBrowserRouter([
   {
@@ -70,10 +69,6 @@ export const router = createBrowserRouter([
       {
         path: '/voucher',
         element: <Voucher />,
-      },
-      {
-        path: '/voucher/detail/:id',
-        element: <VoucherDetail />,
       },
       {
         path: '/report',

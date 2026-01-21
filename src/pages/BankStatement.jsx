@@ -309,10 +309,7 @@ const BankStatement = () => {
               </Button>
             }
           />
-          <Menu
-            className='h-[calc(100%-105px)]'
-            selectedKeys={[rangeValue?.month]}
-            onClickMenuItem={(e) => onSelectMonth(e, rangeValue?.year)}>
+          <Menu selectedKeys={[rangeValue?.month]} onClickMenuItem={(e) => onSelectMonth(e, rangeValue?.year)}>
             {monthList?.map((item) => (
               <Menu.Item key={item.month} className='flex items-center gap-1.5 leading-9!'>
                 {item.month}月份
@@ -374,7 +371,7 @@ const BankStatement = () => {
             {tableData.length > 0 ? (
               <>
                 {showType === 'list' && (
-                  <div className='flex flex-wrap'>
+                  <div className='flex h-full flex-wrap'>
                     <div className='w-full border-b border-neutral-200 p-2 select-none'>
                       <Checkbox
                         checked={selectList.length === tableData.length}
@@ -386,7 +383,10 @@ const BankStatement = () => {
                         </span>
                       </Checkbox>
                     </div>
-                    <Checkbox.Group value={selectList} onChange={(values) => setSelectList(values)}>
+                    <Checkbox.Group
+                      className='h-full overflow-auto'
+                      value={selectList}
+                      onChange={(values) => setSelectList(values)}>
                       {tableData.map((item) => {
                         let url = item.filepaththumb
                         if (item.fileext === 'docx') {

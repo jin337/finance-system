@@ -105,28 +105,28 @@ const StockIn = () => {
       dataIndex: 'price_norate',
       align: 'center',
       width: 140,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '金额(不含税)',
       dataIndex: 'totalmoney_norate',
       align: 'center',
       width: 140,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '税额',
       dataIndex: 'ratemoney',
       align: 'center',
       width: 140,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '价税合计',
       dataIndex: 'totalmoney',
       align: 'center',
       width: 140,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '出库类型',
@@ -230,7 +230,7 @@ const StockIn = () => {
           columns={columns}
           data={tableData}
           pagination={false}
-          scroll={{ x: true, y: pageHeight - 180 }}
+          scroll={{ x: true, y: pageHeight - 120 }}
           rowClassName={(record) => (record.pid === 0 && record.sort === 2 ? 'table-summary' : '')}
         />
       </Layout.Content>

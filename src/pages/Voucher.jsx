@@ -1,7 +1,6 @@
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { useNavigate } from 'react-router'
+import { useDispatch, useSelector } from 'react-redux'
 
 import {
   Button,
@@ -37,9 +36,12 @@ import { downloadFile, formatNumber } from 'src/utils/common'
 // 组件
 import CashInfo from 'src/components/CashInfo'
 import FileInfo from 'src/components/FileInfo'
+import VoucherInfo from 'src/components/VoucherInfo'
 
 // 图片
+import { useRef } from 'react'
 import status from 'src/assets/images/status.png'
+import { setCloseVoucherDetail } from 'src/store/reducers/home'
 
 const buttonlist = [
   { id: '', name: '全部', color: '#606266' },
@@ -144,11 +146,20 @@ const exportMenu = [
       isFinish: true,
     },
   },
+  {
+    id: 12,
+    name: '财务分析报表',
+    url: '/report/analy_export',
+    filter: {
+      isFinish: true,
+    },
+  },
 ]
 const Voucher = () => {
-  const navigate = useNavigate()
+  const dispatch = useDispatch()
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
-  const { menuSelect } = useSelector((state) => state.homeReducer)
+
+  const { menuSelect, visibleVoucher } = useSelector((state) => state.homeReducer)
   const [monthList, setMonthList] = useState([])
 
   const [tableData, setTableData] = useState({ list: [], page: 1, pageSize: 10, total: 0 })
@@ -170,6 +181,11 @@ const Voucher = () => {
 
   // 现金流量指定
   const [visibleCash, setVisibleCash] = useState(false)
+
+  // 详情
+  const refVoucher = useRef()
+  const [voucherVisible, setVoucherVisible] = useState(false)
+  const [voucherParams, setVoucherParams] = useState()
 
   // 现金流量
   const onCashInfo = (record) => {
@@ -256,6 +272,7 @@ const Voucher = () => {
     } else {
       Message.error(message || '审核出错')
     }
+    setVoucherVisible(false)
   }
 
   // 日志
@@ -354,24 +371,30 @@ const Voucher = () => {
         <div className=''>
           <div className='mb-2'>操作意见：</div>
           <Input.TextArea onChange={(e) => (value = e)} />
+          <div className='full mt-3 flex justify-end gap-3'>
+            <Button onClick={() => onExamine({ id: record.id, status: '2', remark: value })}>不通过</Button>
+            <Button type='primary' onClick={() => onExamine({ id: record.id, status: '1', remark: value })}>
+              通过
+            </Button>
+          </div>
         </div>
       ),
       className: 'simpleModal',
-      okText: '通过',
-      cancelText: '不通过',
-      onOk: () => {
-        onExamine({ id: record.id, status: '1', remark: value })
-      },
-      onCancel: () => {
-        onExamine({ id: record.id, status: '2', remark: value })
-      },
+      footer: null,
     })
   }
 
   // 查看&&编辑&&新建
   const onOpenEditView = (type, record) => {
     // 1新建 2查看 3编辑
-    navigate(`/voucher/detail/${record.id}`, { state: { type } })
+    setVoucherParams({
+      type,
+      id: record.id,
+      year: record.year,
+      month: record.month,
+    })
+    setVoucherVisible(true)
+    dispatch(setCloseVoucherDetail(false))
   }
 
   // 提交
@@ -726,9 +749,15 @@ const Voucher = () => {
     }
   }, [currentCompany])
 
+  useEffect(() => {
+    if (visibleVoucher) {
+      setVoucherVisible(false)
+    }
+  }, [visibleVoucher])
+
   return (
     <>
-      <Layout className='h-full w-full'>
+      <Layout className='relative h-full w-full' ref={refVoucher}>
         <Layout.Sider width={114} className='h-full border-r border-neutral-200'>
           <DatePicker.YearPicker
             value={String(searchData?.year)}
@@ -741,10 +770,7 @@ const Voucher = () => {
               </Button>
             }
           />
-          <Menu
-            className='h-[calc(100%-105px)]'
-            selectedKeys={[searchData?.month]}
-            onClickMenuItem={(e) => onChangeSearch({ year: searchData?.year, month: e })}>
+          <Menu selectedKeys={[searchData?.month]} onClickMenuItem={(e) => onChangeSearch({ year: searchData?.year, month: e })}>
             {monthList?.map((item) => (
               <Menu.Item key={item.month} className='flex items-center gap-1.5 leading-9!'>
                 {item.month}月份
@@ -754,7 +780,7 @@ const Voucher = () => {
           </Menu>
         </Layout.Sider>
         <Layout className='h-full overflow-hidden'>
-          <Layout.Header className='border-b border-neutral-200 px-5 py-4'>
+          <Layout.Header className='min-w-220 border-b border-neutral-200 px-5 py-4'>
             <Space size='large'>
               {buttonlist.map((item) => (
                 <Button
@@ -767,7 +793,7 @@ const Voucher = () => {
               ))}
             </Space>
           </Layout.Header>
-          <Layout.Header className='flex items-center justify-between border-b border-neutral-200 px-5 py-4'>
+          <Layout.Header className='flex min-w-220 items-center justify-between border-b border-neutral-200 px-5 py-4'>
             <Space size='large'>
               {!tableTyle.finish && (
                 <>
@@ -846,7 +872,7 @@ const Voucher = () => {
               </Button>
             </Dropdown>
           </Layout.Header>
-          <Layout.Content className='h-full overflow-auto'>
+          <Layout.Content className='h-full overflow-auto pb-3'>
             <Table
               size='small'
               rowKey='id'
@@ -863,7 +889,7 @@ const Voucher = () => {
                 className: 'mr-3',
               }}
               onChange={changeTable}
-              scroll={{ x: true, y: pageHeight - 216 }}
+              scroll={{ x: true, y: pageHeight - 218 }}
               rowSelection={{
                 type: 'checkbox',
                 selectedRowKeys: selectList,
@@ -877,6 +903,21 @@ const Voucher = () => {
             />
           </Layout.Content>
         </Layout>
+
+        {/* 详情弹窗 */}
+        <Drawer
+          width='100%'
+          zIndex={10}
+          title={null}
+          footer={null}
+          closable={false}
+          escToExit={false}
+          bodyStyle={{ padding: 0, overflow: 'hidden' }}
+          getPopupContainer={() => refVoucher && refVoucher?.current}
+          visible={voucherVisible}
+          onCancel={() => setVoucherVisible(false)}>
+          <VoucherInfo voucherParams={voucherParams} onBack={() => setVoucherVisible(false)} onReview={(e) => onOpenExamine(e)} />
+        </Drawer>
       </Layout>
 
       {/* 日志 */}

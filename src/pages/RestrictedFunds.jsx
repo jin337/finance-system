@@ -262,7 +262,7 @@ const RestrictedFunds = () => {
           </Popover>
         </Space>
       </Layout.Header>
-      <Layout.Content>
+      <Layout.Content className='p-5'>
         <Table
           rowKey='id'
           size='small'

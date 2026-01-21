@@ -5,6 +5,7 @@ export const home = createSlice({
   initialState: {
     menuList: [],
     menuSelect: {},
+    visibleVoucher: false,
   },
   reducers: {
     setMenuList: (state, action) => {
@@ -13,8 +14,11 @@ export const home = createSlice({
     setMenuSelect: (state, action) => {
       state.menuSelect = action.payload
     },
+    setCloseVoucherDetail: (state, action) => {
+      state.visibleVoucher = action.payload
+    },
   },
 })
 
-export const { setMenuSelect, setMenuList } = home.actions
+export const { setMenuSelect, setMenuList, setCloseVoucherDetail } = home.actions
 export default home.reducer

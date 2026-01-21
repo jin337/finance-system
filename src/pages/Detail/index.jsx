@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useLocation } from 'react-router'
 
-import { Button, DatePicker, Form, Layout, Table } from '@arco-design/web-react'
+import { Button, DatePicker, Drawer, Form, Layout, Table } from '@arco-design/web-react'
 
 // 公共方法
 import { downloadFile, formatNumber } from 'src/utils/common'
@@ -113,7 +113,7 @@ const Detail = () => {
   const [tableData, setTableData] = useState([])
 
   const [voucherVisible, setVoucherVisible] = useState(false)
-  const [voucherKey, setVoucherKey] = useState()
+  const [voucherParams, setVoucherParams] = useState()
 
   // 表头
   const columns = [
@@ -133,8 +133,7 @@ const Detail = () => {
     {
       title: '科目代码',
       dataIndex: 'account_code',
-      align: 'center',
-      width: 110,
+      width: 130,
     },
     {
       title: '科目名称',
@@ -161,14 +160,14 @@ const Detail = () => {
       dataIndex: 'borrow',
       align: 'center',
       width: 130,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '贷方',
       dataIndex: 'loan',
       align: 'center',
       width: 130,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
@@ -179,7 +178,7 @@ const Detail = () => {
       render: (text, record) => (
         <div className='flex justify-between'>
           <div className='balance-two-line'>{record.direct}</div>
-          <div>{!!text && formatNumber(record.balance)}</div>
+          <div className={`${text < 0 ? 'text-red-500' : ''}`}>{!!text && formatNumber(text)}</div>
         </div>
       ),
     },
@@ -236,7 +235,13 @@ const Detail = () => {
   // 行点击
   const onRowClick = (record) => {
     if (record.sort === 1) {
-      setVoucherKey(record.pid)
+      setVoucherParams({
+        id: record.pid,
+        type: 2,
+        isdrawer: 1,
+        year: Number(record.year),
+        month: Number(record.month),
+      })
       setVoucherVisible(true)
     }
   }
@@ -294,7 +299,7 @@ const Detail = () => {
             columns={columns}
             data={tableData}
             pagination={false}
-            scroll={{ x: true, y: pageHeight - 182 }}
+            scroll={{ x: 1500, y: pageHeight - 120 }}
             onRow={(record, index) => {
               return {
                 onDoubleClick: () => onRowClick(record, index),
@@ -305,7 +310,9 @@ const Detail = () => {
         </Layout.Content>
       </Layout>
 
-      <VoucherInfo visible={voucherVisible} voucherKey={voucherKey} onCancel={() => setVoucherVisible(false)} />
+      <Drawer width='80%' title={null} footer={null} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+        <VoucherInfo voucherParams={voucherParams} />
+      </Drawer>
     </>
   )
 }

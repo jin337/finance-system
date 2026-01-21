@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { Button, Form, Input, Layout, Menu, ResizeBox, Select, Table, Tabs } from '@arco-design/web-react'
+import { Button, Drawer, Form, Input, Layout, Menu, ResizeBox, Select, Table, Tabs } from '@arco-design/web-react'
 import { useSelector } from 'react-redux'
 
 // 公共方法
@@ -11,7 +11,7 @@ import dayjs from 'dayjs'
 import VoucherInfo from 'src/components/VoucherInfo'
 
 const Inventory = () => {
-  const { currentCompany } = useSelector((state) => state.commonReducer)
+  const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
   const [supplierList, setSupplierList] = useState([])
   const [supplierKeys, setSupplierKeys] = useState()
   const [projectKey, setProjectKey] = useState()
@@ -21,7 +21,7 @@ const Inventory = () => {
   const [stockList, setStockList] = useState({})
 
   const [voucherVisible, setVoucherVisible] = useState(false)
-  const [voucherKey, setVoucherKey] = useState()
+  const [voucherParams, setVoucherParams] = useState()
 
   // 表头-库存余额概况
   const columns = [
@@ -42,13 +42,13 @@ const Inventory = () => {
           title: '借方',
           dataIndex: 'qc_borrow',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'qc_loan',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -59,13 +59,13 @@ const Inventory = () => {
           title: '借方',
           dataIndex: 'bq_borrow',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'bq_loan',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -76,13 +76,13 @@ const Inventory = () => {
           title: '借方',
           dataIndex: 'qm_borrow',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'qm_loan',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -110,13 +110,15 @@ const Inventory = () => {
           title: '入库金额',
           dataIndex: 'in_money',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 130,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '回冲金额',
           dataIndex: 'in_ch_money',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 130,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -127,19 +129,24 @@ const Inventory = () => {
           title: '出库金额',
           dataIndex: 'out_money',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 130,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '回冲金额',
           dataIndex: 'out_ch_money',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 130,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
     {
       title: '库存余额',
       dataIndex: 'balance',
+      align: 'center',
+      width: 130,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
   ]
   // 表头-右
@@ -163,17 +170,20 @@ const Inventory = () => {
         {
           title: '发票日期',
           dataIndex: 'fpdate',
+          width: 120,
           render: (text) => <>{text && dayjs(text).format('YYYY-MM-DD')}</>,
         },
         {
           title: '发票号码',
           dataIndex: 'fpno',
+          width: 200,
         },
         {
           title: '入库金额',
           dataIndex: 'in_money',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 130,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -184,19 +194,22 @@ const Inventory = () => {
           title: '回冲金额',
           dataIndex: 'in_ch_money',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 130,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '出库金额',
           dataIndex: 'out_money',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 130,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '回冲金额',
           dataIndex: 'out_ch_money',
           align: 'center',
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          width: 130,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -204,7 +217,8 @@ const Inventory = () => {
       title: '库存余额',
       dataIndex: 'balance',
       align: 'center',
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      width: 130,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
   ]
 
@@ -284,7 +298,14 @@ const Inventory = () => {
   // 行点击
   const onRowClick = (record) => {
     if (record.sort === 1) {
-      setVoucherKey(record.pid)
+      const time = record?.vno?.split('-')
+      setVoucherParams({
+        id: record.pid,
+        type: 2,
+        isdrawer: 1,
+        year: Number(time[1]),
+        month: Number(time[2]),
+      })
       setVoucherVisible(true)
     }
   }
@@ -297,7 +318,7 @@ const Inventory = () => {
             <Tabs.TabPane key='1' title='供应商'>
               <Input.Search size='small' searchButton allowClear placeholder='请输入供应商…' onSearch={onSearch} />
               <Menu
-                className='h-[calc(100%-105px)]'
+                className='h-[calc(100%-28px)]'
                 selectedKeys={[supplierKeys?.supplier_code]}
                 onClickMenuItem={(e) => onSelectItem(e, supplierList)}>
                 {supplierList?.map((item) => (
@@ -321,7 +342,7 @@ const Inventory = () => {
             />
           ) : (
             <>
-              <Form autoComplete='off' layout='inline' size='small'>
+              <Form className='pb-3' autoComplete='off' layout='inline' size='small'>
                 <Form.Item label=' 项目'>
                   <Select
                     className='w-62.5!'
@@ -338,7 +359,6 @@ const Inventory = () => {
               </Form>
               <ResizeBox.Split
                 id='page-inventory'
-                className='h-[calc(100%-70px)] py-5'
                 max={0.8}
                 min={0.2}
                 panes={[
@@ -351,6 +371,7 @@ const Inventory = () => {
                     data={stockList?.stock_zg}
                     border={{ wrapper: true, cell: true }}
                     pagination={false}
+                    scroll={{ x: 637, y: pageHeight - 154 }}
                     onRow={(record, index) => {
                       return {
                         onDoubleClick: () => onRowClick(record, index),
@@ -366,6 +387,7 @@ const Inventory = () => {
                     data={stockList?.stock_fp}
                     border={{ wrapper: true, cell: true }}
                     pagination={false}
+                    scroll={{ x: 1100, y: pageHeight - 154 }}
                     onRow={(record, index) => {
                       return {
                         onDoubleClick: () => onRowClick(record, index),
@@ -379,7 +401,9 @@ const Inventory = () => {
         </Layout.Content>
       </Layout>
 
-      <VoucherInfo visible={voucherVisible} voucherKey={voucherKey} onCancel={() => setVoucherVisible(false)} />
+      <Drawer width='80%' title={null} footer={null} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+        <VoucherInfo voucherParams={voucherParams} />
+      </Drawer>
     </>
   )
 }

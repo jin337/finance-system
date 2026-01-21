@@ -26,7 +26,7 @@ const Balance = () => {
   const [drawerData, setDrawerData] = useState([])
 
   const [voucherVisible, setVoucherVisible] = useState(false)
-  const [voucherKey, setVoucherKey] = useState()
+  const [voucherParams, setVoucherParams] = useState()
 
   // 输入框回车
   const onPressEnter = async (e) => {
@@ -136,14 +136,14 @@ const Balance = () => {
           dataIndex: 'nc_borrow',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'nc_loan',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -156,14 +156,14 @@ const Balance = () => {
           dataIndex: 'qc_borrow',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'qc_loan',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -181,14 +181,14 @@ const Balance = () => {
           dataIndex: 'bq_borrow',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'bq_loan',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -201,14 +201,14 @@ const Balance = () => {
           dataIndex: 'bn_borrow',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'bn_loan',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -221,14 +221,14 @@ const Balance = () => {
           dataIndex: 'qm_borrow',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
         {
           title: '贷方',
           dataIndex: 'qm_loan',
           align: 'center',
           ellipsis: true,
-          render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
         },
       ],
     },
@@ -262,7 +262,7 @@ const Balance = () => {
       width: 130,
       align: 'center',
       ellipsis: true,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '贷方',
@@ -270,7 +270,7 @@ const Balance = () => {
       width: 160,
       align: 'center',
       ellipsis: true,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '余额',
@@ -281,7 +281,7 @@ const Balance = () => {
       render: (text, record) => (
         <div className='flex justify-between'>
           <div className='balance-two-line'>{record.direct}</div>
-          <div>{!!text && formatNumber(record.balance)}</div>
+          <div className={`${text < 0 ? 'text-red-500' : ''}`}>{!!text && formatNumber(text)}</div>
         </div>
       ),
     },
@@ -290,7 +290,13 @@ const Balance = () => {
   // 抽屉行点击
   const onRowDrawerClick = (record) => {
     if (record.sort === 1) {
-      setVoucherKey(record.pid)
+      setVoucherParams({
+        id: record.pid,
+        type: 2,
+        isdrawer: 1,
+        year: Number(rangeValue.year),
+        month: Number(rangeValue.month),
+      })
       setVoucherVisible(true)
     }
   }
@@ -426,7 +432,9 @@ const Balance = () => {
         />
       </Drawer>
 
-      <VoucherInfo visible={voucherVisible} voucherKey={voucherKey} onCancel={() => setVoucherVisible(false)} />
+      <Drawer width='80%' title={null} footer={null} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+        <VoucherInfo voucherParams={voucherParams} />
+      </Drawer>
     </>
   )
 }

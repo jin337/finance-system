@@ -9,7 +9,6 @@ import { Button, DatePicker, Form, Layout, Table } from '@arco-design/web-react'
 import { downloadFile, formatNumber } from 'src/utils/common'
 
 // 组件
-import VoucherInfo from 'src/components/VoucherInfo'
 
 const list = [
   {
@@ -42,9 +41,6 @@ const TemplateOne = () => {
   const [selectInfo, setSelectInfo] = useState()
   const [tableLoading, setTableLoading] = useState(false)
   const [tableData, setTableData] = useState([])
-
-  const [voucherVisible, setVoucherVisible] = useState(false)
-  const [voucherKey, setVoucherKey] = useState()
 
   // 表头
   const columns = [
@@ -93,14 +89,14 @@ const TemplateOne = () => {
       dataIndex: 'price',
       align: 'center',
       width: 130,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '金额(不含税)',
       dataIndex: 'noratemoney',
       align: 'center',
       width: 130,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '税率/征收率',
@@ -113,14 +109,14 @@ const TemplateOne = () => {
       dataIndex: 'ratemoney',
       align: 'center',
       width: 130,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '价税合计',
       dataIndex: 'money',
       align: 'center',
       width: 130,
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
   ]
 
@@ -170,14 +166,6 @@ const TemplateOne = () => {
       ...prev,
       selectData: e,
     }))
-  }
-
-  // 行点击
-  const onRowClick = (record) => {
-    if (record.sort === 1) {
-      setVoucherKey(record.pid)
-      setVoucherVisible(true)
-    }
   }
 
   useEffect(() => {
@@ -233,18 +221,11 @@ const TemplateOne = () => {
             columns={columns}
             data={tableData}
             pagination={false}
-            scroll={{ x: true, y: pageHeight - 182 }}
-            onRow={(record, index) => {
-              return {
-                onDoubleClick: () => onRowClick(record, index),
-              }
-            }}
+            scroll={{ x: 1500, y: pageHeight - 120 }}
             rowClassName={(record) => (record.pid === 0 && record.sort === 2 ? 'table-summary' : '')}
           />
         </Layout.Content>
       </Layout>
-
-      <VoucherInfo visible={voucherVisible} voucherKey={voucherKey} onCancel={() => setVoucherVisible(false)} />
     </>
   )
 }

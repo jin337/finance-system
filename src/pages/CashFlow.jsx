@@ -24,7 +24,7 @@ const CashFlow = () => {
   const [drawerData, setDrawerData] = useState([])
 
   const [visibleCash, setVisibleCash] = useState(false)
-  const [cashKey, setCashKey] = useState()
+  const [cashParams, setCashParams] = useState()
 
   const columns = [
     {
@@ -50,14 +50,14 @@ const CashFlow = () => {
       dataIndex: 'byvalue',
       width: 200,
       align: 'center',
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '本年数',
       dataIndex: 'bnvalue',
       width: 200,
       align: 'center',
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
   ]
 
@@ -94,13 +94,18 @@ const CashFlow = () => {
       dataIndex: 'money',
       width: 160,
       align: 'center',
-      render: (text) => !!text && <div className='text-right'>{formatNumber(text)}</div>,
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
   ]
 
   // 现金流量指定
   const onRowDrawerClick = (record) => {
-    setCashKey(record.id)
+    setCashParams({
+      ...record,
+      id: record.pid,
+      year: Number(rangeValue.year),
+      month: Number(rangeValue.month),
+    })
     setVisibleCash(true)
   }
   // 行点击
@@ -232,7 +237,7 @@ const CashFlow = () => {
         />
       </Drawer>
 
-      <CashInfo visible={visibleCash} cashKey={cashKey} onCancel={() => setVisibleCash(false)} />
+      <CashInfo visible={visibleCash} cashParams={cashParams} onCancel={() => setVisibleCash(false)} />
     </>
   )
 }

@@ -30,7 +30,7 @@ export default defineConfig({
       enableWebp: true,
     }),
     autoImport({
-      imports: [{ 'src/service/api': [['default', 'Http']] }, { 'src/config/hooks': [['default', 'Hooks']] }],
+      imports: [{ 'src/service/api': [['default', 'Http']] }, { 'src/hooks': [['default', 'Hooks']] }],
     }),
     compression(),
   ],
