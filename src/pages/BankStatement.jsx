@@ -440,8 +440,6 @@ const BankStatement = () => {
             ) : (
               <Empty className='flex h-full items-center' description='暂无文件，请扫描或者上传' />
             )}
-
-            <Image.PreviewGroup srcList={srcList} visible={visible} onVisibleChange={setVisible} />
           </Layout.Content>
         </Layout>
       </Layout>
@@ -462,6 +460,8 @@ const BankStatement = () => {
         }}
         onCancel={() => setUploadVisible(false)}
       />
+      {/* 图片预览 */}
+      <Image.PreviewGroup srcList={srcList} visible={visible} onVisibleChange={setVisible} />
     </>
   )
 }

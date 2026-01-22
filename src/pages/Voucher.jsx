@@ -387,21 +387,27 @@ const Voucher = () => {
   // 查看&&编辑&&新建
   const onOpenEditView = (type, record) => {
     // 1新建 2查看 3编辑
+    const baseParams = {
+      type,
+      catid: menuSelect.catid,
+      groupid: currentCompany.id,
+      user_name: account.user_name,
+    }
+
     const params =
       type === 1
         ? {
             type,
             year: Number(searchData.year),
             month: Number(searchData.month),
-            groupid: currentCompany.id,
-            catid: menuSelect.catid,
-            user_name: account.user_name,
+            ...baseParams,
           }
         : {
             type,
             id: record.id,
             year: record.year,
             month: record.month,
+            ...baseParams,
           }
     setVoucherParams(params)
     setVoucherVisible(true)

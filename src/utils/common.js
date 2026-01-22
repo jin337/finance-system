@@ -103,14 +103,25 @@ export const uuid = () => {
 
 // 数字转中文大写金额
 export const numberToChinese = (num) => {
-  if (isNaN(num)) return ''
+  // 验证并转换输入参数
+  if (num === null || num === undefined || num === '') {
+    return ''
+  }
+
+  // 尝试转换为数字
+  const numericValue = typeof num === 'number' ? num : Number(num)
+
+  // 检查转换后是否为有效数字
+  if (isNaN(numericValue) || !isFinite(numericValue)) {
+    return ''
+  }
 
   const digits = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
   const units = ['', '拾', '佰', '仟']
   const bigUnits = ['', '万', '亿']
 
   // 处理整数和小数部分
-  const [integerPart, decimalPart] = num.toFixed(2).split('.')
+  const [integerPart, decimalPart] = numericValue.toFixed(2).split('.')
 
   // 转换整数部分
   const convertInteger = (str) => {
@@ -166,5 +177,9 @@ export const numberToChinese = (num) => {
     }
   }
 
-  return chineseResult + '元整'
+  if (chineseResult.includes('点')) {
+    return chineseResult + '元'
+  } else {
+    return chineseResult + '元整'
+  }
 }

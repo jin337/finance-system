@@ -39,6 +39,7 @@ import UploadModal from 'src/components/UploadModal'
 import excel from 'src/assets/images/excel.png'
 import pdf from 'src/assets/images/pdf.png'
 import world from 'src/assets/images/world.png'
+import zip from 'src/assets/images/zip.png'
 
 const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }) => {
   const [oaSelectForm] = Form.useForm()
@@ -235,6 +236,19 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
       window.open(record.filepathtrans + '?token=' + account.token, '_blank')
     } else if (['xlsx', 'docx'].includes(record.fileext)) {
       window.open('/excel/view/' + record.id, '_blank')
+    } else if (['zip', 'rar'].includes(record.fileext)) {
+      Modal.confirm({
+        title: '提示',
+        content: '压缩文件预览,请先下载文件,是否继续?',
+        className: 'simpleModal',
+        okText: '下载',
+        onOk: async () => {
+          const files = [record.filepath + record.filename]
+          const result = await Http.post('/file/download', { files }, { responseType: 'blob' })
+          const title = record.title.split('.')[0]
+          downloadFile(result, title, 'zip')
+        },
+      })
     } else {
       setVisibleViewImg(true)
     }
@@ -471,9 +485,11 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                     </Button>
                   </>
                 )}
-                <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
-                  OA审批单
-                </Button>
+                {tableImgData.length > 0 && (
+                  <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
+                    OA审批单
+                  </Button>
+                )}
                 <Button shape='round' type='outline' icon={<IconSync />} onClick={() => onImgInfo(imgInfo)}>
                   刷新
                 </Button>
@@ -518,6 +534,9 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                         }
                         if (item.fileext === 'pdf' || item.fileext === '.pdf') {
                           url = pdf
+                        }
+                        if (item.fileext === 'zip' || item.fileext === 'rar') {
+                          url = zip
                         }
                         return (
                           <Checkbox key={item.id} value={item.id}>
