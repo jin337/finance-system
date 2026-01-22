@@ -157,7 +157,7 @@ const exportMenu = [
 ]
 const Voucher = () => {
   const dispatch = useDispatch()
-  const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
+  const { currentCompany, pageHeight, account } = useSelector((state) => state.commonReducer)
 
   const { menuSelect, visibleVoucher } = useSelector((state) => state.homeReducer)
   const [monthList, setMonthList] = useState([])
@@ -387,12 +387,23 @@ const Voucher = () => {
   // 查看&&编辑&&新建
   const onOpenEditView = (type, record) => {
     // 1新建 2查看 3编辑
-    setVoucherParams({
-      type,
-      id: record.id,
-      year: record.year,
-      month: record.month,
-    })
+    const params =
+      type === 1
+        ? {
+            type,
+            year: Number(searchData.year),
+            month: Number(searchData.month),
+            groupid: currentCompany.id,
+            catid: menuSelect.catid,
+            user_name: account.user_name,
+          }
+        : {
+            type,
+            id: record.id,
+            year: record.year,
+            month: record.month,
+          }
+    setVoucherParams(params)
     setVoucherVisible(true)
     dispatch(setCloseVoucherDetail(false))
   }
@@ -799,11 +810,7 @@ const Voucher = () => {
                 <>
                   {tableTyle.ischeckout === 0 && (
                     <>
-                      <Button
-                        shape='round'
-                        type='primary'
-                        icon={<IconSubscribeAdd />}
-                        onClick={() => onOpenEditView(1, { id: 'create' })}>
+                      <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onOpenEditView(1)}>
                         新建凭证
                       </Button>
                       <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onCheckout(1)}>

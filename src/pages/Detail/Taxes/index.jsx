@@ -18,7 +18,7 @@ import AWarningFilled from 'src/assets/svg/a-warning-filled.svg'
 import CustomizeIcon from 'src/components/CustomizeIcon'
 // 组件
 const Taxes = () => {
-  const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
+  const { currentCompany } = useSelector((state) => state.commonReducer)
 
   const [selectInfo, setSelectInfo] = useState()
   const [info, setInfo] = useState({})

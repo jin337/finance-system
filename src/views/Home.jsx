@@ -343,13 +343,29 @@ const flatArr = (arr) => {
 
 // 查找索引
 const findMenuItemByPath = (arr, path) => {
-  if (!arr || !Array.isArray(arr) || !path) return 0
+  if (!arr || !Array.isArray(arr) || !path) return -1
   const item = flatArr(arr).find((e) => e.pathName === path)
-  if (!item || !item.key) return 0
+  if (!item || !item.key) return -1
+
+  // 查找该菜单项在其父级菜单中的索引
   const keyParts = item.key.split('-')
-  const key = keyParts.length > 0 ? keyParts[0] : item.key
-  const num = arr.findIndex((e) => e.key === key)
-  return num !== -1 ? num : 0
+  const mainKey = keyParts[0]
+  const num = arr.findIndex((e) => {
+    if (e.key === mainKey) return true
+    // 如果当前项有子菜单，也要检查是否是该项的父级
+    if (
+      e.children &&
+      e.children.some(
+        (child) =>
+          child.key === item.key || (child.children && flatArr([child]).some((grandchild) => grandchild.key === item.key))
+      )
+    ) {
+      return true
+    }
+    return false
+  })
+
+  return num
 }
 
 const Home = () => {
@@ -358,7 +374,7 @@ const Home = () => {
   const navigation = useNavigate()
   const location = useLocation()
 
-  const { company, currentCompany, account, pageHeight } = useSelector((state) => state.commonReducer)
+  const { company, currentCompany, account, pageHeight, isAdmin } = useSelector((state) => state.commonReducer)
   const { menuSelect, menuList } = useSelector((state) => state.homeReducer)
   const [visible, setVisible] = useState(false)
 
@@ -440,26 +456,27 @@ const Home = () => {
   // 默认跳转页面
   const onBackPage = () => {
     const pathname = location.pathname || ''
-    if (!pathname.startsWith('/')) return // 防止路径遍历攻击
+    // 验证路径格式，防止路径遍历攻击
+    if (!pathname.startsWith('/')) return
 
-    let num = findMenuItemByPath(sysList, pathname)
-    const targetList = num ? sysList : HomeList
-    num = findMenuItemByPath(targetList, pathname)
+    // 检查是否为系统管理路径
+    const isSys = findMenuItemByPath(sysList, pathname) !== -1
+    const targetList = isSys ? sysList : HomeList
+    const index = findMenuItemByPath(targetList, pathname)
 
-    let selectedItem = num >= 0 ? targetList[num] : targetList[0]
+    // 获取选中的菜单项，如果未找到则默认选择第一个
+    const selectedItem = targetList[index] || targetList[0]
     if (!selectedItem) return
-
+    // 更新菜单列表状态
     dispatch(setMenuList(targetList))
-
+    // 查找子菜单项
     const childrenItem = flatArr(targetList).find((e) => e.pathName === pathname)
     const childrenSelect = !selectedItem?.pathName ? childrenItem : null
-
-    selectedItem = {
+    // 执行菜单选择操作
+    onMenuSelect({
       ...selectedItem,
       childrenSelect,
-    }
-
-    onMenuSelect(selectedItem)
+    })
   }
 
   useEffect(() => {
@@ -622,7 +639,7 @@ const Home = () => {
             <Dropdown
               droplist={
                 <Menu onClickMenuItem={onSysItem}>
-                  <Menu.Item key='1'>系统管理</Menu.Item>
+                  {isAdmin && <Menu.Item key='1'>系统管理</Menu.Item>}
                   <Menu.Item key='2'>修改密码</Menu.Item>
                   <Menu.Item key='3'>退出登录</Menu.Item>
                 </Menu>

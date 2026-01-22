@@ -5,6 +5,7 @@ import {
   Button,
   Checkbox,
   DatePicker,
+  Drawer,
   Dropdown,
   Form,
   Input,
@@ -39,7 +40,7 @@ import CashInfo from 'src/components/CashInfo'
 import FileInfo from 'src/components/FileInfo'
 
 // 公共方法
-import { localSetItem } from 'src/utils/common'
+import { formatNumber, localGetItem, localSetItem, uuid } from 'src/utils/common'
 
 // 图片
 import collection from 'src/assets/images/collection.png'
@@ -74,57 +75,57 @@ const stateList = [
 // 新建按钮
 const buttonList = [
   {
-    id: '3',
+    type: 3,
     name: '银行收款',
     icon: pay,
   },
   {
-    id: '2',
+    type: 2,
     name: '付款',
     icon: iscash,
   },
   {
-    id: '6',
+    type: 6,
     name: '开票收入',
     icon: collection,
   },
   {
-    id: '9',
+    type: 9,
     name: '应收票据',
     icon: pay3,
   },
   {
-    id: '8',
+    type: 8,
     name: '应付票据',
     icon: pay4,
   },
   {
-    id: '4',
+    type: 4,
     name: '入库',
     icon: pay1,
   },
   {
-    id: '1',
+    type: 1,
     name: '计提',
     icon: handle,
   },
   {
-    id: '5',
+    type: 5,
     name: '出库',
     icon: pay2,
   },
   {
-    id: '7',
+    type: 7,
     name: '收据收入',
     icon: pay_collect,
   },
   {
-    id: '10',
+    type: 10,
     name: '财务调账',
     icon: rename,
   },
   {
-    id: 'add',
+    type: 'add',
     name: '手动录入',
     icon: rename,
   },
@@ -138,7 +139,7 @@ const transNum = (num, index) => {
   return targetChar === 'X' || targetChar === '-' ? '' : targetChar || ''
 }
 const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
-  const { pageHeight } = useSelector((state) => state.commonReducer)
+  const { pageHeight, isAdmin } = useSelector((state) => state.commonReducer)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const [pageForm] = Form.useForm()
@@ -151,9 +152,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const [tableData, setTableData] = useState([])
   const [selectRow, setSelectRow] = useState()
   const [selectList, setSelectList] = useState([])
+  const [isEditRow, setIsEditRow] = useState(true) //是否编辑辅助账
 
   const [visibleCash, setVisibleCash] = useState(false)
   const [visibleImg, setVisibleImg] = useState(false)
+
+  const [sessionnoId, setSessionId] = useState()
+  const [billType, setBillType] = useState({})
+  const [billList, setBillList] = useState([])
+  const [visibleBill, setVisibleBill] = useState(false)
+  const [billForm] = Form.useForm()
 
   const columns = [
     {
@@ -170,10 +178,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     },
     {
       title: '科目',
-      dataIndex: 'cashcode',
-      render: (text, record) => {
-        return record?.acccode + record?.accfullname
-      },
+      dataIndex: 'acccode',
+      render: (text, record) => (record?.acccode ? record?.acccode + record?.accfullname : ''),
     },
     {
       title: '借方',
@@ -369,9 +375,221 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     },
   ]
 
-  // 编辑
-  const onEditType = () => {
-    const item = stateList[2]
+  //行-新增
+  const onAddRow = () => {
+    const summary = tableData[tableData?.length - 1]?.summary || ''
+    const newRow = { id: 'index_id_' + uuid(), summary }
+    const newTableData = [...tableData, newRow]
+    setTableData(newTableData)
+  }
+
+  //行-插入
+  const onInsertRow = (record) => {
+    if (tableData.length === 0 || !record) {
+      onAddRow()
+    } else {
+      let index = tableData?.findIndex((e) => e.id === record?.id)
+      if (index !== -1) {
+        const summary = tableData[index]?.summary || ''
+        const newRow = { id: 'index_id_' + uuid(), summary }
+
+        const newTableData = [...tableData.slice(0, index), newRow, ...tableData.slice(index)]
+        setTableData(newTableData)
+      } else {
+        onAddRow()
+      }
+    }
+  }
+  // 行-删除
+  const onDeleteRow = (record) => {
+    if (record?.id) {
+      const list = tableData.filter((e) => e.id !== record?.id)
+      setTableData(list)
+    } else {
+      Message.error('请选择要删除的行！')
+    }
+  }
+  // 黏贴
+  const onPaste = () => {
+    const copyInfo = localGetItem('VOUCHER-COPYPASTE') || []
+    setTableData((prev) => [...prev, ...copyInfo])
+  }
+  // 提交
+  const onEntry = async (params) => {
+    const { code, data, message } = await Http.post('/bill/entry', params)
+    if (code === 200) {
+      const { bill, entrys } = data
+      setPageBill(bill)
+      const entrysTable = entrys.map((e, i) => ({ ...e, id: 'index_id_' + i }))
+      setTableData(entrysTable)
+
+      onEditType(2)
+      setVisibleBill(false)
+    } else {
+      Message.error(message)
+    }
+  }
+  // 提交数据处理
+  const onSelectEntry = (record) => {
+    Modal.confirm({
+      title: '提示',
+      content: '确定选择此条数据？',
+      className: 'simpleModal',
+      onOk: () => {
+        const params = {
+          year: voucherParams.year,
+          month: voucherParams.month,
+          groupid: voucherParams.groupid,
+          sericnum: record.sericnum,
+          billid: record.billid,
+          modeid: record.modeid,
+          modecode: record.modecode,
+          modetable: record.modetable,
+          entrytype: billType?.type,
+          brachtype: record?.brachtype || null,
+          brachflag: [0, 1].includes(record.brachflag) ? record.brachflag : '',
+        }
+        if (billType?.type === 1 && record.brachtype === 1) {
+          Modal.confirm({
+            title: '提示',
+            content: (
+              <Radio.Group onChange={(e) => (params.brachtype = e)}>
+                <Radio value={1}>发放</Radio>
+                <Radio value={2}>计提</Radio>
+              </Radio.Group>
+            ),
+            className: 'simpleModal',
+            onOk: () => {
+              onEntry(params)
+            },
+            onCancel: () => {
+              params.brachtype = record.brachtype
+            },
+          })
+        } else {
+          onEntry(params)
+        }
+      },
+    })
+  }
+  // 获取账单列表
+  const getBillList = async (item) => {
+    const params = {
+      groupid: voucherParams?.groupid,
+      entrytype: item?.type || billType?.type,
+      summary: item?.summary || '',
+      entrymoney: item?.entrymoney || null,
+      modecode: item?.modecode || null,
+      pid: item?.pid || null,
+    }
+    const { code, data } = await Http.post('/bill/list', params)
+    if (code === 200) {
+      const list = data?.list || []
+      setBillList(list)
+    }
+  }
+  // 获取账单类型
+  const getBillType = async (item) => {
+    setBillType({})
+    billForm.resetFields()
+
+    if (item.type === 'add') {
+      onEditType(2)
+      setPageBill({
+        sericnum: '无引单',
+        modename: '手动录入',
+      })
+    } else {
+      const params = {
+        entrytype: item.type,
+      }
+      const { code, data } = await Http.post('/bill/type', params)
+      if (code === 200) {
+        const list = (data?.list || []).map((e) => ({ ...e, label: e.name, value: e.code }))
+        setBillType({
+          list,
+          ...item,
+        })
+
+        getBillList(item)
+
+        setVisibleBill(true)
+      }
+    }
+  }
+
+  // 类别切换
+  const onCahengBill = (v, vs) => {
+    const key = Object.keys(v)[0]
+    if (key === 'modecode') {
+      getBillList(vs)
+    }
+  }
+  // 获取附件数量
+  const getFileCount = async () => {
+    const params = {
+      groupid: voucherParams?.groupid,
+      pid: voucherParams?.id,
+      sessionno: sessionnoId,
+    }
+    const { code, data } = await Http.post('/file/counts', params)
+    if (code === 200) {
+      setPageProof((prev) => ({
+        ...prev,
+        attachs: data?.counts || 0,
+      }))
+    }
+  }
+  // 获取凭证号
+  const getProofNumber = async () => {
+    const params = {
+      groupid: voucherParams?.groupid,
+      year: voucherParams?.year,
+      month: voucherParams?.month,
+      catid: voucherParams?.catid,
+    }
+    const { code, data } = await Http.post('/proof/number', params)
+    if (code === 200) {
+      const vno = `记-${params.year}-${params.month}-${data?.reqno}`
+      setPageProof((prev) => ({
+        ...prev,
+        vno,
+      }))
+    }
+  }
+  // 新建凭证
+  const getCreate = async () => {
+    const { type, user_name, ...params } = voucherParams
+    const stateInfo = stateList.find((item) => String(item.id) === String(type))
+    setPageType(stateInfo)
+
+    const item = {
+      vtype: '记',
+      range: `${params?.year}年${params?.month}期`,
+      attachs: 0,
+      markername: user_name,
+    }
+    setPageProof(item)
+    pageForm.setFieldsValue(item)
+
+    const UUID = uuid()
+    setSessionId(UUID)
+
+    getProofNumber()
+    getFileCount()
+  }
+
+  // 删除已存在的账单
+  const clearBill = () => {
+    setPageBill()
+    onEditType(0)
+    setTableData([])
+    setSelectRow()
+  }
+  // 页面状态改变
+  const onEditType = (type) => {
+    // 0新建 1查看 2编辑
+    const item = stateList[type]
     setPageType((prev) => ({
       ...prev,
       ...item,
@@ -387,7 +605,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         title: null,
         icon: null,
         content: (
-          <Form className='pt-4'>
+          <Form autoComplete='off' className='pt-4'>
             <Form.Item label='权限配置'>
               <Select
                 placeholder='请选择'
@@ -432,21 +650,49 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       Message.success(`${typeName}复制成功，数据有效期为30天`)
     }
   }
+
+  const onRowSelect = (e, record) => {
+    const targetElement = e.target
+    const isCheckboxClick =
+      targetElement.classList.contains('arco-checkbox') ||
+      targetElement.classList.contains('arco-checkbox-input') ||
+      targetElement.closest('.arco-checkbox')
+    // 排除干扰点击
+
+    if (!isCheckboxClick) {
+      selectForm.resetFields()
+      setSelectRow(() => {
+        const item = record?.assistitems
+        if (item) {
+          item.direct = record.borrow !== 0 && record.loan === 0 ? 1 : 2
+          item.items = Array.isArray(item.items)
+            ? item.items.map((e) => ({
+                ...e,
+                value: `${e.itemcode || ''}-${e.itemname || ''}`,
+              }))
+            : []
+
+          // 异步更新表单值
+          Promise.resolve().then(() => {
+            selectForm.setFieldsValue({
+              ...item,
+              acccode: record.acccode,
+              project_off_set: record.project_off_set,
+            })
+          })
+        }
+
+        return record
+      })
+    }
+  }
   // 页面数据
   const getPageInfo = async (id) => {
     const { code, data } = await Http.post(`/proof/info/${id}`)
     if (code === 200) {
       let { proof, bill, ...rest } = data || {}
-      const { entrys, ...restProof } = proof
-
-      const key = buttonlist.find((item) => String(item.id) == String(restProof.status)) || {}
 
       setPageBill(bill)
-      setPageProof(() => ({
-        ...restProof,
-        status_name: key?.name,
-        status_color: key?.color,
-      }))
 
       const stateInfo = stateList.find((item) => String(item.id) === String(voucherParams.type))
       setPageType(() => ({
@@ -454,7 +700,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         ...stateInfo,
       }))
 
-      pageForm.setFieldsValue({ ...proof, range: `${restProof?.year}年${restProof?.month}期` })
+      const { entrys, ...restProof } = proof
+      const key = buttonlist.find((item) => String(item.id) == String(restProof.status)) || {}
+      const itemProof = {
+        ...restProof,
+        status_name: key?.name,
+        status_color: key?.color,
+        range: `${restProof?.year}年${restProof?.month}期`,
+      }
+      setPageProof(itemProof)
+      pageForm.setFieldsValue(itemProof)
 
       setTableData(entrys || [])
     }
@@ -470,13 +725,12 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     pageForm.resetFields()
     selectForm.resetFields()
 
-    if (voucherParams?.id) {
-      const { id } = voucherParams
-      if (id !== 'create') {
-        getPageInfo(id)
+    if (voucherParams?.type) {
+      const { id, type } = voucherParams
+      if (type === 1) {
+        getCreate()
       } else {
-        const stateInfo = stateList.find((item) => String(item.id) === String(1))
-        setPageType(stateInfo)
+        getPageInfo(id)
       }
     }
   }, [voucherParams])
@@ -511,7 +765,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             {pageType?.id === 2 && (
               <>
                 {[-1, 0, 2, 3].includes(pageProof?.status) && (
-                  <Button type='primary' status='success' size='small' onClick={() => onEditType()}>
+                  <Button type='primary' status='success' size='small' onClick={() => onEditType(2)}>
                     编辑
                   </Button>
                 )}
@@ -533,7 +787,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         <Layout.Content className='relative'>
           {!isCollapsed && (
             <div className='relative flex justify-between p-3 pb-1'>
-              <Form layout='inline' size='small' form={pageForm} disabled={pageType?.id === 2}>
+              <Form layout='inline' size='small' autoComplete='off' form={pageForm} disabled={pageType?.id === 2}>
                 <Form.Item label='记账日期' field={'bdate'} rules={[{ required: true }]}>
                   <DatePicker />
                 </Form.Item>
@@ -549,7 +803,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                   </Input.Group>
                 </Form.Item>
                 <Form.Item label='业务类型' field={'vtype'} rules={[{ required: true }]}>
-                  <Select options={['记', '收', '付', '借']} className='w-32!' />
+                  <Select options={['记']} className='w-32!' />
                 </Form.Item>
                 <Form.Item label='会计期间' field={'range'} rules={[{ required: true }]} disabled>
                   <Input />
@@ -584,15 +838,20 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             <div className='flex-1'>
               <div className='flex items-center justify-between border-b border-neutral-200 px-4 py-2.5'>
                 <div className='text-base'>分录</div>
+                {/* 新建 */}
                 {pageType?.id === 1 && (
                   <Space size='large'>
                     {buttonList.map((e) => (
-                      <div key={e.id} className='flex cursor-pointer items-center gap-1 text-blue-600'>
+                      <div
+                        key={e.type}
+                        className='flex cursor-pointer items-center gap-1 text-blue-600'
+                        onClick={() => getBillType(e)}>
                         <img src={e.icon} alt='' /> {e.name}
                       </div>
                     ))}
                   </Space>
                 )}
+                {/* 查看 */}
                 {pageType?.id === 2 && (
                   <Space>
                     <Button.Group>
@@ -621,13 +880,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       </Tooltip>
                     </Dropdown>
 
-                    <Tooltip content='锁定配置'>
-                      <Button type='text' size='small' onClick={() => onLock()}>
-                        <IconLock />
-                      </Button>
-                    </Tooltip>
+                    {isAdmin && (
+                      <Tooltip content='锁定配置'>
+                        <Button type='text' size='small' onClick={() => onLock()}>
+                          <IconLock />
+                        </Button>
+                      </Tooltip>
+                    )}
                   </Space>
                 )}
+                {/* 编辑 */}
                 {pageType?.id === 3 && (
                   <Space>
                     <Button.Group>
@@ -637,28 +899,28 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       <Button type='outline' size='small'>
                         {pageBill?.sericnum}
                       </Button>
-                      <Button type='primary' size='small'>
+                      <Button type='primary' size='small' onClick={() => clearBill()}>
                         <IconClose />
                       </Button>
                     </Button.Group>
 
                     <Tooltip content='黏贴'>
-                      <Button type='text' size='small'>
+                      <Button type='text' size='small' onClick={() => onPaste()}>
                         <IconPaste />
                       </Button>
                     </Tooltip>
                     <Tooltip content='新增'>
-                      <Button type='text' size='small'>
+                      <Button type='text' size='small' onClick={() => onAddRow()}>
                         <IconPlus />
                       </Button>
                     </Tooltip>
                     <Tooltip content='插入'>
-                      <Button type='text' size='small'>
+                      <Button type='text' size='small' onClick={() => onInsertRow(selectRow)}>
                         <IconImport />
                       </Button>
                     </Tooltip>
                     <Tooltip content='删除'>
-                      <Button type='text' size='small'>
+                      <Button type='text' size='small' onClick={() => onDeleteRow(selectRow)}>
                         <IconClose />
                       </Button>
                     </Tooltip>
@@ -684,39 +946,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                 }}
                 onRow={(record) => {
                   return {
-                    onClick: (e) => {
-                      const targetElement = e.target
-                      const isCheckboxClick =
-                        targetElement.classList.contains('arco-checkbox') ||
-                        targetElement.classList.contains('arco-checkbox-input') ||
-                        targetElement.closest('.arco-checkbox')
-                      // 排除干扰点击
-
-                      if (!isCheckboxClick) {
-                        selectForm.resetFields()
-                        setSelectRow(() => {
-                          const item = record.assistitems
-                          item.direct = record.borrow !== 0 && record.loan === 0 ? 1 : 2
-                          item.items = Array.isArray(item.items)
-                            ? item.items.map((e) => ({
-                                ...e,
-                                value: `${e.itemcode || ''}-${e.itemname || ''}`,
-                              }))
-                            : []
-
-                          // 异步更新表单值
-                          Promise.resolve().then(() => {
-                            selectForm.setFieldsValue({
-                              ...item,
-                              acccode: record.acccode,
-                              project_off_set: record.project_off_set,
-                            })
-                          })
-
-                          return record
-                        })
-                      }
-                    },
+                    onClick: (e) => onRowSelect(e, record),
                   }
                 }}
               />
@@ -737,7 +967,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                 </Space>
               </div>
             </div>
-            {selectRow?.id && selectRow?.assistitems?.eid !== 0 && (
+            {selectRow?.id && selectRow?.assistitems?.money && (
               <div className='w-1/4 border-l border-neutral-200'>
                 <div className='border-b border-neutral-200 px-4 py-3 text-base'>辅助账</div>
                 <Form
@@ -747,7 +977,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                   className='p-4 pl-0'
                   labelCol={{ style: { flexBasis: 110 } }}
                   wrapperCol={{ style: { flexBasis: `calc(100% - ${110}px)` } }}
-                  disabled={pageType?.id === 2}>
+                  disabled={isEditRow}>
                   <Form.Item label='业务日期' field={'bdate'} rules={[{ required: true }]}>
                     <DatePicker className='w-full!' />
                   </Form.Item>
@@ -765,9 +995,13 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       min={0}
                       prefix='¥'
                       allowClear
-                      formatter={(value) => {
-                        return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                      }}
+                      formatter={(value) =>
+                        value &&
+                        parseFloat(value)
+                          .toFixed(2)
+                          .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                      }
+                      parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
                     />
                   </Form.Item>
                   <Form.Item shouldUpdate noStyle>
@@ -817,7 +1051,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             )}
           </div>
 
-          <Form className='p-3' size='small' layout='inline' form={pageForm} disabled>
+          <Form className='p-3' size='small' layout='inline' autoComplete='off' form={pageForm} disabled={pageType?.id === 2}>
             <Form.Item label='会计主管' field={'chargename'}>
               <Input placeholder='请输入' className='w-20!' />
             </Form.Item>
@@ -831,7 +1065,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               <Input placeholder='请输入' className='w-20!' />
             </Form.Item>
             <Form.Item label='制单人' field={'markername'} rules={[{ required: true }]}>
-              <Input placeholder='请输入' className='w-20!' />
+              <Input placeholder='请输入' className='w-20!' disabled />
             </Form.Item>
           </Form>
         </Layout.Content>
@@ -855,6 +1089,80 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           setVisibleImg(false)
         }}
       />
+
+      {/* 账单 */}
+      <Drawer
+        visible={visibleBill}
+        width={'80%'}
+        title={billType?.name + '单查询'}
+        footer={null}
+        onCancel={() => setVisibleBill(false)}>
+        <Form layout='inline' size='small' autoComplete='off' form={billForm} onChange={onCahengBill}>
+          <Form.Item label='关键字' field={'summary'}>
+            <Input placeholder='请输入关键字' />
+          </Form.Item>
+          <Form.Item label='金额' field={'entrymoney'}>
+            <InputNumber
+              placeholder='请输入金额'
+              min={0}
+              prefix='¥'
+              formatter={(value) =>
+                value &&
+                parseFloat(value)
+                  .toFixed(2)
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+              }
+              parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
+            />
+          </Form.Item>
+          <Form.Item label='类别' field={'modecode'}>
+            <Select
+              allowClear
+              placeholder='请选择类别'
+              options={billType?.list || []}
+              style={{ width: '180px' }}
+              triggerProps={{
+                autoAlignPopupWidth: false,
+                autoAlignPopupMinWidth: true,
+                position: 'bl',
+              }}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button type='primary' onClick={() => getBillList(billForm.getFields())}>
+              查询
+            </Button>
+          </Form.Item>
+        </Form>
+        <Table
+          className='mt-1'
+          size='small'
+          rowKey={'id'}
+          border
+          borderCell
+          pagination={false}
+          scroll={{ y: pageHeight - 44 }}
+          columns={[
+            { title: '类别', dataIndex: 'modename', width: 200 },
+            { title: '业务日期', dataIndex: 'bdate', width: 120 },
+            { title: '单据号', dataIndex: 'sericnum', width: 190 },
+            { title: '摘要', dataIndex: 'summary' },
+            {
+              title: '金额',
+              dataIndex: 'money',
+              width: 140,
+              render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
+            },
+            { title: '发起人', dataIndex: 'optname', width: 80 },
+          ]}
+          data={billList}
+          onRow={(record) => {
+            return {
+              onDoubleClick: () => onSelectEntry(record),
+            }
+          }}
+        />
+      </Drawer>
     </>
   )
 }

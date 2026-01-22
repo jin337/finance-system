@@ -626,9 +626,13 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                   min={0}
                   prefix='¥'
                   allowClear
-                  formatter={(value) => {
-                    return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                  }}
+                  formatter={(value) =>
+                    value &&
+                    parseFloat(value)
+                      .toFixed(2)
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                  }
+                  parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
                 />
               </Form.Item>
               <Form.Item label='类别' field='modecode' className='w-1/3! flex-1'>

@@ -20,7 +20,7 @@ import Ruku from 'src/assets/svg/ruku.svg'
 import CustomizeIcon from 'src/components/CustomizeIcon'
 // 组件
 const Stock = () => {
-  const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
+  const { currentCompany } = useSelector((state) => state.commonReducer)
 
   const [selectInfo, setSelectInfo] = useState()
   const [info, setInfo] = useState({})

@@ -280,9 +280,13 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
         <InputNumber
           value={record?.money}
           prefix='¥'
-          formatter={(value) => {
-            return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-          }}
+          formatter={(value) =>
+            value &&
+            parseFloat(value)
+              .toFixed(2)
+              .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+          }
+          parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
         />
       ),
     },

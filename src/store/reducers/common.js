@@ -8,6 +8,7 @@ export const common = createSlice({
     account: null,
     parmission: null,
     pageHeight: 0,
+    isAdmin: 0,
   },
   reducers: {
     setCompany: (state, action) => {
@@ -18,6 +19,7 @@ export const common = createSlice({
     },
     setAccount: (state, action) => {
       state.account = action.payload
+      state.isAdmin = action.payload.user_type
     },
     setParmission: (state, action) => {
       state.parmission = action.payload

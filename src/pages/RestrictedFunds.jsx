@@ -335,9 +335,13 @@ const RestrictedFunds = () => {
               min={0}
               prefix='¥'
               allowClear
-              formatter={(value) => {
-                return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-              }}
+              formatter={(value) =>
+                value &&
+                parseFloat(value)
+                  .toFixed(2)
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+              }
+              parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
             />
           </Form.Item>
           <Form.Item label='备注' field='remark'>
