@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { createContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
 const EditableContext = createContext({})
@@ -10,6 +10,7 @@ import {
   DatePicker,
   Drawer,
   Dropdown,
+  Empty,
   Form,
   Input,
   InputNumber,
@@ -23,15 +24,19 @@ import {
   Table,
   Tag,
   Tooltip,
+  Tree,
   Typography,
 } from '@arco-design/web-react'
 import {
+  IconCheck,
   IconClose,
   IconCopy,
   IconDoubleDown,
   IconDoubleUp,
+  IconDragDotVertical,
   IconImport,
   IconLock,
+  IconMore,
   IconPaste,
   IconPlus,
   IconSync,
@@ -143,24 +148,22 @@ const transNum = (num, index) => {
   return targetChar === 'X' || targetChar === '-' ? '' : targetChar || ''
 }
 
-const EditableRow = (props) => {
-  const { children, className, ...rest } = props
-  const refForm = useRef(null)
-  const getForm = () => refForm.current
+// 获取有子项的key
+const getChildrenId = (list, key) => {
+  return list.reduce((acc, item) => {
+    if (item.children && item.children.length > 1) {
+      acc.push(item[key])
+    }
 
-  return (
-    <EditableContext.Provider value={{ getForm }}>
-      <Form children={children} ref={refForm} wrapper='tr' wrapperProps={rest} className={`${className} table-row!`} />
-    </EditableContext.Provider>
-  )
-}
-const EditableCell = (props) => {
-  const { children, className, ...rest } = props
+    if (item.children && Array.isArray(item.children)) {
+      acc = acc.concat(getChildrenId(item.children, key))
+    }
 
-  return <div className={className}>{children}</div>
+    return acc
+  }, [])
 }
 const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
-  const { pageHeight, isAdmin } = useSelector((state) => state.commonReducer)
+  const { pageHeight, isAdmin, currentCompany } = useSelector((state) => state.commonReducer)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const [pageForm] = Form.useForm()
@@ -173,7 +176,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const [tableData, setTableData] = useState([])
   const [selectRow, setSelectRow] = useState()
   const [selectList, setSelectList] = useState([])
-  const [isEditRow, setIsEditRow] = useState()
+  const [isEditRows, setIsEditRows] = useState([])
 
   const [visibleCash, setVisibleCash] = useState(false)
   const [visibleImg, setVisibleImg] = useState(false)
@@ -184,10 +187,19 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const [visibleBill, setVisibleBill] = useState(false)
   const [billForm] = Form.useForm()
 
+  const [visibleAccount, setVisibleAccount] = useState(false)
+  const [accountLoading, setAccountLoading] = useState(false)
+  const [accountClassList, setAccountClassList] = useState([])
+  const [accountList, setAccountList] = useState([])
+  const [accountForm] = Form.useForm()
+  const [expandedRowKeys, setExpandedRowKeys] = useState([])
+  const [selectedKeys, setSelectedKeys] = useState()
+  const [selectRowAccount, setSelectRowAccount] = useState()
+
   const columns = [
     {
       title: '序号',
-      dataIndex: 'id',
+      dataIndex: 'order',
       width: 75,
       align: 'center',
       render: (text, record, index) => index + 1,
@@ -195,7 +207,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     {
       title: '摘要',
       dataIndex: 'summary',
-      editable: true,
     },
     {
       title: '科目',
@@ -206,195 +217,371 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       title: '借方',
       dataIndex: 'borrow',
       align: 'center',
-      children: [
-        {
-          title: '亿',
-          dataIndex: 'borrow_10',
-          align: 'center',
-          className: 'row-money border-l! border-neutral-200!',
-          width: 30,
-          render: (_, record) => (
-            <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 10)}</span>
-          ),
-        },
-        {
-          title: '千',
-          dataIndex: 'borrow_9',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 9)}</span>,
-        },
-        {
-          title: '百',
-          dataIndex: 'borrow_8',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 8)}</span>,
-        },
-        {
-          title: '十',
-          dataIndex: 'borrow_7',
-          align: 'center',
-          className: 'row-money row-blue',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 7)}</span>,
-        },
-        {
-          title: '万',
-          dataIndex: 'borrow_6',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 6)}</span>,
-        },
-        {
-          title: '千',
-          dataIndex: 'borrow_5',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 5)}</span>,
-        },
-        {
-          title: '百',
-          dataIndex: 'borrow_4',
-          align: 'center',
-          className: 'row-money row-blue',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 4)}</span>,
-        },
-        {
-          title: '十',
-          dataIndex: 'borrow_3',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 3)}</span>,
-        },
-        {
-          title: '元',
-          dataIndex: 'borrow_2',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 2)}</span>,
-        },
-        {
-          title: '角',
-          dataIndex: 'borrow_1',
-          align: 'center',
-          className: 'row-money row-red',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 1)}</span>,
-        },
-        {
-          title: '分',
-          dataIndex: 'borrow_0',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 0)}</span>,
-        },
-      ],
+      // children: [
+      //   {
+      //     title: '亿',
+      //     dataIndex: 'borrow_10',
+      //     align: 'center',
+      //     className: 'row-money border-l! border-neutral-200!',
+      //     width: 30,
+      //     render: (_, record) => (
+      //       <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 10)}</span>
+      //     ),
+      //   },
+      //   {
+      //     title: '千',
+      //     dataIndex: 'borrow_9',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 9)}</span>,
+      //   },
+      //   {
+      //     title: '百',
+      //     dataIndex: 'borrow_8',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 8)}</span>,
+      //   },
+      //   {
+      //     title: '十',
+      //     dataIndex: 'borrow_7',
+      //     align: 'center',
+      //     className: 'row-money row-blue',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 7)}</span>,
+      //   },
+      //   {
+      //     title: '万',
+      //     dataIndex: 'borrow_6',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 6)}</span>,
+      //   },
+      //   {
+      //     title: '千',
+      //     dataIndex: 'borrow_5',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 5)}</span>,
+      //   },
+      //   {
+      //     title: '百',
+      //     dataIndex: 'borrow_4',
+      //     align: 'center',
+      //     className: 'row-money row-blue',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 4)}</span>,
+      //   },
+      //   {
+      //     title: '十',
+      //     dataIndex: 'borrow_3',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 3)}</span>,
+      //   },
+      //   {
+      //     title: '元',
+      //     dataIndex: 'borrow_2',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 2)}</span>,
+      //   },
+      //   {
+      //     title: '角',
+      //     dataIndex: 'borrow_1',
+      //     align: 'center',
+      //     className: 'row-money row-red',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 1)}</span>,
+      //   },
+      //   {
+      //     title: '分',
+      //     dataIndex: 'borrow_0',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 0)}</span>,
+      //   },
+      // ],
     },
     {
       title: '贷方',
       dataIndex: 'loan',
       align: 'center',
-      children: [
-        {
-          title: '亿',
-          dataIndex: 'loan_10',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 10)}</span>,
-        },
-        {
-          title: '千',
-          dataIndex: 'loan_9',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 9)}</span>,
-        },
-        {
-          title: '百',
-          dataIndex: 'loan_8',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 8)}</span>,
-        },
-        {
-          title: '十',
-          dataIndex: 'loan_7',
-          align: 'center',
-          className: 'row-money row-blue',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 7)}</span>,
-        },
-        {
-          title: '万',
-          dataIndex: 'loan_6',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 6)}</span>,
-        },
-        {
-          title: '千',
-          dataIndex: 'loan_5',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 5)}</span>,
-        },
-        {
-          title: '百',
-          dataIndex: 'loan_4',
-          align: 'center',
-          className: 'row-money row-blue',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 4)}</span>,
-        },
-        {
-          title: '十',
-          dataIndex: 'loan_3',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 3)}</span>,
-        },
-        {
-          title: '元',
-          dataIndex: 'loan_2',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 2)}</span>,
-        },
-        {
-          title: '角',
-          dataIndex: 'loan_1',
-          align: 'center',
-          className: 'row-money row-red',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 1)}</span>,
-        },
-        {
-          title: '分',
-          dataIndex: 'loan_0',
-          align: 'center',
-          className: 'row-money',
-          width: 30,
-          render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 0)}</span>,
-        },
-      ],
+      // children: [
+      //   {
+      //     title: '亿',
+      //     dataIndex: 'loan_10',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 10)}</span>,
+      //   },
+      //   {
+      //     title: '千',
+      //     dataIndex: 'loan_9',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 9)}</span>,
+      //   },
+      //   {
+      //     title: '百',
+      //     dataIndex: 'loan_8',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 8)}</span>,
+      //   },
+      //   {
+      //     title: '十',
+      //     dataIndex: 'loan_7',
+      //     align: 'center',
+      //     className: 'row-money row-blue',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 7)}</span>,
+      //   },
+      //   {
+      //     title: '万',
+      //     dataIndex: 'loan_6',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 6)}</span>,
+      //   },
+      //   {
+      //     title: '千',
+      //     dataIndex: 'loan_5',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 5)}</span>,
+      //   },
+      //   {
+      //     title: '百',
+      //     dataIndex: 'loan_4',
+      //     align: 'center',
+      //     className: 'row-money row-blue',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 4)}</span>,
+      //   },
+      //   {
+      //     title: '十',
+      //     dataIndex: 'loan_3',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 3)}</span>,
+      //   },
+      //   {
+      //     title: '元',
+      //     dataIndex: 'loan_2',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 2)}</span>,
+      //   },
+      //   {
+      //     title: '角',
+      //     dataIndex: 'loan_1',
+      //     align: 'center',
+      //     className: 'row-money row-red',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 1)}</span>,
+      //   },
+      //   {
+      //     title: '分',
+      //     dataIndex: 'loan_0',
+      //     align: 'center',
+      //     className: 'row-money',
+      //     width: 30,
+      //     render: (_, record) => <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 0)}</span>,
+      //   },
+      // ],
     },
   ]
+
+  // 会计科目选择
+  const onSelectRowAccount = async (record) => {
+    const { code, data } = await Http.post(`/account/${record.id}`)
+    if (code === 200) {
+      const { code, fullname, name, ...rest } = data
+      const item = {
+        ...selectRow,
+        ...rest,
+        acccode: code,
+        accfullname: fullname,
+        accname: name,
+      }
+      setSelectRow(item)
+      setTableData((prev) => prev.map((e) => (e.id === selectRow.id ? item : e)))
+
+      setVisibleAccount(false)
+    }
+  }
+  // 会计科目勾选项监控
+  const onChangeAccount = (v, vs) => {
+    const key = Object?.keys(v)[0]
+    if (key === 'open') {
+      const keys = getChildrenId(accountList, 'id')
+      setExpandedRowKeys(vs?.open ? keys : [])
+    } else {
+      getAccountList(selectedKeys)
+    }
+  }
+
+  // 展开关闭
+  const onExpand = (e, expanded) => {
+    setExpandedRowKeys((prev) => (expanded ? [...prev, e.id] : prev.filter((id) => id !== e.id)))
+  }
+  // 会计科目
+  const getAccountList = async (classid) => {
+    if (classid !== 0) {
+      accountForm.setFieldValue('open', false)
+      setAccountLoading(true)
+      setSelectedKeys(classid)
+      setExpandedRowKeys([])
+
+      const values = accountForm.getFields()
+      const params = {
+        classid: classid,
+        haslevel: values?.haslevel ? '1' : '0',
+        isuse: values?.isuse ? '1' : null,
+      }
+      const { code, data } = await Http.post('/account/list', params)
+      if (code === 200) {
+        const list = data?.list || []
+        setAccountList(list)
+      }
+      setAccountLoading(false)
+    }
+  }
+  // 会计类别
+  const openAccount = async (record) => {
+    const { code, data } = await Http.post(`/account/class/list`)
+    if (code === 200) {
+      const list = data.list || []
+      const treeData = [
+        {
+          id: 0,
+          name: currentCompany.shortname,
+          children: list,
+        },
+      ]
+      setAccountClassList(treeData)
+
+      accountForm.setFieldValue('haslevel', true)
+      const key = record?.classid ? record?.classid : list[0].id
+      getAccountList(key)
+
+      setSelectRowAccount()
+      setTimeout(() => {
+        setVisibleAccount(true)
+      }, 200)
+    }
+  }
+  // 表格行
+  const EditableRow = (props) => {
+    const { children, className, ...rest } = props
+    const refForm = useRef(null)
+    const getForm = () => refForm.current
+
+    const [newData, setNewData] = useState({})
+    // 保存行和编辑行的函数
+    const onSaveRow = () => {
+      const item = { ...rest.record, ...newData }
+      setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
+      setIsEditRows((prev) => prev.filter((e) => e !== item.id))
+    }
+    // 修改数据
+    const changeEdit = (key, e) => {
+      setNewData((prev) => ({
+        ...prev,
+        [key]: e,
+      }))
+    }
+
+    return (
+      <EditableContext.Provider value={{ getForm, onSaveRow, changeEdit }}>
+        <Form
+          autoComplete='off'
+          children={children}
+          ref={refForm}
+          wrapper='tr'
+          wrapperProps={rest}
+          className={`${className} table-row!`}
+        />
+      </EditableContext.Provider>
+    )
+  }
+
+  // 单元格
+  const EditableCell = (props) => {
+    const { children, className, rowData, column } = props
+    const { onSaveRow, changeEdit } = useContext(EditableContext)
+
+    if (isEditRows.includes(rowData.id)) {
+      // 序号
+      if (column.dataIndex === 'order') {
+        return (
+          <Space>
+            <IconCheck className='text-xl! text-blue-600!' onClick={() => onSaveRow()} />
+            <IconClose className='text-xl! text-red-600!' onClick={() => onDeleteRow(rowData)} />
+          </Space>
+        )
+      }
+      // 摘要
+      if (column.dataIndex === 'summary') {
+        return (
+          <Form.Item field={column.dataIndex} initialValue={rowData[column.dataIndex]} className='mb-0!'>
+            <Input onChange={(e) => changeEdit(column.dataIndex, e)} />
+          </Form.Item>
+        )
+      }
+      // 科目
+      if (column.dataIndex === 'acccode' && [0, 2].includes(rowData?.authtype)) {
+        return (
+          <Form.Item field={column.dataIndex} className='mb-0!'>
+            <div className='flex items-center gap-2'>
+              <Input.TextArea
+                defaultValue={rowData[column.dataIndex] ? rowData[column.dataIndex] + rowData?.accfullname : ''}
+                className='flex-1'
+                onChange={(e) => changeEdit(column.dataIndex, e)}
+              />
+              <IconMore className='text-xl!' onClick={() => openAccount(rowData)} />
+            </div>
+          </Form.Item>
+        )
+      }
+      // 借方&贷方
+      if (column.dataIndex === 'borrow' || column.dataIndex === 'loan') {
+        return (
+          <Form.Item field={column.dataIndex} initialValue={rowData[column.dataIndex]} className='mb-0!'>
+            <InputNumber
+              min={0}
+              prefix='¥'
+              allowClear
+              formatter={(value) =>
+                value &&
+                parseFloat(value)
+                  .toFixed(2)
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+              }
+              parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
+              onChange={(e) => changeEdit(column.dataIndex, e)}
+            />
+          </Form.Item>
+        )
+      }
+    }
+    return <div className={className}>{children}</div>
+  }
 
   // 保存&暂存
   const submitBill = async (type) => {
@@ -468,22 +655,30 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
 
   // 保存辅助账
   const onSaveRowAssistitems = (record) => {
-    const { _acccode, _project_off_set, ...rest } = record
-    setSelectRow((prev) => ({
-      ...prev,
-      assistitems: rest,
-    }))
-
-    setIsEditRow()
+    if (record.direct === 1) {
+      record.borrow = record.money
+      record.loan = 0
+    }
+    if (record.direct === 2) {
+      record.borrow = 0
+      record.loan = record.money
+    }
+    setSelectRow(record)
+    setTableData((prev) => [...prev].map((e) => (e.id === record.id ? record : e)))
   }
   //行-新增
   const onAddRow = () => {
-    const summary = tableData[tableData?.length - 1]?.summary || ''
-    const newRow = { id: 'index_id_' + uuid(), summary }
+    const id = 'index_id_' + uuid()
+    const newRow = {
+      id,
+      summary: tableData[tableData?.length - 1]?.summary || '',
+      authtype: 0,
+    }
     const newTableData = [...tableData, newRow]
     setTableData(newTableData)
+    setSelectRow(newRow)
+    setIsEditRows((prev) => [...prev, id])
   }
-
   //行-插入
   const onInsertRow = (record) => {
     if (tableData.length === 0 || !record) {
@@ -491,11 +686,17 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     } else {
       let index = tableData?.findIndex((e) => e.id === record?.id)
       if (index !== -1) {
-        const summary = tableData[index]?.summary || ''
-        const newRow = { id: 'index_id_' + uuid(), summary }
+        const id = 'index_id_' + uuid()
+        const newRow = {
+          id,
+          summary: tableData[index]?.summary || '',
+          authtype: 0,
+        }
 
         const newTableData = [...tableData.slice(0, index), newRow, ...tableData.slice(index)]
         setTableData(newTableData)
+        setSelectRow(newRow)
+        setIsEditRows((prev) => [...prev, id])
       } else {
         onAddRow()
       }
@@ -513,7 +714,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   // 行-编辑
   const onRowEdit = (record) => {
     if ([3, 4].includes(pageType?.id)) {
-      setIsEditRow(record)
+      setIsEditRows((prev) => [...prev, record.id])
     }
   }
   // 行-选择
@@ -541,9 +742,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           // 异步更新表单值
           Promise.resolve().then(() => {
             selectForm.setFieldsValue({
-              ...item,
-              acccode: record.acccode,
-              project_off_set: record.project_off_set,
+              ...record,
+              assistitems: item,
             })
           })
         }
@@ -642,6 +842,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         sericnum: '无引单',
         modename: '手动录入',
       })
+
+      onAddRow()
     } else {
       const params = {
         entrytype: item.type,
@@ -862,6 +1064,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     setPageBill()
     setSelectRow()
     setSelectList([])
+    setIsEditRows([])
+
     pageForm.resetFields()
     selectForm.resetFields()
 
@@ -892,14 +1096,14 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           </Space>
           <Space className='pr-12'>
             {pageType?.id !== 2 && (
-              <>
+              <Space>
                 <Button type='primary' status='success' size='small' onClick={() => submitBill(-1)}>
                   凭证暂存
                 </Button>
                 <Button type='primary' size='small' onClick={() => submitBill(0)}>
                   凭证保存
                 </Button>
-              </>
+              </Space>
             )}
 
             {pageType?.id === 2 && (
@@ -1095,23 +1299,70 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                 style={{ height: pageHeight - (isCollapsed ? 210 : 298) }}
                 scroll={{ y: pageHeight - 372 }}
                 rowClassName={(record) => ['h-15', record.id === selectRow?.id && 'table-select'].join(' ')}
-                rowSelection={{
-                  type: 'checkbox',
-                  selectedRowKeys: selectList,
-                  onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
-                }}
+                rowSelection={
+                  pageType?.id === 2 && {
+                    type: 'checkbox',
+                    selectedRowKeys: selectList,
+                    onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
+                  }
+                }
                 onRow={(record) => {
                   return {
                     onClick: (e) => onRowSelect(e, record),
                     onDoubleClick: () => onRowEdit(record),
                   }
                 }}
-                components={{
-                  body: {
-                    row: EditableRow,
-                    cell: EditableCell,
-                  },
-                }}
+                components={
+                  pageType?.id !== 2
+                    ? {
+                        header: {
+                          operations: ({ selectionNode, expandNode }) => [
+                            {
+                              node: <th />,
+                              width: 40,
+                            },
+                            {
+                              name: 'expandNode',
+                              node: expandNode,
+                            },
+                            {
+                              name: 'selectionNode',
+                              node: selectionNode,
+                            },
+                          ],
+                        },
+                        body: {
+                          operations: ({ selectionNode, expandNode }) => [
+                            {
+                              node: (
+                                <td>
+                                  <div className='arco-table-cell'>
+                                    <IconDragDotVertical className='text-xl!' />
+                                  </div>
+                                </td>
+                              ),
+                              width: 40,
+                            },
+                            {
+                              name: 'expandNode',
+                              node: expandNode,
+                            },
+                            {
+                              name: 'selectionNode',
+                              node: selectionNode,
+                            },
+                          ],
+                          row: EditableRow,
+                          cell: EditableCell,
+                        },
+                      }
+                    : {
+                        body: {
+                          row: EditableRow,
+                          cell: EditableCell,
+                        },
+                      }
+                }
               />
               <div className='flex justify-between border-t border-neutral-200 p-3'>
                 <div>
@@ -1130,16 +1381,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                 </Space>
               </div>
             </div>
-            {selectRow?.id && selectRow?.assistitems?.money && (
-              <div className='w-1/4 border-l border-neutral-200'>
-                <div className='flex items-center justify-between border-b border-neutral-200 px-4 py-3'>
-                  <div className='text-base'>辅助账</div>
-                  {isEditRow?.id === selectRow?.id && (
-                    <Button type='primary' size='small' onClick={() => onSaveRowAssistitems(selectForm.getFields())}>
-                      确定
-                    </Button>
-                  )}
-                </div>
+            <div className='w-1/4 border-l border-neutral-200'>
+              <div className='flex items-center justify-between border-b border-neutral-200 px-4 py-3'>
+                <div className='text-base'>辅助账</div>
+                {isEditRows.includes(selectRow?.id) && selectRow?.assistitems?.items?.length > 0 && (
+                  <Button type='primary' size='small' onClick={() => onSaveRowAssistitems(selectForm.getFields())}>
+                    确定
+                  </Button>
+                )}
+              </div>
+              {selectRow && selectRow?.assistitems?.items?.length > 0 ? (
                 <Form
                   form={selectForm}
                   size='small'
@@ -1148,20 +1399,24 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                   labelCol={{ style: { flexBasis: 110 } }}
                   wrapperCol={{ style: { flexBasis: `calc(100% - ${110}px)` } }}
                   validateMessages={{ required: (_, { label }) => `${label}不能为空` }}
-                  disabled={isEditRow?.id !== selectRow?.id}>
-                  <Form.Item label='业务日期' field={'bdate'} rules={[{ required: true }]}>
+                  disabled={!isEditRows.includes(selectRow?.id)}>
+                  <Form.Item label='业务日期' field={'assistitems.bdate'} rules={[{ required: true }]}>
                     <DatePicker className='w-full!' defaultPickerValue={pageProof?.defaultStart} />
                   </Form.Item>
-                  <Form.Item label='方向' field={'direct'} rules={[{ required: true }]}>
+                  <Form.Item label='方向' field={'assistitems.direct'} rules={[{ required: true }]}>
                     <Radio.Group>
                       <Radio value={1}>借</Radio>
                       <Radio value={2}>贷</Radio>
                     </Radio.Group>
                   </Form.Item>
-                  <Form.Item label='到期日期' field={'edate'} rules={[{ required: true }]} hidden={selectRow?.isbj !== 1}>
+                  <Form.Item
+                    label='到期日期'
+                    field={'assistitems.edate'}
+                    rules={[{ required: true }]}
+                    hidden={selectRow?.isbj !== 1}>
                     <DatePicker className='w-full!' />
                   </Form.Item>
-                  <Form.Item label='本位币金额' field={'money'} rules={[{ required: true }]}>
+                  <Form.Item label='本位币金额' field={'assistitems.money'} rules={[{ required: true }]}>
                     <InputNumber
                       min={0}
                       prefix='¥'
@@ -1177,14 +1432,14 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                   </Form.Item>
                   <Form.Item shouldUpdate noStyle>
                     {(values) => {
-                      return values?.items?.map((item, index) => (
-                        <Form.Item key={index} label={item.typename} field={`items[${index}].value`}>
+                      return values?.assistitems?.items?.map((item, index) => (
+                        <Form.Item key={index} label={item.typename} field={`assistitems.items[${index}].value`}>
                           <Input placeholder='请输入' />
                         </Form.Item>
                       ))
                     }}
                   </Form.Item>
-                  <Form.Item label='摘要' field={'summary'} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
+                  <Form.Item label='摘要' field={'assistitems.summary'} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                     <Input.TextArea rows={2} autoSize />
                   </Form.Item>
                   <Form.Item shouldUpdate noStyle>
@@ -1197,19 +1452,25 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                               triggerPropName='checked'
                               label={<></>}
                               style={{ marginTop: 20 }}
-                              field={`project_off_set[${index}].id`}>
+                              field={`assistitems.project_off_set[${index}].id`}>
                               <Checkbox>冲抵项目款</Checkbox>
                             </Form.Item>
                             <Form.Item
                               label='供应商'
-                              field={`project_off_set[${index}].suppliername`}
+                              field={`assistitems.project_off_set[${index}].suppliername`}
                               rules={[{ required: true }]}>
                               <Input placeholder='请输入' />
                             </Form.Item>
-                            <Form.Item label='项目' field={`project_off_set[${index}].projectname`} rules={[{ required: true }]}>
+                            <Form.Item
+                              label='项目'
+                              field={`assistitems.project_off_set[${index}].projectname`}
+                              rules={[{ required: true }]}>
                               <Input placeholder='请输入' />
                             </Form.Item>
-                            <Form.Item label='合同号' field={`project_off_set[${index}].contractno`} rules={[{ required: true }]}>
+                            <Form.Item
+                              label='合同号'
+                              field={`assistitems.project_off_set[${index}].contractno`}
+                              rules={[{ required: true }]}>
                               <Input placeholder='请输入' />
                             </Form.Item>
                           </>
@@ -1218,8 +1479,10 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                     }}
                   </Form.Item>
                 </Form>
-              </div>
-            )}
+              ) : (
+                <Empty />
+              )}
+            </div>
           </div>
 
           <Form className='p-3' size='small' layout='inline' autoComplete='off' form={pageForm} disabled={pageType?.id === 2}>
@@ -1333,6 +1596,75 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             }
           }}
         />
+      </Drawer>
+
+      {/* 会计科目 */}
+      <Drawer visible={visibleAccount} width={'52%'} title='会计科目选择' footer={null} onCancel={() => setVisibleAccount(false)}>
+        <Layout>
+          <Layout.Sider width={200} className='pr-4! shadow-none!'>
+            {accountClassList?.length > 0 && (
+              <Tree
+                blockNode
+                defaultExpandedKeys={['0']}
+                selectedKeys={[selectedKeys]}
+                fieldNames={{
+                  key: 'id',
+                  title: 'name',
+                }}
+                treeData={accountClassList}
+                onSelect={(e) => getAccountList(e[0])}
+              />
+            )}
+          </Layout.Sider>
+          <Layout>
+            <Layout.Header>
+              <Form layout='inline' size='small' autoComplete='off' form={accountForm} onChange={onChangeAccount}>
+                <Form.Item field={'haslevel'} triggerPropName='checked'>
+                  <Checkbox>包含下级节点</Checkbox>
+                </Form.Item>
+                <Form.Item field={'open'} triggerPropName='checked'>
+                  <Checkbox>全部展开</Checkbox>
+                </Form.Item>
+                <Form.Item field={'isuse'} triggerPropName='checked'>
+                  <Checkbox>常用科目</Checkbox>
+                </Form.Item>
+                <Form.Item>
+                  <Button type='primary' onClick={() => onSelectRowAccount(selectRowAccount)}>
+                    确认选择
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Layout.Header>
+            <Layout.Content>
+              <Table
+                size='small'
+                rowKey={'id'}
+                border
+                borderCell
+                columns={[
+                  { title: '编码', dataIndex: 'code' },
+                  { title: '名称', dataIndex: 'name' },
+                  { title: '助记码', dataIndex: 'mmcode', width: 100 },
+                  { title: '余额方向', dataIndex: 'direct', width: 90 },
+                  { title: '辅助账', dataIndex: 'assist' },
+                ]}
+                data={accountList}
+                pagination={false}
+                onExpand={onExpand}
+                loading={accountLoading}
+                expandedRowKeys={expandedRowKeys}
+                scroll={{ y: pageHeight - 40 }}
+                rowClassName={(record) => record.id === selectRowAccount?.id && 'table-select'}
+                onRow={(record) => {
+                  return {
+                    onClick: () => setSelectRowAccount(record),
+                    onDoubleClick: () => onSelectRowAccount(record),
+                  }
+                }}
+              />
+            </Layout.Content>
+          </Layout>
+        </Layout>
       </Drawer>
     </>
   )

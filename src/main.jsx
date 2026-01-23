@@ -7,6 +7,7 @@ import { RouterProvider } from 'react-router'
 import { router } from './router'
 // 样式
 import '@arco-design/web-react/dist/css/arco.css'
+import '@arco-design/web-react/es/_util/react-19-adapter'
 import 'src/index.css'
 
 createRoot(document.getElementById('root')).render(

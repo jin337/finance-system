@@ -815,14 +815,14 @@ const Voucher = () => {
               {!tableTyle.finish && (
                 <>
                   {tableTyle.ischeckout === 0 && (
-                    <>
+                    <Space>
                       <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onOpenEditView(1)}>
                         新建凭证
                       </Button>
                       <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onCheckout(1)}>
                         生成转接凭证
                       </Button>
-                    </>
+                    </Space>
                   )}
                   {tableTyle.status === 1 && tableTyle.ischeckout === 1 && (
                     <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onCheckout(2)}>

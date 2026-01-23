@@ -26,3 +26,6 @@ git push
 - eslint.config.js
 - commitlint.config.cjs
 - postcss.config.mjs
+
+# node
+v24.5.0
