@@ -744,28 +744,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       // 借方
       if (column.dataIndex === 'borrow_10') {
         const key = column.dataIndex.split('_')[0]
-        const direct = rowData?.assistitems?.direct
+        // const direct = rowData?.assistitems?.direct
 
-        return (
-          <Input
-            defaultValue={rowData[key] || ''}
-            onChange={(e) => changeEdit(key, e)}
-            disabled={direct === 2 && rowData?.assistitems?.items?.length > 0}
-          />
-        )
+        return <Input defaultValue={rowData[key] || ''} onChange={(e) => changeEdit(key, e)} />
       }
       // 贷方
       if (column.dataIndex === 'loan_10') {
         const key = column.dataIndex.split('_')[0]
-        const direct = rowData?.assistitems?.direct
+        // const direct = rowData?.assistitems?.direct
 
-        return (
-          <Input
-            defaultValue={rowData[key] || ''}
-            onChange={(e) => changeEdit(key, e)}
-            disabled={direct === 1 && rowData?.assistitems?.items?.length > 0}
-          />
-        )
+        return <Input defaultValue={rowData[key] || ''} onChange={(e) => changeEdit(key, e)} />
       }
     }
     return <div className={className}>{children}</div>
