@@ -47,6 +47,10 @@ import {
 // 组件
 import CashInfo from 'src/components/CashInfo'
 import FileInfo from 'src/components/FileInfo'
+// 拖拽
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 // 公共方法
 import { formatNumber, localGetItem, localSetItem, numberToChinese, uuid } from 'src/utils/common'
@@ -672,10 +676,21 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     }
   }
 
+  // 拖拽元素
+  const SortableItem = ({ id, children }) => {
+    const { attributes, listeners } = useSortable({
+      id,
+    })
+
+    return (
+      <div {...attributes} {...listeners}>
+        {children}
+      </div>
+    )
+  }
   // 表格行
   const EditableRow = (props) => {
     const { record, index, ...rest } = props
-
     const [newData, setNewData] = useState({})
     // 保存行和编辑行的函数
     const onSaveRow = () => {
@@ -691,9 +706,20 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       }))
     }
 
+    const { setNodeRef, transform, transition } = useSortable({
+      id: record.id,
+      index,
+    })
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      userSelect: 'none',
+    }
+
     return (
       <EditableContext.Provider value={{ onSaveRow, changeEdit }}>
-        <tr index={index} {...rest} />
+        <tr index={index} {...rest} ref={setNodeRef} style={style} />
       </EditableContext.Provider>
     )
   }
@@ -757,6 +783,22 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       }
     }
     return <div className={className}>{children}</div>
+  }
+
+  // 结束拖拽
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+
+    if (active.id !== over.id) {
+      setTableData((prev) => {
+        const activeIndex = prev.findIndex((item) => item.id === active.id)
+        const overIndex = prev.findIndex((item) => item.id === over.id)
+        const newItems = [...prev]
+        newItems.splice(activeIndex, 1)
+        newItems.splice(overIndex, 0, prev[activeIndex])
+        return newItems
+      })
+    }
   }
 
   // 保存&暂存
@@ -1468,52 +1510,53 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               </div>
 
               {/* 表格 */}
-              <Table
-                size='small'
-                rowKey={'id'}
-                border={false}
-                borderCell
-                pagination={false}
-                columns={columns}
-                data={tableData}
-                style={{ height: pageHeight - (isCollapsed ? 210 : 298) }}
-                scroll={{ y: pageHeight - 372 }}
-                rowClassName={(record) =>
-                  [
-                    'h-15',
-                    record.id === selectRow?.id ? 'table-select' : '',
-                    isEditRows.includes(record.id) ? 'table-edit' : '',
-                  ].join(' ')
-                }
-                rowSelection={{
-                  type: 'checkbox',
-                  selectedRowKeys: selectList,
-                  onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
-                  renderCell: (originNode, _, record) =>
-                    pageType?.id === 2 ? (
-                      originNode
-                    ) : (
-                      <IconDragDotVertical
-                        className='cursor-move text-xl!'
-                        onClick={() => {
-                          console.log(record)
-                        }}
-                      />
-                    ),
-                }}
-                onRow={(record) => {
-                  return {
-                    onClick: (e) => onRowSelect(e, record),
-                    onDoubleClick: () => onRowEdit(record),
-                  }
-                }}
-                components={{
-                  body: {
-                    row: EditableRow,
-                    cell: EditableCell,
-                  },
-                }}
-              />
+              <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} coordinates={sortableKeyboardCoordinates}>
+                <SortableContext items={tableData.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+                  <Table
+                    size='small'
+                    rowKey={'id'}
+                    border={false}
+                    borderCell
+                    pagination={false}
+                    columns={columns}
+                    data={tableData}
+                    style={{ height: pageHeight - (isCollapsed ? 210 : 298) }}
+                    scroll={{ y: pageHeight - 372 }}
+                    rowClassName={(record) =>
+                      [
+                        'h-15',
+                        record.id === selectRow?.id ? 'table-select' : '',
+                        isEditRows.includes(record.id) ? 'table-edit' : '',
+                      ].join(' ')
+                    }
+                    rowSelection={{
+                      type: 'checkbox',
+                      selectedRowKeys: selectList,
+                      onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
+                      renderCell: (originNode, _, record) =>
+                        pageType?.id === 2 ? (
+                          originNode
+                        ) : (
+                          <SortableItem id={record.id}>
+                            <IconDragDotVertical className='cursor-move text-xl!' />
+                          </SortableItem>
+                        ),
+                    }}
+                    onRow={(record) => {
+                      return {
+                        onClick: (e) => onRowSelect(e, record),
+                        onDoubleClick: () => onRowEdit(record),
+                      }
+                    }}
+                    components={{
+                      body: {
+                        row: EditableRow,
+                        cell: EditableCell,
+                      },
+                    }}
+                  />
+                </SortableContext>
+              </DndContext>
               <div className='flex justify-between border-t border-neutral-200 p-3'>
                 <div>
                   合计：
