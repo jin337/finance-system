@@ -276,19 +276,7 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
       title: '金额',
       dataIndex: 'money',
       width: 150,
-      render: (_, record) => (
-        <InputNumber
-          value={record?.money}
-          prefix='¥'
-          formatter={(value) =>
-            value &&
-            parseFloat(value)
-              .toFixed(2)
-              .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-          }
-          parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
-        />
-      ),
+      render: (_, record) => <InputNumber value={record?.money} prefix='¥' />,
     },
   ]
   const processUniqueList = (arr) => {

@@ -641,18 +641,7 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                 <Input allowClear />
               </Form.Item>
               <Form.Item label='金额' field='entrymoney' className='w-1/3! flex-1'>
-                <InputNumber
-                  min={0}
-                  prefix='¥'
-                  allowClear
-                  formatter={(value) =>
-                    value &&
-                    parseFloat(value)
-                      .toFixed(2)
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                  }
-                  parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
-                />
+                <InputNumber prefix='¥' allowClear />
               </Form.Item>
               <Form.Item label='类别' field='modecode' className='w-1/3! flex-1'>
                 <Select options={billType} allowClear />

@@ -331,18 +331,7 @@ const RestrictedFunds = () => {
             </Form.Item>
           </div>
           <Form.Item label='金额' field='money' rules={[{ required: true }]}>
-            <InputNumber
-              min={0}
-              prefix='¥'
-              allowClear
-              formatter={(value) =>
-                value &&
-                parseFloat(value)
-                  .toFixed(2)
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-              }
-              parser={(value) => (value ? parseFloat(value.replace(/,/g, '')) : '')}
-            />
+            <InputNumber prefix='¥' allowClear />
           </Form.Item>
           <Form.Item label='备注' field='remark'>
             <Input.TextArea />

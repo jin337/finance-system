@@ -26,9 +26,19 @@ strong {
 .arco-table-content-scroll {
   overflow: inherit; /* 继承父元素的overflow值 */
 }
-.row-money .arco-table-th-item {
-  padding: 9px 0;
+
+.row-money {
+  text-align: center;
+  padding: 0 !important;
 }
+.row-money .arco-table-th-item {
+  padding: 9px 0 !important;
+  text-align: center;
+}
+.table-edit .row-money {
+  padding: 5px 16px !important;
+}
+
 .row-blue {
   border-left-color: #165dff66 !important;
 }
