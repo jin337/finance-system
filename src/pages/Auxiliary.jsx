@@ -1,7 +1,20 @@
 import { useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
-import { Button, Checkbox, DatePicker, Drawer, Form, Layout, Message, Modal, Select, Table } from '@arco-design/web-react'
+import {
+  Button,
+  Checkbox,
+  DatePicker,
+  Drawer,
+  Form,
+  Layout,
+  Message,
+  Modal,
+  Select,
+  Table,
+  Tooltip,
+  Typography,
+} from '@arco-design/web-react'
 import { IconExport, IconSearch } from '@arco-design/web-react/icon'
 // 公共方法
 import { downloadFile, formatNumber } from 'src/utils/common'
@@ -44,7 +57,13 @@ const Auxiliary = () => {
       title: '科目名称',
       dataIndex: 'name',
       width: 150,
-      ellipsis: true,
+      render: (text) => (
+        <Tooltip content={text}>
+          <Typography.Text ellipsis className='mb-0!'>
+            {text}
+          </Typography.Text>
+        </Tooltip>
+      ),
     },
     {
       title: '记账日期',
@@ -80,7 +99,13 @@ const Auxiliary = () => {
       title: '摘要',
       dataIndex: 'summary',
       width: 180,
-      ellipsis: true,
+      render: (text) => (
+        <Tooltip content={text}>
+          <Typography.Text ellipsis className='mb-0!'>
+            {text}
+          </Typography.Text>
+        </Tooltip>
+      ),
     },
     {
       title: '借方',

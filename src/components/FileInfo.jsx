@@ -18,6 +18,8 @@ import {
   Space,
   Table,
   Tabs,
+  Tooltip,
+  Typography,
 } from '@arco-design/web-react'
 import {
   IconApps,
@@ -258,7 +260,13 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
     {
       title: '名称',
       dataIndex: 'name',
-      ellipsis: true,
+      render: (text) => (
+        <Tooltip content={text}>
+          <Typography.Text ellipsis className='mb-0!'>
+            {text}
+          </Typography.Text>
+        </Tooltip>
+      ),
     },
     {
       title: '创建时间',

@@ -180,6 +180,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const [pageType, setPageType] = useState()
 
   const [tableData, setTableData] = useState([])
+  const [tableLoading, setTableLoading] = useState(false)
   const [selectRow, setSelectRow] = useState()
   const [selectList, setSelectList] = useState([])
   const [isEditRows, setIsEditRows] = useState([])
@@ -216,8 +217,13 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     },
     {
       title: '科目',
-      dataIndex: 'acccode',
-      render: (text, record) => (record?.acccode ? record?.acccode + record?.accfullname : ''),
+      dataIndex: 'accfullname',
+      render: (text, record) => {
+        if (text) {
+          return record?.acccode ? record?.acccode + ' ' + record?.accfullname : ''
+        }
+        return record?.accfullname
+      },
     },
     {
       title: '借方',
@@ -691,7 +697,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   // 表格行
   const EditableRow = (props) => {
     const { record, index, ...rest } = props
-    const [newData, setNewData] = useState({})
+    const [newData, setNewData] = useState(record)
     // 保存行和编辑行的函数
     const onSaveRow = () => {
       const item = { ...record, ...newData }
@@ -700,6 +706,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     }
     // 修改数据
     const changeEdit = (key, e) => {
+      console.log(key)
       setNewData((prev) => ({
         ...prev,
         [key]: e,
@@ -728,6 +735,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const EditableCell = (props) => {
     const { children, className, rowData, column } = props
     const { onSaveRow, changeEdit } = useContext(EditableContext)
+    const auxiliary = rowData?.assistitems?.items && rowData?.assistitems?.items?.length > 0 ? 1 : 0
     // 取消行
     const onRemoveRow = () => {
       const isTemporaryId = rowData?.id && typeof rowData.id === 'string' && rowData.id.includes('index_id_')
@@ -755,11 +763,11 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         return <Input defaultValue={rowData[column.dataIndex]} onChange={(e) => changeEdit(column.dataIndex, e)} />
       }
       // 科目
-      if (column.dataIndex === 'acccode' && [0, 2].includes(rowData?.authtype)) {
+      if (column.dataIndex === 'accfullname' && [0, 2].includes(rowData?.authtype)) {
         return (
           <div className='flex items-center gap-2'>
             <Input.TextArea
-              defaultValue={rowData[column.dataIndex] ? rowData[column.dataIndex] + rowData?.accfullname : ''}
+              defaultValue={rowData[column.dataIndex] ? `${rowData?.acccode} ${rowData[column.dataIndex]}` : ''}
               className='flex-1'
               onChange={(e) => changeEdit(column.dataIndex, e)}
             />
@@ -770,18 +778,17 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       // 借方
       if (column.dataIndex === 'borrow_10') {
         const key = column.dataIndex.split('_')[0]
-        // const direct = rowData?.assistitems?.direct
-
-        return <Input defaultValue={rowData[key] || ''} onChange={(e) => changeEdit(key, e)} />
+        return <Input defaultValue={rowData[key] || ''} onChange={(e) => changeEdit(key, e)} disabled={auxiliary === 1} />
       }
+
       // 贷方
       if (column.dataIndex === 'loan_10') {
         const key = column.dataIndex.split('_')[0]
-        // const direct = rowData?.assistitems?.direct
 
-        return <Input defaultValue={rowData[key] || ''} onChange={(e) => changeEdit(key, e)} />
+        return <Input defaultValue={rowData[key] || ''} onChange={(e) => changeEdit(key, e)} disabled={auxiliary === 1} />
       }
     }
+
     return <div className={className}>{children}</div>
   }
 
@@ -873,16 +880,18 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
 
   // 保存辅助账
   const onSaveRowAssistitems = (record) => {
-    if (record.direct === 1) {
-      record.borrow = record.money
+    if (record?.assistitems?.direct === 1) {
+      record.borrow = record?.assistitems?.money
       record.loan = 0
     }
-    if (record.direct === 2) {
+    if (record?.assistitems?.direct === 2) {
       record.borrow = 0
-      record.loan = record.money
+      record.loan = record?.assistitems?.money
     }
+
     setSelectRow(record)
-    setTableData((prev) => [...prev].map((e) => (e.id === record.id ? record : e)))
+    setIsEditRows((prev) => prev.filter((e) => e !== record.id))
+    setTableData((prev) => prev.map((e) => (e.id === record.id ? record : e)))
   }
   //行-新增
   const onAddRow = () => {
@@ -1232,6 +1241,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   }
   // 页面数据
   const getPageInfo = async (id) => {
+    setTableLoading(true)
     const { code, data } = await Http.post(`/proof/info/${id}`)
     if (code === 200) {
       let { proof, bill, ...rest } = data || {}
@@ -1262,6 +1272,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
 
       setTableData(entrys || [])
     }
+
+    setTableLoading(false)
   }
 
   // 监控表格-计算合计
@@ -1518,6 +1530,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                     border={false}
                     borderCell
                     pagination={false}
+                    loading={tableLoading}
                     columns={columns}
                     data={tableData}
                     style={{ height: pageHeight - (isCollapsed ? 210 : 298) }}
@@ -1574,98 +1587,104 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                 </Space>
               </div>
             </div>
-            <div className='w-90 border-l border-neutral-200'>
-              <div className='flex items-center justify-between border-b border-neutral-200 px-4 py-3'>
-                <div className='text-base'>辅助账</div>
-                {isEditRows.includes(selectRow?.id) && selectRow?.assistitems?.items?.length > 0 && (
-                  <Button type='primary' size='small' onClick={() => onSaveRowAssistitems(selectForm.getFields())}>
-                    确定
-                  </Button>
+            {tableData.length > 0 && (
+              <div className='w-90 border-l border-neutral-200'>
+                <div className='flex items-center justify-between border-b border-neutral-200 px-4 py-3'>
+                  <div className='text-base'>辅助账</div>
+                  {isEditRows.includes(selectRow?.id) && selectRow?.assistitems?.items?.length > 0 && (
+                    <Button type='primary' size='small' onClick={() => onSaveRowAssistitems(selectForm.getFields())}>
+                      确定
+                    </Button>
+                  )}
+                </div>
+                {selectRow && selectRow?.assistitems?.items?.length > 0 ? (
+                  <Form
+                    form={selectForm}
+                    size='small'
+                    layout='vertical'
+                    autoComplete='off'
+                    className='p-4'
+                    labelCol={{ style: { flexBasis: 110 } }}
+                    wrapperCol={{ style: { flexBasis: `calc(100% - ${110}px)` } }}
+                    validateMessages={{ required: (_, { label }) => `${label}不能为空` }}
+                    disabled={!isEditRows.includes(selectRow?.id)}>
+                    <Form.Item label='业务日期' field={'assistitems.bdate'} rules={[{ required: true }]}>
+                      <DatePicker className='w-full!' defaultPickerValue={pageProof?.defaultStart} />
+                    </Form.Item>
+                    <Form.Item label='方向' field={'assistitems.direct'} rules={[{ required: true }]}>
+                      <Radio.Group>
+                        <Radio value={1}>借</Radio>
+                        <Radio value={2}>贷</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                    <Form.Item
+                      label='到期日期'
+                      field={'assistitems.edate'}
+                      rules={[{ required: true }]}
+                      hidden={selectRow?.isbj !== 1}>
+                      <DatePicker className='w-full!' />
+                    </Form.Item>
+                    <Form.Item label='本位币金额' field={'assistitems.money'} rules={[{ required: true }]}>
+                      <InputNumber prefix='¥' allowClear />
+                    </Form.Item>
+                    <Form.Item shouldUpdate noStyle>
+                      {(values) => {
+                        return values?.assistitems?.items?.map((item, index) => (
+                          <Form.Item key={index} label={item.typename} field={`assistitems.items[${index}].value`}>
+                            <Input placeholder='请输入' />
+                          </Form.Item>
+                        ))
+                      }}
+                    </Form.Item>
+                    <Form.Item
+                      label='摘要'
+                      field={'assistitems.summary'}
+                      rules={[{ required: true }]}
+                      style={{ marginBottom: 0 }}>
+                      <Input.TextArea rows={2} autoSize />
+                    </Form.Item>
+                    <Form.Item shouldUpdate noStyle>
+                      {(values) => {
+                        if (['1221.003', '2241.005'].includes(values.acccode)) {
+                          console.log(values)
+                          return values?.project_off_set?.map((item, index) => (
+                            <>
+                              <Form.Item
+                                triggerPropName='checked'
+                                label={<></>}
+                                style={{ marginTop: 20 }}
+                                field={`assistitems.project_off_set[${index}].id`}>
+                                <Checkbox>冲抵项目款</Checkbox>
+                              </Form.Item>
+                              <Form.Item
+                                label='供应商'
+                                field={`assistitems.project_off_set[${index}].suppliername`}
+                                rules={[{ required: true }]}>
+                                <Input placeholder='请输入' />
+                              </Form.Item>
+                              <Form.Item
+                                label='项目'
+                                field={`assistitems.project_off_set[${index}].projectname`}
+                                rules={[{ required: true }]}>
+                                <Input placeholder='请输入' />
+                              </Form.Item>
+                              <Form.Item
+                                label='合同号'
+                                field={`assistitems.project_off_set[${index}].contractno`}
+                                rules={[{ required: true }]}>
+                                <Input placeholder='请输入' />
+                              </Form.Item>
+                            </>
+                          ))
+                        }
+                      }}
+                    </Form.Item>
+                  </Form>
+                ) : (
+                  <Empty />
                 )}
               </div>
-              {selectRow && selectRow?.assistitems?.items?.length > 0 ? (
-                <Form
-                  form={selectForm}
-                  size='small'
-                  layout='vertical'
-                  autoComplete='off'
-                  className='p-4'
-                  labelCol={{ style: { flexBasis: 110 } }}
-                  wrapperCol={{ style: { flexBasis: `calc(100% - ${110}px)` } }}
-                  validateMessages={{ required: (_, { label }) => `${label}不能为空` }}
-                  disabled={!isEditRows.includes(selectRow?.id)}>
-                  <Form.Item label='业务日期' field={'assistitems.bdate'} rules={[{ required: true }]}>
-                    <DatePicker className='w-full!' defaultPickerValue={pageProof?.defaultStart} />
-                  </Form.Item>
-                  <Form.Item label='方向' field={'assistitems.direct'} rules={[{ required: true }]}>
-                    <Radio.Group>
-                      <Radio value={1}>借</Radio>
-                      <Radio value={2}>贷</Radio>
-                    </Radio.Group>
-                  </Form.Item>
-                  <Form.Item
-                    label='到期日期'
-                    field={'assistitems.edate'}
-                    rules={[{ required: true }]}
-                    hidden={selectRow?.isbj !== 1}>
-                    <DatePicker className='w-full!' />
-                  </Form.Item>
-                  <Form.Item label='本位币金额' field={'assistitems.money'} rules={[{ required: true }]}>
-                    <InputNumber prefix='¥' allowClear />
-                  </Form.Item>
-                  <Form.Item shouldUpdate noStyle>
-                    {(values) => {
-                      return values?.assistitems?.items?.map((item, index) => (
-                        <Form.Item key={index} label={item.typename} field={`assistitems.items[${index}].value`}>
-                          <Input placeholder='请输入' />
-                        </Form.Item>
-                      ))
-                    }}
-                  </Form.Item>
-                  <Form.Item label='摘要' field={'assistitems.summary'} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
-                    <Input.TextArea rows={2} autoSize />
-                  </Form.Item>
-                  <Form.Item shouldUpdate noStyle>
-                    {(values) => {
-                      if (['1221.003', '2241.005'].includes(values.acccode)) {
-                        console.log(values)
-                        return values?.project_off_set?.map((item, index) => (
-                          <>
-                            <Form.Item
-                              triggerPropName='checked'
-                              label={<></>}
-                              style={{ marginTop: 20 }}
-                              field={`assistitems.project_off_set[${index}].id`}>
-                              <Checkbox>冲抵项目款</Checkbox>
-                            </Form.Item>
-                            <Form.Item
-                              label='供应商'
-                              field={`assistitems.project_off_set[${index}].suppliername`}
-                              rules={[{ required: true }]}>
-                              <Input placeholder='请输入' />
-                            </Form.Item>
-                            <Form.Item
-                              label='项目'
-                              field={`assistitems.project_off_set[${index}].projectname`}
-                              rules={[{ required: true }]}>
-                              <Input placeholder='请输入' />
-                            </Form.Item>
-                            <Form.Item
-                              label='合同号'
-                              field={`assistitems.project_off_set[${index}].contractno`}
-                              rules={[{ required: true }]}>
-                              <Input placeholder='请输入' />
-                            </Form.Item>
-                          </>
-                        ))
-                      }
-                    }}
-                  </Form.Item>
-                </Form>
-              ) : (
-                <Empty />
-              )}
-            </div>
+            )}
           </div>
 
           <Form className='p-3' size='small' layout='inline' autoComplete='off' form={pageForm} disabled={pageType?.id === 2}>
@@ -1749,9 +1768,20 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           pagination={false}
           scroll={{ y: pageHeight - 44 }}
           columns={[
-            { title: '类别', dataIndex: 'modename', width: 200 },
+            { title: '类别', dataIndex: 'modename', width: 210 },
             { title: '业务日期', dataIndex: 'bdate', width: 120 },
-            { title: '单据号', dataIndex: 'sericnum', width: 190 },
+            {
+              title: '单据号',
+              dataIndex: 'sericnum',
+              width: 190,
+              render: (text) => (
+                <Tooltip content={text}>
+                  <Typography.Text ellipsis className='mb-0!'>
+                    {text}
+                  </Typography.Text>
+                </Tooltip>
+              ),
+            },
             { title: '摘要', dataIndex: 'summary' },
             {
               title: '金额',

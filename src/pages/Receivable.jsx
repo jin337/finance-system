@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 
-import { Button, DatePicker, Drawer, Form, Layout, Table, Tabs } from '@arco-design/web-react'
+import { Button, DatePicker, Drawer, Form, Layout, Table, Tabs, Tooltip, Typography } from '@arco-design/web-react'
 import { useSelector } from 'react-redux'
 
 // 公共方法
@@ -108,12 +108,24 @@ const Receivable = () => {
     {
       title: '科目名称',
       dataIndex: 'fullname',
-      ellipsis: true,
+      render: (text) => (
+        <Tooltip content={text}>
+          <Typography.Text ellipsis className='mb-0!'>
+            {text}
+          </Typography.Text>
+        </Tooltip>
+      ),
     },
     {
       title: '摘要',
       dataIndex: 'summary',
-      ellipsis: true,
+      render: (text) => (
+        <Tooltip content={text}>
+          <Typography.Text ellipsis className='mb-0!'>
+            {text}
+          </Typography.Text>
+        </Tooltip>
+      ),
     },
     {
       title: '借方',

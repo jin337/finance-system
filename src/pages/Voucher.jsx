@@ -18,6 +18,8 @@ import {
   Table,
   Tag,
   Timeline,
+  Tooltip,
+  Typography,
 } from '@arco-design/web-react'
 import {
   IconCalendar,
@@ -473,8 +475,14 @@ const Voucher = () => {
     {
       title: '摘要',
       dataIndex: 'summary',
-      ellipsis: true,
       width: 280,
+      render: (text) => (
+        <Tooltip content={text}>
+          <Typography.Text ellipsis className='mb-0!'>
+            {text}
+          </Typography.Text>
+        </Tooltip>
+      ),
     },
     {
       title: '记账日期',
