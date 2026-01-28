@@ -466,7 +466,7 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                   OA审批单
                 </Button>
                 {imgInfo.status !== 1 && (
-                  <>
+                  <Space size='large'>
                     <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
                       删除
                     </Button>
@@ -475,7 +475,7 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                         重命名
                       </Button>
                     )}
-                  </>
+                  </Space>
                 )}
                 <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
                   下载
@@ -484,14 +484,14 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
             ) : (
               <Space size='large'>
                 {imgInfo.status !== 1 && (
-                  <>
+                  <Space size='large'>
                     <Button shape='round' type='primary' icon={<IconScan />} disabled>
                       扫描
                     </Button>
                     <Button shape='round' type='primary' icon={<IconUpload />} onClick={() => setUploadVisible(true)}>
                       上传
                     </Button>
-                  </>
+                  </Space>
                 )}
                 {tableImgData.length > 0 && (
                   <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>

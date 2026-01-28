@@ -116,12 +116,16 @@ export const numberToChinese = (num) => {
     return ''
   }
 
+  // 处理负数情况
+  // const isNegative = numericValue < 0
+  const absoluteValue = Math.abs(numericValue) // 转换为正数
+
   const digits = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
   const units = ['', '拾', '佰', '仟']
   const bigUnits = ['', '万', '亿']
 
   // 处理整数和小数部分
-  const [integerPart, decimalPart] = numericValue.toFixed(2).split('.')
+  const [integerPart, decimalPart] = absoluteValue.toFixed(2).split('.') // 使用绝对值
 
   // 转换整数部分
   const convertInteger = (str) => {
@@ -176,6 +180,11 @@ export const numberToChinese = (num) => {
       }
     }
   }
+
+  // 根据原数值是否为负数来决定是否添加"负"
+  // if (isNegative) {
+  //   chineseResult = '负' + chineseResult
+  // }
 
   if (chineseResult.includes('点')) {
     return chineseResult + '元'

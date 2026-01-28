@@ -614,10 +614,13 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         accfullname: fullname,
         accname: name,
       }
+
       setSelectRow(item)
       setTableData((prev) => prev.map((e) => (e.id === selectRow.id ? item : e)))
 
       setVisibleAccount(false)
+
+      setIsEditRows((prev) => [...prev, record.id])
     }
   }
   // 会计科目勾选项监控
@@ -706,11 +709,20 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     }
     // 修改数据
     const changeEdit = (key, e) => {
-      console.log(key)
       setNewData((prev) => ({
         ...prev,
         [key]: e,
       }))
+    }
+
+    // 失去焦点
+    const onBlurEdit = (key, e) => {
+      const value = e.target.value
+      const item = {
+        ...record,
+        [key]: value,
+      }
+      setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
     }
 
     const { setNodeRef, transform, transition } = useSortable({
@@ -725,7 +737,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     }
 
     return (
-      <EditableContext.Provider value={{ onSaveRow, changeEdit }}>
+      <EditableContext.Provider value={{ onSaveRow, changeEdit, onBlurEdit }}>
         <tr index={index} {...rest} ref={setNodeRef} style={style} />
       </EditableContext.Provider>
     )
@@ -734,7 +746,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   // 单元格
   const EditableCell = (props) => {
     const { children, className, rowData, column } = props
-    const { onSaveRow, changeEdit } = useContext(EditableContext)
+    const { onSaveRow, changeEdit, onBlurEdit } = useContext(EditableContext)
     const auxiliary = rowData?.assistitems?.items && rowData?.assistitems?.items?.length > 0 ? 1 : 0
     // 取消行
     const onRemoveRow = () => {
@@ -759,33 +771,65 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       }
       // 摘要
       if (column.dataIndex === 'summary') {
-        // autoFocus
-        return <Input defaultValue={rowData[column.dataIndex]} onChange={(e) => changeEdit(column.dataIndex, e)} />
+        return (
+          <Form.Item className='mb-0!' rules={[{ required: true, message: '请输入摘要' }]}>
+            <Input.TextArea
+              defaultValue={rowData[column.dataIndex]}
+              rows={1}
+              onChange={(e) => changeEdit(column.dataIndex, e)}
+              onBlur={(e) => onBlurEdit(column.dataIndex, e)}
+            />
+          </Form.Item>
+        )
       }
       // 科目
       if (column.dataIndex === 'accfullname' && [0, 2].includes(rowData?.authtype)) {
         return (
           <div className='flex items-center gap-2'>
-            <Input.TextArea
-              defaultValue={rowData[column.dataIndex] ? `${rowData?.acccode} ${rowData[column.dataIndex]}` : ''}
-              className='flex-1'
-              onChange={(e) => changeEdit(column.dataIndex, e)}
-            />
-            <IconMore className='text-xl!' onClick={() => openAccount(rowData)} />
+            <Form.Item className='mb-0! flex-1' wrapperCol={{ span: 24 }}>
+              <Input.TextArea
+                defaultValue={
+                  rowData[column.acccode] ? `${rowData?.acccode} ${rowData[column.dataIndex]}` : rowData[column.dataIndex]
+                }
+                className='flex-1'
+                onChange={(e) => changeEdit('acccode', e)}
+                onBlur={(e) => onBlurEdit(column.dataIndex, e)}
+              />
+            </Form.Item>
+            <Form.Item className='mb-0! w-5!' wrapperCol={{ span: 24 }} rules={[{ required: true, message: '请选择科目' }]}>
+              <IconMore className='text-xl!' onClick={() => openAccount(rowData)} />
+            </Form.Item>
           </div>
         )
       }
       // 借方
       if (column.dataIndex === 'borrow_10') {
         const key = column.dataIndex.split('_')[0]
-        return <Input defaultValue={rowData[key] || ''} onChange={(e) => changeEdit(key, e)} disabled={auxiliary === 1} />
+        return (
+          <Form.Item className='mb-0!' rules={[{ required: true, message: '请输入借方金额' }]}>
+            <Input
+              defaultValue={rowData[key] || ''}
+              disabled={auxiliary === 1}
+              onChange={(e) => changeEdit(key, e)}
+              onBlur={(e) => onBlurEdit(key, e)}
+            />
+          </Form.Item>
+        )
       }
 
       // 贷方
       if (column.dataIndex === 'loan_10') {
         const key = column.dataIndex.split('_')[0]
-
-        return <Input defaultValue={rowData[key] || ''} onChange={(e) => changeEdit(key, e)} disabled={auxiliary === 1} />
+        return (
+          <Form.Item className='mb-0!' rules={[{ required: true, message: '请输入贷方金额' }]}>
+            <Input
+              defaultValue={rowData[key] || ''}
+              disabled={auxiliary === 1}
+              onChange={(e) => changeEdit(key, e)}
+              onBlur={(e) => onBlurEdit(key, e)}
+            />
+          </Form.Item>
+        )
       }
     }
 
@@ -1646,7 +1690,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                     <Form.Item shouldUpdate noStyle>
                       {(values) => {
                         if (['1221.003', '2241.005'].includes(values.acccode)) {
-                          console.log(values)
                           return values?.project_off_set?.map((item, index) => (
                             <>
                               <Form.Item
