@@ -806,7 +806,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             wrapperCol={wrapperCol}
             field={key}
             initialValue={rowData[key]}
-            rules={[{ required: true, message: '借贷必须输入一个' }]}>
+            rules={[
+              {
+                validator(value, cb) {
+                  if (!value && !rowData.loan) {
+                    return cb('借贷必须输入一个')
+                  }
+                  return cb()
+                },
+              },
+            ]}>
             <InputNumber prefix={'¥'} defaultValue={rowData[key] || ''} disabled={auxiliary === 1} />
           </Form.Item>
         )
@@ -821,7 +830,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             wrapperCol={wrapperCol}
             field={key}
             initialValue={rowData[key]}
-            rules={[{ required: true, message: '借贷必须输入一个' }]}>
+            rules={[
+              {
+                validator(value, cb) {
+                  if (!value && !rowData.borrow) {
+                    return cb('借贷必须输入一个')
+                  }
+                  return cb()
+                },
+              },
+            ]}>
             <InputNumber prefix={'¥'} defaultValue={rowData[key] || ''} disabled={auxiliary === 1} />
           </Form.Item>
         )
