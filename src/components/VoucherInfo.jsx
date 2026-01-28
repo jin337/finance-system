@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
 const EditableContext = createContext({})
@@ -219,10 +219,10 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       title: '科目',
       dataIndex: 'accfullname',
       render: (text, record) => {
-        if (text) {
-          return record?.acccode ? record?.acccode + ' ' + record?.accfullname : ''
+        if (record?.acccode && text) {
+          return record.acccode + ' ' + text
         }
-        return record?.accfullname
+        return text
       },
     },
     {
@@ -699,46 +699,44 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   }
   // 表格行
   const EditableRow = (props) => {
-    const { record, index, ...rest } = props
-    const [newData, setNewData] = useState(record)
-    // 保存行和编辑行的函数
-    const onSaveRow = () => {
+    const { record, index, className, children, ...rest } = props
+    const { setNodeRef, transform, transition } = useSortable({ id: record.id, index })
+
+    const refForm = useRef(null)
+    const getForm = () => refForm.current
+
+    // 保存-行内容
+    const onSaveRow = async () => {
+      // 获取数据
+      const newData = await getForm().validate()
       const item = { ...record, ...newData }
+      // 保存表格数据
       setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
+      // 取消编辑状态
       setIsEditRows((prev) => prev.filter((e) => e !== item.id))
     }
-    // 修改数据
-    const changeEdit = (key, e) => {
-      setNewData((prev) => ({
-        ...prev,
-        [key]: e,
-      }))
-    }
 
-    // 失去焦点
-    const onBlurEdit = (key, e) => {
-      const value = e.target.value
-      const item = {
-        ...record,
-        [key]: value,
+    // 取消-行编辑
+    const onRemoveRow = () => {
+      const isTemporaryId = record?.id && typeof record.id === 'string' && record.id.includes('index_id_')
+
+      if (isTemporaryId) {
+        onDeleteRow(record)
+      } else {
+        setIsEditRows((prev) => prev.filter((e) => e !== record.id))
       }
-      setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
-    }
-
-    const { setNodeRef, transform, transition } = useSortable({
-      id: record.id,
-      index,
-    })
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      userSelect: 'none',
     }
 
     return (
-      <EditableContext.Provider value={{ onSaveRow, changeEdit, onBlurEdit }}>
-        <tr index={index} {...rest} ref={setNodeRef} style={style} />
+      <EditableContext.Provider value={{ onSaveRow, onRemoveRow }}>
+        <Form
+          children={children}
+          ref={refForm}
+          wrapper='tr'
+          wrapperProps={{ ...rest, ref: setNodeRef }}
+          className={`${className} table-row!`}
+          style={{ transform: CSS.Transform.toString(transform), transition }}
+        />
       </EditableContext.Provider>
     )
   }
@@ -746,18 +744,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   // 单元格
   const EditableCell = (props) => {
     const { children, className, rowData, column } = props
-    const { onSaveRow, changeEdit, onBlurEdit } = useContext(EditableContext)
+    const { onSaveRow, onRemoveRow } = useContext(EditableContext)
     const auxiliary = rowData?.assistitems?.items && rowData?.assistitems?.items?.length > 0 ? 1 : 0
-    // 取消行
-    const onRemoveRow = () => {
-      const isTemporaryId = rowData?.id && typeof rowData.id === 'string' && rowData.id.includes('index_id_')
-
-      if (isTemporaryId) {
-        onDeleteRow(rowData)
-      } else {
-        setIsEditRows((prev) => prev.filter((e) => e !== rowData.id))
-      }
-    }
+    const wrapperCol = { span: 24 }
 
     if (isEditRows.includes(rowData.id)) {
       // 序号
@@ -772,31 +761,37 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       // 摘要
       if (column.dataIndex === 'summary') {
         return (
-          <Form.Item className='mb-0!' rules={[{ required: true, message: '请输入摘要' }]}>
-            <Input.TextArea
-              defaultValue={rowData[column.dataIndex]}
-              rows={1}
-              onChange={(e) => changeEdit(column.dataIndex, e)}
-              onBlur={(e) => onBlurEdit(column.dataIndex, e)}
-            />
+          <Form.Item
+            className='mb-0!'
+            wrapperCol={wrapperCol}
+            field={column.dataIndex}
+            initialValue={rowData[column.dataIndex]}
+            rules={[{ required: true, message: '摘要不能为空' }]}>
+            <Input.TextArea defaultValue={rowData[column.dataIndex]} rows={1} />
           </Form.Item>
         )
       }
       // 科目
       if (column.dataIndex === 'accfullname' && [0, 2].includes(rowData?.authtype)) {
+        const initialValue =
+          rowData?.acccode && rowData[column.dataIndex]
+            ? rowData.acccode + ' ' + rowData[column.dataIndex]
+            : rowData[column.dataIndex]
+
         return (
           <div className='flex items-center gap-2'>
-            <Form.Item className='mb-0! flex-1' wrapperCol={{ span: 24 }}>
+            <Form.Item
+              className='mb-0! flex-1'
+              wrapperCol={wrapperCol}
+              field={column.dataIndex}
+              initialValue={initialValue}
+              rules={[{ required: true, message: '科目不能为空' }]}>
               <Input.TextArea
-                defaultValue={
-                  rowData[column.acccode] ? `${rowData?.acccode} ${rowData[column.dataIndex]}` : rowData[column.dataIndex]
-                }
+                defaultValue={rowData.acccode ? `${rowData?.acccode} ${rowData[column.dataIndex]}` : rowData[column.dataIndex]}
                 className='flex-1'
-                onChange={(e) => changeEdit('acccode', e)}
-                onBlur={(e) => onBlurEdit(column.dataIndex, e)}
               />
             </Form.Item>
-            <Form.Item className='mb-0! w-5!' wrapperCol={{ span: 24 }} rules={[{ required: true, message: '请选择科目' }]}>
+            <Form.Item className='mb-0! w-5!' wrapperCol={wrapperCol}>
               <IconMore className='text-xl!' onClick={() => openAccount(rowData)} />
             </Form.Item>
           </div>
@@ -806,13 +801,13 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       if (column.dataIndex === 'borrow_10') {
         const key = column.dataIndex.split('_')[0]
         return (
-          <Form.Item className='mb-0!' rules={[{ required: true, message: '请输入借方金额' }]}>
-            <Input
-              defaultValue={rowData[key] || ''}
-              disabled={auxiliary === 1}
-              onChange={(e) => changeEdit(key, e)}
-              onBlur={(e) => onBlurEdit(key, e)}
-            />
+          <Form.Item
+            className='mb-0!'
+            wrapperCol={wrapperCol}
+            field={key}
+            initialValue={rowData[key]}
+            rules={[{ required: true, message: '借贷必须输入一个' }]}>
+            <InputNumber prefix={'¥'} defaultValue={rowData[key] || ''} disabled={auxiliary === 1} />
           </Form.Item>
         )
       }
@@ -821,13 +816,13 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       if (column.dataIndex === 'loan_10') {
         const key = column.dataIndex.split('_')[0]
         return (
-          <Form.Item className='mb-0!' rules={[{ required: true, message: '请输入贷方金额' }]}>
-            <Input
-              defaultValue={rowData[key] || ''}
-              disabled={auxiliary === 1}
-              onChange={(e) => changeEdit(key, e)}
-              onBlur={(e) => onBlurEdit(key, e)}
-            />
+          <Form.Item
+            className='mb-0!'
+            wrapperCol={wrapperCol}
+            field={key}
+            initialValue={rowData[key]}
+            rules={[{ required: true, message: '借贷必须输入一个' }]}>
+            <InputNumber prefix={'¥'} defaultValue={rowData[key] || ''} disabled={auxiliary === 1} />
           </Form.Item>
         )
       }
@@ -988,6 +983,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       setIsEditRows((prev) => [...prev, record.id])
     }
   }
+
   // 行-选择
   const onRowSelect = (e, record) => {
     const targetElement = e.target
@@ -1589,7 +1585,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                     rowSelection={{
                       type: 'checkbox',
                       selectedRowKeys: selectList,
-                      onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
+                      onChange: (e) => setSelectList(e),
                       renderCell: (originNode, _, record) =>
                         pageType?.id === 2 ? (
                           originNode
@@ -1599,12 +1595,10 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                           </SortableItem>
                         ),
                     }}
-                    onRow={(record) => {
-                      return {
-                        onClick: (e) => onRowSelect(e, record),
-                        onDoubleClick: () => onRowEdit(record),
-                      }
-                    }}
+                    onRow={(record) => ({
+                      onClick: (e) => onRowSelect(e, record),
+                      onDoubleClick: () => onRowEdit(record),
+                    })}
                     components={{
                       body: {
                         row: EditableRow,
