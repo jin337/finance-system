@@ -73,7 +73,7 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
     } else {
       Message.error('指定凭证现金流量出错了')
     }
-    handleCancel()
+    handleCancel(1)
   }
 
   // 项目选择
@@ -290,7 +290,17 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
       title: '金额',
       dataIndex: 'money',
       width: 150,
-      render: (_, record) => <InputNumber value={record?.money} prefix='¥' />,
+      render: (_, record) => (
+        <InputNumber
+          defaultValue={record?.money}
+          prefix='¥'
+          hideControl
+          autocomplete='off'
+          precision={1}
+          step={0.01}
+          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+        />
+      ),
     },
   ]
   const processUniqueList = (arr) => {
@@ -374,7 +384,7 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
   }, [visible, cashParams])
 
   // 关闭
-  const handleCancel = () => {
+  const handleCancel = (type) => {
     setTableOptions([])
     setTableCashData([])
     setTableData([])
@@ -387,7 +397,7 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
     setSelectList([])
 
     setVisibleDrawer(false)
-    if (onCancel) onCancel()
+    if (onCancel) onCancel(type)
   }
 
   return (
@@ -399,7 +409,7 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
         okText='保存'
         okButtonProps={{ disabled: tableData.length <= 0 }}
         onOk={submitCash}
-        onCancel={handleCancel}>
+        onCancel={() => handleCancel(0)}>
         <Grid.Row>
           <Grid.Col span={12}>
             当前凭证现金类科目净额：

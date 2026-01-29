@@ -54,6 +54,8 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
 
   const [sessionId, setSessionId] = useState('')
 
+  const [isSave, setIsSave] = useState(false)
+
   const [imgInfo, setImgInfo] = useState({})
   const [tableImgData, setTableImgData] = useState([])
   const [tableImgLoading, setTableImgLoading] = useState(false)
@@ -445,12 +447,13 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
 
   const handleCancel = () => {
     setVisibleDrawer(false)
-    if (onCancel) onCancel()
+    if (onCancel) onCancel(isSave)
   }
 
   useEffect(() => {
     setVisibleDrawer(!!visible)
     if (visible) {
+      setIsSave(false)
       onImgInfo(fileParams)
     }
   }, [visible])
@@ -607,6 +610,7 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
         onOk={() => {
           setUploadVisible(false)
           onImgInfo(imgInfo)
+          setIsSave(true)
         }}
         onCancel={() => setUploadVisible(false)}
       />
@@ -649,7 +653,15 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                 <Input allowClear />
               </Form.Item>
               <Form.Item label='金额' field='entrymoney' className='w-1/3! flex-1'>
-                <InputNumber prefix='¥' allowClear />
+                <InputNumber
+                  hideControl
+                  prefix='¥'
+                  allowClear
+                  autocomplete='off'
+                  precision={1}
+                  step={0.01}
+                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                />
               </Form.Item>
               <Form.Item label='类别' field='modecode' className='w-1/3! flex-1'>
                 <Select options={billType} allowClear />

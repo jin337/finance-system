@@ -166,7 +166,6 @@ const Voucher = () => {
 
   const [tableData, setTableData] = useState({ list: [], page: 1, pageSize: 10, total: 0 })
   const [selectList, setSelectList] = useState([])
-  const [tableLoading, setTableLoading] = useState(false)
   const [tableTyle, setTableTyle] = useState({})
   const [searchData, setSearchData] = useState({
     type: '0',
@@ -638,7 +637,6 @@ const Voucher = () => {
   // 获取页面数据
   const changeTableData = async (page, pageSize, values) => {
     setTableData({ list: [], page: 1, pageSize: 10, total: 0 })
-    setTableLoading(true)
     setSelectList([])
 
     setSearchData(values)
@@ -667,7 +665,6 @@ const Voucher = () => {
       })
       setTableTyle({ ...data.check, finish: data.finish })
     }
-    setTableLoading(false)
   }
 
   // 监控表格变化
@@ -899,7 +896,6 @@ const Voucher = () => {
               rowKey='id'
               columns={columns}
               data={tableData.list}
-              loading={tableLoading}
               pagination={{
                 sizeCanChange: true,
                 showTotal: true,
@@ -967,9 +963,9 @@ const Voucher = () => {
         visible={visibleImg}
         fileParams={itemInfo}
         tableTyle={tableTyle}
-        onCancel={() => {
+        onCancel={(isSave) => {
           setVisibleImg(false)
-          changeTableData(tableData.page, tableData.pageSize, searchData)
+          isSave && changeTableData(tableData.page, tableData.pageSize, searchData)
         }}
       />
 
@@ -977,9 +973,9 @@ const Voucher = () => {
       <CashInfo
         visible={visibleCash}
         cashParams={itemInfo}
-        onCancel={() => {
+        onCancel={(isSave) => {
           setVisibleCash(false)
-          changeTableData(tableData.page, tableData.pageSize, searchData)
+          isSave && changeTableData(tableData.page, tableData.pageSize, searchData)
         }}
       />
     </>

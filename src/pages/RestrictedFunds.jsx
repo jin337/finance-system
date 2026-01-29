@@ -331,7 +331,15 @@ const RestrictedFunds = () => {
             </Form.Item>
           </div>
           <Form.Item label='金额' field='money' rules={[{ required: true }]}>
-            <InputNumber prefix='¥' allowClear />
+            <InputNumber
+              hideControl
+              prefix='¥'
+              allowClear
+              autocomplete='off'
+              precision={1}
+              step={0.01}
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+            />
           </Form.Item>
           <Form.Item label='备注' field='remark'>
             <Input.TextArea />
