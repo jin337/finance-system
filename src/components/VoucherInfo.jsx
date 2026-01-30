@@ -4,6 +4,11 @@ import { useSelector } from 'react-redux'
 
 const EditableContext = createContext({})
 
+// 拖拽
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
 import {
   Button,
   Checkbox,
@@ -24,7 +29,6 @@ import {
   Table,
   Tag,
   Tooltip,
-  Tree,
   Typography,
 } from '@arco-design/web-react'
 
@@ -45,15 +49,14 @@ import {
 } from '@arco-design/web-react/icon'
 
 // 组件
+import AccountInfo from 'src/components/Accountinfo'
+import AssistInfo from 'src/components/AssistInfo'
+import BillInfo from 'src/components/BillInfo'
 import CashInfo from 'src/components/CashInfo'
 import FileInfo from 'src/components/FileInfo'
-// 拖拽
-import { DndContext, closestCenter } from '@dnd-kit/core'
-import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 
 // 公共方法
-import { formatNumber, localGetItem, localSetItem, numberToChinese, uuid } from 'src/utils/common'
+import { localGetItem, localSetItem, numberToChinese, uuid } from 'src/utils/common'
 
 // 图片
 import collection from 'src/assets/images/collection.png'
@@ -153,21 +156,6 @@ const transNum = (num, index) => {
   return targetChar === 'X' || targetChar === '-' ? '' : targetChar || ''
 }
 
-// 获取有子项的key
-const getChildrenId = (list, key) => {
-  return list.reduce((acc, item) => {
-    if (item.children && item.children.length > 1) {
-      acc.push(item[key])
-    }
-
-    if (item.children && Array.isArray(item.children)) {
-      acc = acc.concat(getChildrenId(item.children, key))
-    }
-
-    return acc
-  }, [])
-}
-
 const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const { pageHeight, isAdmin, currentCompany } = useSelector((state) => state.commonReducer)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -189,18 +177,18 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const [visibleImg, setVisibleImg] = useState(false)
 
   const [sessionnoId, setSessionId] = useState()
-  const [billType, setBillType] = useState({})
-  const [billList, setBillList] = useState([])
-  const [visibleBill, setVisibleBill] = useState(false)
-  const [billForm] = Form.useForm()
 
+  // 会计科目选择
   const [visibleAccount, setVisibleAccount] = useState(false)
-  const [accountClassList, setAccountClassList] = useState([])
-  const [accountList, setAccountList] = useState([])
-  const [accountForm] = Form.useForm()
-  const [expandedRowKeys, setExpandedRowKeys] = useState([])
-  const [selectedKeys, setSelectedKeys] = useState()
-  const [selectRowAccount, setSelectRowAccount] = useState()
+  const [accountParams, setAccountParams] = useState({})
+
+  // 新建账单选择
+  const [visibleBill, setVisibleBill] = useState(false)
+  const [billParams, setBillParams] = useState({})
+
+  // 辅助账
+  const [visibleAssist, setVisibleAssist] = useState(false)
+  const [assistInfo, setAssistInfo] = useState()
 
   const columns = [
     {
@@ -622,63 +610,80 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       setIsEditRows((prev) => [...prev, record.id])
     }
   }
-  // 会计科目勾选项监控
-  const onChangeAccount = (v, vs) => {
-    const key = Object?.keys(v)[0]
-    if (key === 'open') {
-      const keys = getChildrenId(accountList, 'id')
-      setExpandedRowKeys(vs?.open ? keys : [])
-    } else {
-      getAccountList(selectedKeys)
-    }
-  }
 
-  // 展开关闭
-  const onExpand = (e, expanded) => {
-    setExpandedRowKeys((prev) => (expanded ? [...prev, e.id] : prev.filter((id) => id !== e.id)))
-  }
-  // 会计科目
-  const getAccountList = async (classid) => {
-    if (classid !== 0) {
-      accountForm.setFieldValue('open', false)
-      setSelectedKeys(classid)
-      setExpandedRowKeys([])
-
-      const values = accountForm.getFields()
-      const params = {
-        classid: classid,
-        haslevel: values?.haslevel ? '1' : '0',
-        isuse: values?.isuse ? '1' : null,
-      }
-      const { code, data } = await Http.post('/account/list', params)
-      if (code === 200) {
-        const list = data?.list || []
-        setAccountList(list)
-      }
-    }
-  }
-  // 会计类别
+  // 打开会计科目选择
   const openAccount = async (record) => {
-    const { code, data } = await Http.post(`/account/class/list`)
+    const params = {
+      shortname: currentCompany?.shortname,
+      classid: record.classid,
+    }
+    setAccountParams(params)
+    setVisibleAccount(true)
+  }
+
+  // 保存辅助账
+  const onSaveRowAssistitems = (record) => {
+    if (record?.assistitems?.direct === 1) {
+      record.borrow = record?.assistitems?.money
+      record.loan = 0
+    }
+    if (record?.assistitems?.direct === 2) {
+      record.borrow = 0
+      record.loan = record?.assistitems?.money
+    }
+
+    setSelectRow(record)
+    setIsEditRows((prev) => prev.filter((e) => e !== record.id))
+    setTableData((prev) => prev.map((e) => (e.id === record.id ? record : e)))
+  }
+
+  // 打开辅助账选择
+  const openAssist = (record) => {
+    setAssistInfo(record)
+    setVisibleAssist(true)
+  }
+
+  // 辅助账选择确认
+  const onSelectRowAssist = (record) => {
+    // tableData
+    console.log(record, selectRow.assistitems)
+    setVisibleAssist(false)
+  }
+
+  // 提交选择账单
+  const onBillEntry = async (params) => {
+    const { code, data, message } = await Http.post('/bill/entry', params)
     if (code === 200) {
-      const list = data.list || []
-      const treeData = [
-        {
-          id: 0,
-          name: currentCompany.shortname,
-          children: list,
-        },
-      ]
-      setAccountClassList(treeData)
+      const { bill, entrys } = data
+      setPageBill(bill)
+      const entrysTable = entrys.map((e, i) => ({ ...e, id: 'index_id_' + i }))
+      setTableData(entrysTable)
 
-      accountForm.setFieldValue('haslevel', true)
-      const key = record?.classid ? record?.classid : list[0].id
-      getAccountList(key)
+      onEditType(3)
+      setVisibleBill(false)
+    } else {
+      Message.error(message)
+    }
+  }
+  // 获取账单类型
+  const getBillType = async (item) => {
+    if (item.type === 'add') {
+      onEditType(3)
+      setPageBill({
+        sericnum: '无引单',
+        modename: '手动录入',
+      })
 
-      setSelectRowAccount(null)
-      setTimeout(() => {
-        setVisibleAccount(true)
-      }, 200)
+      onAddRow()
+    } else {
+      setVisibleBill(true)
+      const params = {
+        ...item,
+        year: voucherParams.year,
+        month: voucherParams.month,
+        groupid: voucherParams.groupid,
+      }
+      setBillParams(params)
     }
   }
 
@@ -998,21 +1003,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     }
   }
 
-  // 保存辅助账
-  const onSaveRowAssistitems = (record) => {
-    if (record?.assistitems?.direct === 1) {
-      record.borrow = record?.assistitems?.money
-      record.loan = 0
-    }
-    if (record?.assistitems?.direct === 2) {
-      record.borrow = 0
-      record.loan = record?.assistitems?.money
-    }
-
-    setSelectRow(record)
-    setIsEditRows((prev) => prev.filter((e) => e !== record.id))
-    setTableData((prev) => prev.map((e) => (e.id === record.id ? record : e)))
-  }
   //行-新增
   const onAddRow = () => {
     const id = 'index_id_' + uuid()
@@ -1108,118 +1098,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     setTableData((prev) => {
       return [...copyInfo, ...prev]
     })
-  }
-  // 提交选择账单
-  const onEntry = async (params) => {
-    const { code, data, message } = await Http.post('/bill/entry', params)
-    if (code === 200) {
-      const { bill, entrys } = data
-      setPageBill(bill)
-      const entrysTable = entrys.map((e, i) => ({ ...e, id: 'index_id_' + i }))
-      setTableData(entrysTable)
-
-      onEditType(3)
-      setVisibleBill(false)
-    } else {
-      Message.error(message)
-    }
-  }
-  // 提交数据处理
-  const onSelectEntry = (record) => {
-    Modal.confirm({
-      title: '提示',
-      content: '确定选择此条数据？',
-      className: 'simpleModal',
-      onOk: () => {
-        const params = {
-          year: voucherParams.year,
-          month: voucherParams.month,
-          groupid: voucherParams.groupid,
-          sericnum: record.sericnum,
-          billid: record.billid,
-          modeid: record.modeid,
-          modecode: record.modecode,
-          modetable: record.modetable,
-          entrytype: billType?.type,
-          brachtype: record?.brachtype || null,
-          brachflag: [0, 1].includes(record.brachflag) ? record.brachflag : '',
-        }
-        if (billType?.type === 1 && record.brachtype === 1) {
-          Modal.confirm({
-            title: '提示',
-            content: (
-              <Radio.Group onChange={(e) => (params.brachtype = e)}>
-                <Radio value={1}>发放</Radio>
-                <Radio value={2}>计提</Radio>
-              </Radio.Group>
-            ),
-            className: 'simpleModal',
-            onOk: () => {
-              onEntry(params)
-            },
-            onCancel: () => {
-              params.brachtype = record.brachtype
-            },
-          })
-        } else {
-          onEntry(params)
-        }
-      },
-    })
-  }
-  // 获取账单列表
-  const getBillList = async (item) => {
-    const params = {
-      groupid: voucherParams?.groupid,
-      entrytype: item?.type || billType?.type,
-      summary: item?.summary || '',
-      entrymoney: item?.entrymoney || null,
-      modecode: item?.modecode || null,
-      pid: item?.pid || null,
-    }
-    const { code, data } = await Http.post('/bill/list', params)
-    if (code === 200) {
-      const list = data?.list || []
-      setBillList(list)
-    }
-  }
-  // 获取账单类型
-  const getBillType = async (item) => {
-    setBillType({})
-    billForm.resetFields()
-
-    if (item.type === 'add') {
-      onEditType(3)
-      setPageBill({
-        sericnum: '无引单',
-        modename: '手动录入',
-      })
-
-      onAddRow()
-    } else {
-      const params = {
-        entrytype: item.type,
-      }
-      const { code, data } = await Http.post('/bill/type', params)
-      if (code === 200) {
-        const list = (data?.list || []).map((e) => ({ ...e, label: e.name, value: e.code }))
-        setBillType({
-          list,
-          ...item,
-        })
-
-        getBillList(item)
-
-        setVisibleBill(true)
-      }
-    }
-  }
-  // 类别切换
-  const onCahengBill = (v, vs) => {
-    const key = Object.keys(v)[0]
-    if (key === 'modecode') {
-      getBillList(vs)
-    }
   }
   // 获取附件数量
   const getFileCount = async () => {
@@ -1722,7 +1600,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                     size='small'
                     layout='vertical'
                     autoComplete='off'
-                    className='p-4'
+                    className='overflow-y-auto p-4'
+                    style={{ height: pageHeight - (isCollapsed ? 161 : 248) }}
                     labelCol={{ style: { flexBasis: 110 } }}
                     wrapperCol={{ style: { flexBasis: `calc(100% - ${110}px)` } }}
                     validateMessages={{ required: (_, { label }) => `${label}不能为空` }}
@@ -1758,7 +1637,10 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       {(values) => {
                         return values?.assistitems?.items?.map((item, index) => (
                           <Form.Item key={index} label={item.typename} field={`assistitems.items[${index}].value`}>
-                            <Input placeholder='请输入' />
+                            <Input
+                              placeholder='请输入'
+                              suffix={<IconMore onClick={() => isEditRows.includes(selectRow?.id) && openAssist(item)} />}
+                            />
                           </Form.Item>
                         ))
                       }}
@@ -1856,151 +1738,27 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       <Drawer
         visible={visibleBill}
         width={'80%'}
-        title={billType?.name + '单查询'}
+        title={billParams?.name + '单查询'}
         footer={null}
         onCancel={() => setVisibleBill(false)}>
-        <Form layout='inline' size='small' autoComplete='off' form={billForm} onChange={onCahengBill}>
-          <Form.Item label='关键字' field={'summary'}>
-            <Input placeholder='请输入关键字' />
-          </Form.Item>
-          <Form.Item label='金额' field={'entrymoney'}>
-            <InputNumber
-              hideControl
-              placeholder='请输入金额'
-              prefix='¥'
-              autocomplete='off'
-              precision={1}
-              step={0.01}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-            />
-          </Form.Item>
-          <Form.Item label='类别' field={'modecode'}>
-            <Select
-              allowClear
-              placeholder='请选择类别'
-              options={billType?.list || []}
-              style={{ width: '180px' }}
-              triggerProps={{
-                autoAlignPopupWidth: false,
-                autoAlignPopupMinWidth: true,
-                position: 'bl',
-              }}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button type='primary' onClick={() => getBillList(billForm.getFields())}>
-              查询
-            </Button>
-          </Form.Item>
-        </Form>
-        <Table
-          className='mt-1'
-          size='small'
-          rowKey={'id'}
-          border
-          borderCell
-          pagination={false}
-          scroll={{ y: pageHeight - 44 }}
-          columns={[
-            { title: '类别', dataIndex: 'modename', width: 210 },
-            { title: '业务日期', dataIndex: 'bdate', width: 120 },
-            {
-              title: '单据号',
-              dataIndex: 'sericnum',
-              width: 190,
-              render: (text) => (
-                <Tooltip content={text}>
-                  <Typography.Text ellipsis className='mb-0!'>
-                    {text}
-                  </Typography.Text>
-                </Tooltip>
-              ),
-            },
-            { title: '摘要', dataIndex: 'summary' },
-            {
-              title: '金额',
-              dataIndex: 'money',
-              width: 140,
-              render: (text) => <div className='text-right'>{formatNumber(text)}</div>,
-            },
-            { title: '发起人', dataIndex: 'optname', width: 80 },
-          ]}
-          data={billList}
-          onRow={(record) => {
-            return {
-              onDoubleClick: () => onSelectEntry(record),
-            }
-          }}
-        />
+        {visibleBill && <BillInfo billParams={billParams} onSelect={onBillEntry} />}
       </Drawer>
 
       {/* 会计科目 */}
       <Drawer visible={visibleAccount} width={'52%'} title='会计科目选择' footer={null} onCancel={() => setVisibleAccount(false)}>
-        <Layout>
-          <Layout.Sider width={200} className='pr-4! shadow-none!'>
-            {accountClassList?.length > 0 && (
-              <Tree
-                blockNode
-                autoExpandParent
-                defaultExpandedKeys={['0']}
-                selectedKeys={[selectedKeys]}
-                fieldNames={{
-                  key: 'id',
-                  title: 'name',
-                }}
-                treeData={accountClassList}
-                onSelect={(e) => getAccountList(e[0])}
-              />
-            )}
-          </Layout.Sider>
-          <Layout>
-            <Layout.Header>
-              <Form layout='inline' size='small' autoComplete='off' form={accountForm} onChange={onChangeAccount}>
-                <Form.Item field={'haslevel'} triggerPropName='checked'>
-                  <Checkbox>包含下级节点</Checkbox>
-                </Form.Item>
-                <Form.Item field={'open'} triggerPropName='checked'>
-                  <Checkbox>全部展开</Checkbox>
-                </Form.Item>
-                <Form.Item field={'isuse'} triggerPropName='checked'>
-                  <Checkbox>常用科目</Checkbox>
-                </Form.Item>
-                <Form.Item>
-                  <Button type='primary' onClick={() => onSelectRowAccount(selectRowAccount)}>
-                    确认选择
-                  </Button>
-                </Form.Item>
-              </Form>
-            </Layout.Header>
-            <Layout.Content>
-              <Table
-                size='small'
-                rowKey={'id'}
-                border
-                borderCell
-                columns={[
-                  { title: '编码', dataIndex: 'code' },
-                  { title: '名称', dataIndex: 'name' },
-                  { title: '助记码', dataIndex: 'mmcode', width: 100 },
-                  { title: '余额方向', dataIndex: 'direct', width: 90 },
-                  { title: '辅助账', dataIndex: 'assist' },
-                ]}
-                data={accountList}
-                pagination={false}
-                onExpand={onExpand}
-                expandedRowKeys={expandedRowKeys}
-                scroll={{ y: pageHeight - 40 }}
-                rowClassName={(record) => record.id === selectRowAccount?.id && 'table-select'}
-                onRow={(record) => {
-                  return {
-                    onClick: () => setSelectRowAccount(record),
-                    onDoubleClick: () => onSelectRowAccount(record),
-                  }
-                }}
-              />
-            </Layout.Content>
-          </Layout>
-        </Layout>
+        {visibleAccount && <AccountInfo accountParams={accountParams} onSelect={onSelectRowAccount} />}
+      </Drawer>
+
+      {/* 辅助账 */}
+      <Drawer
+        visible={visibleAssist}
+        width={'52%'}
+        title={assistInfo?.typename}
+        footer={null}
+        onCancel={() => setVisibleAssist(false)}>
+        {visibleAssist && (
+          <AssistInfo assistParams={{ ...assistInfo, groupid: voucherParams?.groupid }} onSelect={onSelectRowAssist} />
+        )}
       </Drawer>
     </>
   )
