@@ -589,40 +589,97 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     },
   ]
 
-  // 会计科目选择
-  const onSelectRowAccount = async (record) => {
-    const { code, data } = await Http.post(`/account/${record.id}`)
+  // 保存&暂存
+  const submitBill = async (type) => {
+    // -1 暂存凭证 0凭证保存
+    const values = await pageForm.validate()
+
+    // 获取附件id
+    const fileids = []
+    const fileParams = {
+      groupid: voucherParams.groupid,
+      catid: voucherParams.catid,
+      year: voucherParams.year,
+      month: voucherParams.month,
+      pid: voucherParams.id,
+      sessionno: sessionnoId,
+    }
+    const { code, data } = await Http.post('/file/list', fileParams)
     if (code === 200) {
-      const { code, fullname, name, ...rest } = data
-      const item = {
-        ...selectRow,
-        ...rest,
-        acccode: code,
-        accfullname: fullname,
-        accname: name,
-      }
-
-      setSelectRow(item)
-      setTableData((prev) => prev.map((e) => (e.id === selectRow.id ? item : e)))
-
-      setVisibleAccount(false)
-
-      setIsEditRows((prev) => [...prev, record.id])
+      const list = (data?.list || []).map((e) => e.id)
+      fileids.push(...list)
     }
-  }
 
-  // 打开会计科目选择
-  const openAccount = async (record) => {
+    const entrys = [] // 分录信息
+    tableData.forEach((e, i) => {
+      entrys.push({
+        acccode: e.acccode,
+        accname: e.accname,
+        accfullname: e.accfullname,
+        borrow: e.borrow,
+        loan: e.loan,
+        summary: e.summary,
+        sort: i + 1,
+        classid: e.classid,
+        isbj: e.isbj,
+        edate: e.edate,
+        authtype: e.authtype,
+        autobuild: e.autobuild,
+        brachflag: e.brachflag || '',
+        assistitems: e.assistitems || null,
+        project_off_set: e.project_off_set || null,
+      })
+    })
+
     const params = {
-      shortname: currentCompany?.shortname,
-      classid: record.classid,
+      groupid: voucherParams.groupid, // 机构id
+      year: voucherParams.year, // 年
+      month: voucherParams.month, // 月
+      catid: voucherParams.catid, // 目录id
+      bdate: values.bdate, // 业务日期
+      pdate: values.pdate, // 记账日期
+      vtype: values.vtype, // 凭证类型
+      rmsg: values.rmsg || '', // 参考信息
+      attachs: values.attachs, // 附件张数
+      isrelatetrans: values.isrelatetrans ? 1 : 0, // 是否关联
+      markername: values.markername, // 制单人
+      chargename: values.chargename || '', // 会计主管
+      checkername: values.checkername || '', // 审核人
+      bookkeepername: values.bookkeepername || '', // 记账人
+      cashiername: values.cashiername || '', // 出纳人
+      seqno: pageProof.seqno, // 凭证序号
+      vno: pageProof.vno, // 凭证号
+      borrow: Number(pageProof.borrow), // 借方合计
+      loan: Number(pageProof.loan), // 贷方合计
+      total: Number(pageProof.total), // 合计
+      totalcn: pageProof.totalcn, // 合计中文
+      stocktype: pageProof.stocktype, // 出入库类型 0=非出入库凭证1=入库2=出库
+      stockpzid: pageProof.stockpzid, // 出入库关联凭证
+      sessionno: sessionnoId,
+      bill: pageBill,
+      entrys: entrys,
+      fileids: fileids, // 已上传文件id列表
+      isdraft: type,
     }
-    setAccountParams(params)
-    setVisibleAccount(true)
+    if (voucherParams?.id) {
+      params.id = voucherParams.id
+    }
+    // const url = voucherParams?.id ? '/proof/update' : '/proof/new'
+    // const { code: Billcode, data: Billdata, message } = await Http.post(url, params)
+    // if (Billcode === 200) {
+    //   onEditType(1)
+    //   //新增
+    //   if (voucherParams.type === 1) {
+    //     getPageInfo(Billdata.pid)
+    //   } else {
+    //     getPageInfo(voucherParams.id)
+    //   }
+    // } else {
+    //   Message.error(message || '新增凭证出错了')
+    // }
   }
-
   // 保存辅助账
-  const onSaveRowAssistitems = (record) => {
+  const onSaveAssist = (record) => {
     if (record?.assistitems?.direct === 1) {
       record.borrow = record?.assistitems?.money
       record.loan = 0
@@ -636,27 +693,96 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     setIsEditRows((prev) => prev.filter((e) => e !== record.id))
     setTableData((prev) => prev.map((e) => (e.id === record.id ? record : e)))
   }
+  // 确认-辅助账选择
+  const onAssistEntry = (record) => {
+    const item = {
+      itemcode: record.code,
+      itemfullname: record.fullname,
+      itemid: record.id,
+      itemname: record.name,
+      typeid: assistInfo.typeid,
+      typename: assistInfo.typename,
+    }
 
-  // 打开辅助账选择
+    const updatedItems = selectRow.assistitems.items.map((e) => (e.typeid === assistInfo.typeid ? item : e))
+
+    const fuzhuData = selectForm.getFields()
+    const newRow = {
+      ...selectRow,
+      assistitems: {
+        ...fuzhuData.assistitems,
+        items: updatedItems,
+      },
+    }
+
+    onRowSelect(newRow)
+    setVisibleAssist(false)
+  }
+  // 打开-辅助账选择
   const openAssist = (record) => {
     setAssistInfo(record)
     setVisibleAssist(true)
   }
+  // 确认-会计科目选择
+  const onAccountEntry = async (record) => {
+    const { code, data } = await Http.post(`/account/${record.id}`)
+    if (code === 200) {
+      const direct = data.direct == '借' ? 1 : 2
+      const item = {
+        acccode: data.code,
+        accfullname: data.fullname,
+        accname: data.name,
+        assistitems: {
+          bdate: pageForm.getFieldValue('bdate'),
+          summary: selectRow.summary,
+          money: direct === 1 ? Number(selectRow.borrow) : Number(selectRow.loan),
+          items: (data.assistitems || []).map((e) => ({
+            typename: e.name,
+            typeid: e.id,
+            value: null,
+          })),
+        },
+        authtype: selectRow.authtype,
+        autobuild: selectRow.autobuild,
+        borrow: direct === 1 ? Number(selectRow.borrow) : 0,
+        brachflag: '',
+        classid: data.classid,
+        edate: '',
+        isbj: data.isbj,
+        loan: direct === 2 ? Number(selectRow.loan) : 0,
+        project_off_set: selectRow.project_off_set,
+        summary: selectRow.summary,
+      }
+      setTableData((prev) => prev.map((e) => (e.id === selectRow.id ? item : e)))
 
-  // 辅助账选择确认
-  const onSelectRowAssist = (record) => {
-    // tableData
-    console.log(record, selectRow.assistitems)
-    setVisibleAssist(false)
+      // 选中
+      onRowSelect(item)
+      // 编辑
+      onRowEdit(item)
+      // 关闭弹窗
+      setVisibleAccount(false)
+    }
   }
-
-  // 提交选择账单
+  // 打开-会计科目选择
+  const openAccount = async (record) => {
+    const params = {
+      shortname: currentCompany?.shortname,
+      classid: record.classid,
+    }
+    setAccountParams(params)
+    setVisibleAccount(true)
+  }
+  // 确认-选择账单
   const onBillEntry = async (params) => {
     const { code, data, message } = await Http.post('/bill/entry', params)
     if (code === 200) {
       const { bill, entrys } = data
       setPageBill(bill)
-      const entrysTable = entrys.map((e, i) => ({ ...e, id: 'index_id_' + i }))
+      const entrysTable = entrys.map((e, i) => ({
+        ...e,
+        id: 'index_id_' + i,
+        autobuild: 1,
+      }))
       setTableData(entrysTable)
 
       onEditType(3)
@@ -665,13 +791,15 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       Message.error(message)
     }
   }
-  // 获取账单类型
-  const getBillType = async (item) => {
+  // 新建账单
+  const openBill = async (item) => {
     if (item.type === 'add') {
       onEditType(3)
       setPageBill({
         sericnum: '无引单',
         modename: '手动录入',
+        modecode: 'handle',
+        groupid: voucherParams.groupid,
       })
 
       onAddRow()
@@ -686,7 +814,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       setBillParams(params)
     }
   }
-
   // 拖拽元素
   const SortableItem = ({ id, children }) => {
     const { attributes, listeners } = useSortable({
@@ -760,7 +887,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       </EditableContext.Provider>
     )
   }
-
   // 单元格
   const EditableCell = (props) => {
     const { children, className, rowData, column } = props
@@ -916,7 +1042,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
 
     return <div className={className}>{children}</div>
   }
-
   // 结束拖拽
   const handleDragEnd = (event) => {
     const { active, over } = event
@@ -932,77 +1057,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       })
     }
   }
-
-  // 保存&暂存
-  const submitBill = async (type) => {
-    // -1 暂存凭证 0凭证保存
-    const values = await pageForm.validate()
-
-    // 获取附件id
-    const fileids = []
-    const fileParams = {
-      groupid: voucherParams.groupid,
-      catid: voucherParams.catid,
-      year: voucherParams.year,
-      month: voucherParams.month,
-      pid: voucherParams.id,
-      sessionno: sessionnoId,
-    }
-    const { code, data } = await Http.post('/file/list', fileParams)
-    if (code === 200) {
-      const list = (data?.list || []).map((e) => e.id)
-      fileids.push(...list)
-    }
-
-    const url = voucherParams?.id ? '/proof/update' : '/proof/new'
-    const params = {
-      groupid: voucherParams.groupid, // 机构id
-      year: voucherParams.year, // 年
-      month: voucherParams.month, // 月
-      catid: voucherParams.catid, // 目录id
-      bdate: values.bdate, // 业务日期
-      pdate: values.pdate, // 记账日期
-      vtype: values.vtype, // 凭证类型
-      rmsg: values.rmsg, // 参考信息
-      attachs: values.attachs, // 附件张数
-      isrelatetrans: values.isrelatetrans ? 1 : 0, // 是否关联
-      markername: values.markername, // 制单人
-      chargename: values.chargename, // 会计主管
-      checkername: values.checkername, // 审核人
-      bookkeepername: values.bookkeepername, // 记账人
-      cashiername: values.cashiername, // 出纳人
-      seqno: pageProof.seqno, // 凭证序号
-      vno: pageProof.vno, // 凭证号
-      borrow: Number(pageProof.borrow), // 借方合计
-      loan: Number(pageProof.loan), // 贷方合计
-      total: Number(pageProof.total), // 合计
-      totalcn: pageProof.totalcn, // 合计中文
-      stocktype: pageProof.stocktype, // 出入库类型 0=非出入库凭证1=入库2=出库
-      stockpzid: pageProof.stockpzid, // 出入库关联凭证
-      sessionno: sessionnoId,
-      bill: pageBill,
-      entrys: tableData, // 分录信息
-      fileids: fileids, // 已上传文件id列表
-      isdraft: type,
-    }
-    if (voucherParams?.id) {
-      params.id = voucherParams.id
-    }
-
-    const { code: Billcode, data: Billdata, message } = await Http.post(url, params)
-    if (Billcode === 200) {
-      onEditType(1)
-      //新增
-      if (voucherParams.type === 1) {
-        getPageInfo(Billdata.pid)
-      } else {
-        getPageInfo(voucherParams.id)
-      }
-    } else {
-      Message.error(message || '新增凭证出错了')
-    }
-  }
-
   //行-新增
   const onAddRow = () => {
     const id = 'index_id_' + uuid()
@@ -1010,6 +1064,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       id,
       summary: tableData[tableData?.length - 1]?.summary || '',
       authtype: 0,
+      autobuild: 1,
+      assistitems: null,
     }
     const newTableData = [...tableData, newRow]
     setTableData(newTableData)
@@ -1028,6 +1084,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           id,
           summary: tableData[index]?.summary || '',
           authtype: 0,
+          autobuild: 1,
+          assistitems: null,
         }
 
         const newTableData = [...tableData.slice(0, index), newRow, ...tableData.slice(index)]
@@ -1056,12 +1114,13 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   }
 
   // 行-选择
-  const onRowSelect = (e, record) => {
-    const targetElement = e.target
-    const isCheckboxClick =
-      targetElement.classList.contains('arco-checkbox') ||
-      targetElement.classList.contains('arco-checkbox-input') ||
-      targetElement.closest('.arco-checkbox')
+  const onRowSelect = (record, e) => {
+    const targetElement = e?.target
+    const isCheckboxClick = targetElement
+      ? targetElement?.classList.contains('arco-checkbox') ||
+        targetElement?.classList.contains('arco-checkbox-input') ||
+        targetElement?.closest('.arco-checkbox')
+      : false
     // 排除干扰点击
 
     if (!isCheckboxClick) {
@@ -1073,7 +1132,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           item.items = Array.isArray(item.items)
             ? item.items.map((e) => ({
                 ...e,
-                value: `${e.itemcode || ''}-${e.itemname || ''}`,
+                value: e.itemcode ? `${e.itemcode || ''}-${e.itemname || ''}` : '',
               }))
             : []
 
@@ -1085,7 +1144,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             })
           })
         }
-
         return record
       })
     }
@@ -1093,10 +1151,14 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   // 黏贴
   const onPaste = () => {
     const copyInfo = localGetItem('VOUCHER-COPYPASTE') || []
-    const ids = copyInfo.map((e) => e.id)
+    const newData = copyInfo.map((e) => ({
+      ...e,
+      autobuild: 0,
+    }))
+    const ids = newData.map((e) => e.id)
     setIsEditRows((prev) => [...prev, ...ids])
     setTableData((prev) => {
-      return [...copyInfo, ...prev]
+      return [...newData, ...prev]
     })
   }
   // 获取附件数量
@@ -1173,7 +1235,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     setTableData([])
     setSelectRow()
   }
-
   // 页面状态改变
   const onEditType = (type) => {
     // 0新建 1查看 2编辑 3新建编辑
@@ -1437,7 +1498,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       <div
                         key={e.type}
                         className='flex cursor-pointer items-center gap-1 text-blue-600'
-                        onClick={() => getBillType(e)}>
+                        onClick={() => openBill(e)}>
                         <img src={e.icon} alt='' /> {e.name}
                       </div>
                     ))}
@@ -1555,7 +1616,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                         ),
                     }}
                     onRow={(record) => ({
-                      onClick: (e) => onRowSelect(e, record),
+                      onClick: (e) => onRowSelect(record, e),
                       onDoubleClick: () => onRowEdit(record),
                     })}
                     components={{
@@ -1589,7 +1650,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                 <div className='flex items-center justify-between border-b border-neutral-200 px-4 py-3'>
                   <div className='text-base'>辅助账</div>
                   {isEditRows.includes(selectRow?.id) && selectRow?.assistitems?.items?.length > 0 && (
-                    <Button type='primary' size='small' onClick={() => onSaveRowAssistitems(selectForm.getFields())}>
+                    <Button type='primary' size='small' onClick={() => onSaveAssist(selectForm.getFields())}>
                       确定
                     </Button>
                   )}
@@ -1659,7 +1720,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                             <>
                               <Form.Item
                                 triggerPropName='checked'
-                                label={<></>}
                                 style={{ marginTop: 20 }}
                                 field={`assistitems.project_off_set[${index}].id`}>
                                 <Checkbox>冲抵项目款</Checkbox>
@@ -1746,7 +1806,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
 
       {/* 会计科目 */}
       <Drawer visible={visibleAccount} width={'52%'} title='会计科目选择' footer={null} onCancel={() => setVisibleAccount(false)}>
-        {visibleAccount && <AccountInfo accountParams={accountParams} onSelect={onSelectRowAccount} />}
+        {visibleAccount && <AccountInfo accountParams={accountParams} onSelect={onAccountEntry} />}
       </Drawer>
 
       {/* 辅助账 */}
@@ -1757,7 +1817,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         footer={null}
         onCancel={() => setVisibleAssist(false)}>
         {visibleAssist && (
-          <AssistInfo assistParams={{ ...assistInfo, groupid: voucherParams?.groupid }} onSelect={onSelectRowAssist} />
+          <AssistInfo assistParams={{ ...assistInfo, groupid: voucherParams?.groupid }} onSelect={onAssistEntry} />
         )}
       </Drawer>
     </>
