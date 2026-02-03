@@ -829,6 +829,20 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       </div>
     )
   }
+
+  // 公共方法：移除 acccode 前缀
+  const removeAccCodeFromFullname = (fullname, code) => {
+    if (!fullname || !code) return fullname
+    const regex = new RegExp(`^${code}\\s*`, 'g')
+    return fullname.replace(regex, '')
+  }
+
+  // 公共方法：拼接 acccode 和 fullname
+  const addAccCodeToFullname = (fullname, code) => {
+    if (!code) return fullname
+    const cleanFullname = removeAccCodeFromFullname(fullname, code)
+    return `${code} ${cleanFullname}`
+  }
   // 表格行
   const EditableRow = memo((props) => {
     const { record, index, className, children, ...rest } = props
@@ -836,12 +850,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
 
     const refForm = useRef(null)
     const getForm = () => refForm.current
-
-    const removeAccCodeFromFullname = (fullname, code) => {
-      if (!fullname || !code) return fullname
-      const regex = new RegExp(`^${code}\\s*`, 'g')
-      return fullname.replace(regex, '')
-    }
 
     // 保存-行内容
     const onSaveRow = async () => {
@@ -869,10 +877,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     // 失去焦点
     const onBlurCell = (key, e) => {
       const value = e.target.value
+      let newValue = value
+
+      if (key === 'accfullname' && record?.acccode) {
+        newValue = addAccCodeToFullname(value, record.acccode)
+      }
       const item = {
         ...record,
-        [key]: value,
+        [key]: newValue,
       }
+
       // 延迟更新状态，避免立即重新渲染
       setTimeout(() => {
         setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
@@ -969,10 +983,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       }
       // 科目
       if (column.dataIndex === 'accfullname' && [0, 2].includes(rowData?.authtype)) {
-        const initialValue =
-          rowData?.acccode && rowData[column.dataIndex]
-            ? rowData.acccode + ' ' + rowData[column.dataIndex]
-            : rowData[column.dataIndex]
+        const initialValue = addAccCodeToFullname(rowData[column.dataIndex], rowData?.acccode)
 
         return (
           <div className='flex items-center gap-2'>
