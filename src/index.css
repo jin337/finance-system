@@ -233,3 +233,6 @@ strong {
 .auxiliary .arco-layout-sider-children {
   overflow: hidden !important;
 }
+#newseqno_input {
+  padding-left: 0;
+}

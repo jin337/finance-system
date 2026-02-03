@@ -153,11 +153,13 @@ const AccountInfo = ({ accountParams, onSelect }) => {
             onExpand={onExpand}
             expandedRowKeys={expandedRowKeys}
             scroll={{ y: pageHeight - 40 }}
-            rowClassName={(record) => record.id === selectRowAccount?.id && 'table-select'}
+            rowClassName={(record) =>
+              [record.id === selectRowAccount?.id && 'table-select', record.isdetail === 0 && 'cursor-not-allowed'].join(' ')
+            }
             onRow={(record) => {
               return {
-                onClick: () => setSelectRowAccount(record),
-                onDoubleClick: () => onSelect(record),
+                onClick: () => record.isdetail !== 0 && setSelectRowAccount(record),
+                onDoubleClick: () => record.isdetail !== 0 && onSelect(record),
               }
             }}
           />

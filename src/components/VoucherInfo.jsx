@@ -205,6 +205,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     {
       title: '科目',
       dataIndex: 'accfullname',
+      width: 360,
       render: (text, record) => {
         if (record?.acccode && text) {
           return record.acccode + ' ' + text
@@ -221,7 +222,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '亿',
           dataIndex: 'borrow_10',
           className: 'row-money border-l! border-neutral-200!',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 10)}</span>,
@@ -237,7 +238,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '千',
           dataIndex: 'borrow_9',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 9)}</span>,
@@ -253,7 +254,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '百',
           dataIndex: 'borrow_8',
           className: 'row-money',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -270,7 +271,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '十',
           dataIndex: 'borrow_7',
           className: 'row-money row-blue',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -287,7 +288,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '万',
           dataIndex: 'borrow_6',
           className: 'row-money',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -304,7 +305,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '千',
           dataIndex: 'borrow_5',
           className: 'row-money',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -321,7 +322,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '百',
           dataIndex: 'borrow_4',
           className: 'row-money row-blue',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -338,7 +339,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '十',
           dataIndex: 'borrow_3',
           className: 'row-money',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -355,7 +356,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '元',
           dataIndex: 'borrow_2',
           className: 'row-money',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -372,7 +373,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '角',
           dataIndex: 'borrow_1',
           className: 'row-money row-red',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -389,7 +390,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '分',
           dataIndex: 'borrow_0',
           className: 'row-money',
-          width: 30,
+          width: 20,
 
           render: (_, record) => {
             const obj = {
@@ -413,7 +414,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '亿',
           dataIndex: 'loan_10',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 10)}</span>,
@@ -429,7 +430,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '千',
           dataIndex: 'loan_9',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 9)}</span>,
@@ -445,7 +446,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '百',
           dataIndex: 'loan_8',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 8)}</span>,
@@ -461,7 +462,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '十',
           dataIndex: 'loan_7',
           className: 'row-money row-blue',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 7)}</span>,
@@ -477,7 +478,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '万',
           dataIndex: 'loan_6',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 6)}</span>,
@@ -493,7 +494,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '千',
           dataIndex: 'loan_5',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 5)}</span>,
@@ -509,7 +510,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '百',
           dataIndex: 'loan_4',
           className: 'row-money row-blue',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 4)}</span>,
@@ -525,7 +526,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '十',
           dataIndex: 'loan_3',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 3)}</span>,
@@ -541,7 +542,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '元',
           dataIndex: 'loan_2',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 2)}</span>,
@@ -557,7 +558,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '角',
           dataIndex: 'loan_1',
           className: 'row-money row-red',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 1)}</span>,
@@ -573,7 +574,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           title: '分',
           dataIndex: 'loan_0',
           className: 'row-money',
-          width: 30,
+          width: 20,
           render: (_, record) => {
             const obj = {
               children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 0)}</span>,
@@ -729,6 +730,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     if (code === 200) {
       const direct = data.direct == '借' ? 1 : 2
       const item = {
+        id: selectRow.id,
         acccode: data.code,
         accfullname: data.fullname,
         accname: data.name,
@@ -753,6 +755,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         project_off_set: selectRow.project_off_set,
         summary: selectRow.summary,
       }
+      console.log(item, selectRow)
       setTableData((prev) => prev.map((e) => (e.id === selectRow.id ? item : e)))
 
       // 选中
@@ -1700,7 +1703,12 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                           <Form.Item key={index} label={item.typename} field={`assistitems.items[${index}].value`}>
                             <Input
                               placeholder='请输入'
-                              suffix={<IconMore onClick={() => isEditRows.includes(selectRow?.id) && openAssist(item)} />}
+                              suffix={
+                                <IconMore
+                                  disabled={!isEditRows.includes(selectRow?.id)}
+                                  onClick={() => isEditRows.includes(selectRow?.id) && openAssist(item)}
+                                />
+                              }
                             />
                           </Form.Item>
                         ))

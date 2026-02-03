@@ -5,13 +5,16 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   Button,
   DatePicker,
+  Descriptions,
   Drawer,
   Dropdown,
+  Form,
   Input,
   Layout,
   Menu,
   Message,
   Modal,
+  Popconfirm,
   Radio,
   Select,
   Space,
@@ -434,6 +437,29 @@ const Voucher = () => {
     })
   }
 
+  // 凭证序号更改
+  const [seqnoForm] = Form.useForm()
+  const [seqnoId, setSeqnoId] = useState(null)
+  const onOpenSeqno = (record) => {
+    seqnoForm.resetFields()
+    setSeqnoId(record.id)
+  }
+  const onNumberMove = async (record) => {
+    const values = await seqnoForm.validate()
+    const params = {
+      pid: record.id,
+      newseqno: values?.newseqno,
+    }
+    const { code, message } = await Http.post('/proof/number/move', params)
+    if (code === 200) {
+      Message.success('修改凭证序号成功')
+      changeTableData(tableData.page, tableData.pageSize, searchData)
+    } else {
+      Message.error(message || '修改凭证序号不成功')
+    }
+    setSeqnoId(null)
+  }
+
   // 表头
   const columns = [
     {
@@ -456,20 +482,63 @@ const Voucher = () => {
         },
       ],
       filterMultiple: false,
-      render: (text, record) => (
-        <div className='flex items-center gap-1'>
-          {record.isbuild === 1 && <IconFilePdf style={{ color: '#ff4400', fontSize: '16px' }} />}
-          {record.isbuild === 0 && <IconFile style={{ color: '#165dff', fontSize: '16px' }} />}
-          {text}
-          {record.status === 1 && (
-            <IconPrinter
-              onClick={() => openPdf(record)}
-              className='cursor-pointer'
-              style={{ color: '#165dff', fontSize: '16px' }}
-            />
-          )}
-        </div>
-      ),
+      className: 'cursor-pointer',
+      render: (text, record) => {
+        const Inner = (
+          <div className='flex items-center gap-1' onClick={() => onOpenSeqno(record)}>
+            {record.isbuild === 1 && <IconFilePdf style={{ color: '#ff4400', fontSize: '16px' }} />}
+            {record.isbuild === 0 && <IconFile style={{ color: '#165dff', fontSize: '16px' }} />}
+            {text}
+            {record.status === 1 && (
+              <IconPrinter
+                onClick={() => openPdf(record)}
+                className='cursor-pointer'
+                style={{ color: '#165dff', fontSize: '16px' }}
+              />
+            )}
+          </div>
+        )
+        return tableTyle?.finish ? (
+          Inner
+        ) : (
+          <Popconfirm
+            icon={null}
+            position='right'
+            title='凭证序号更改'
+            popupVisible={record?.id === seqnoId}
+            content={
+              <Form
+                layout='inline'
+                form={seqnoForm}
+                autoComplete='off'
+                requiredSymbol={false}
+                labelCol={{ style: { paddingRight: 0 } }}
+                className='-ml-6.5'>
+                <Descriptions
+                  border
+                  column={1}
+                  data={[
+                    { label: '原凭证号', value: text },
+                    {
+                      label: '新凭证号',
+                      value: (
+                        <Form.Item
+                          className='mr-0! mb-0!'
+                          field={'newseqno'}
+                          rules={[{ required: true, message: '*新的凭证序号必填' }]}>
+                          <Input prefix={text.substring(0, text.lastIndexOf('-') + 1)} size='mini' />
+                        </Form.Item>
+                      ),
+                    },
+                  ]}
+                />
+              </Form>
+            }
+            onOk={() => onNumberMove(record)}>
+            {Inner}
+          </Popconfirm>
+        )
+      },
     },
     {
       title: '摘要',
@@ -636,6 +705,7 @@ const Voucher = () => {
 
   // 获取页面数据
   const changeTableData = async (page, pageSize, values) => {
+    setSeqnoId(null)
     setTableData({ list: [], page: 1, pageSize: 10, total: 0 })
     setSelectList([])
 
