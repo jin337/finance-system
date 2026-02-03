@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, memo, useContext, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
 const EditableContext = createContext({})
@@ -830,7 +830,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     )
   }
   // 表格行
-  const EditableRow = (props) => {
+  const EditableRow = memo((props) => {
     const { record, index, className, children, ...rest } = props
     const { setNodeRef, transform, transition } = useSortable({ id: record.id, index })
 
@@ -873,7 +873,10 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         ...record,
         [key]: value,
       }
-      setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
+      // 延迟更新状态，避免立即重新渲染
+      setTimeout(() => {
+        setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
+      }, 0)
     }
 
     return (
@@ -889,7 +892,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         />
       </EditableContext.Provider>
     )
-  }
+  })
   // 单元格
   const EditableCell = (props) => {
     const { children, className, rowData, column } = props
@@ -899,12 +902,11 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     // 借贷输入校验
     const borrowLoanValidator = (fieldName) => [
       {
-        async validator(value, cb) {
+        validator(value, cb) {
           const formValues = getForm().getFieldsValue()
           const otherField = fieldName === 'borrow' ? 'loan' : 'borrow'
           const otherValue = formValues[otherField]
 
-          // 检查当前值和另一个值的状态
           const hasCurrentValue = value != null && value !== '' && Number(value) !== 0
           const hasOtherValue = otherValue != null && otherValue !== '' && Number(otherValue) !== 0
 
@@ -920,7 +922,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     ]
 
     // 切换输入框内容
-    const onSwitchField = (fieldName) => {
+    const onSwitchField = (fieldName, e) => {
+      e.preventDefault()
       const formValues = getForm().getFieldsValue()
       const sourceValue = formValues[fieldName]
 
@@ -954,6 +957,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       if (column.dataIndex === 'summary') {
         return (
           <Form.Item
+            key={`${rowData.id}-${column.dataIndex}`}
             className='mb-0!'
             wrapperCol={wrapperCol}
             field={column.dataIndex}
@@ -973,6 +977,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         return (
           <div className='flex items-center gap-2'>
             <Form.Item
+              key={`${rowData.id}-${column.dataIndex}`}
               className='mb-0! flex-1'
               wrapperCol={wrapperCol}
               field={column.dataIndex}
@@ -995,6 +1000,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         const fieldName = column.dataIndex.split('_')[0]
         return (
           <Form.Item
+            key={`${rowData.id}-${column.dataIndex}`}
             className='mb-0!'
             wrapperCol={wrapperCol}
             field={fieldName}
@@ -1009,7 +1015,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               step={0.01}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               defaultValue={rowData[fieldName] || ''}
-              onDoubleClick={() => onSwitchField(fieldName)}
+              onDoubleClick={(e) => onSwitchField(fieldName, e)}
               onBlur={(e) => onBlurCell(fieldName, e)}
             />
           </Form.Item>
@@ -1021,6 +1027,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         const fieldName = column.dataIndex.split('_')[0]
         return (
           <Form.Item
+            key={`${rowData.id}-${column.dataIndex}`}
             className='mb-0!'
             wrapperCol={wrapperCol}
             field={fieldName}
@@ -1035,7 +1042,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               step={0.01}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               defaultValue={rowData[fieldName] || ''}
-              onDoubleClick={() => onSwitchField(fieldName)}
+              onDoubleClick={(e) => onSwitchField(fieldName, e)}
               onBlur={(e) => onBlurCell(fieldName, e)}
             />
           </Form.Item>
