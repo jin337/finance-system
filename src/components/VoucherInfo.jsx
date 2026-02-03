@@ -882,15 +882,19 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       if (key === 'accfullname' && record?.acccode) {
         newValue = addAccCodeToFullname(value, record.acccode)
       }
-      const item = {
-        ...record,
-        [key]: newValue,
-      }
 
-      // 延迟更新状态，避免立即重新渲染
-      setTimeout(() => {
-        setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
-      }, 0)
+      // 检查值是否实际发生变化，避免不必要的状态更新
+      if (newValue !== record[key]) {
+        const item = {
+          ...record,
+          [key]: newValue,
+        }
+
+        // 延迟更新状态，避免立即重新渲染
+        setTimeout(() => {
+          setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
+        }, 0)
+      }
     }
 
     return (
@@ -908,7 +912,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     )
   })
   // 单元格
-  const EditableCell = (props) => {
+  const EditableCell = memo((props) => {
     const { children, className, rowData, column } = props
     const { onSaveRow, onRemoveRow, onBlurCell, getForm } = useContext(EditableContext)
     const auxiliary = rowData?.assistitems?.items && rowData?.assistitems?.items?.length > 0 ? 1 : 0
@@ -1021,7 +1025,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             <InputNumber
               prefix={'¥'}
               hideControl
-              autocomplete='off'
+              autoComplete='off'
               precision={1}
               step={0.01}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -1048,7 +1052,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             <InputNumber
               hideControl
               prefix={'¥'}
-              autocomplete='off'
+              autoComplete='off'
               precision={1}
               step={0.01}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
@@ -1062,7 +1066,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     }
 
     return <div className={className}>{children}</div>
-  }
+  })
   // 结束拖拽
   const handleDragEnd = (event) => {
     const { active, over } = event
@@ -1139,8 +1143,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     const targetElement = e?.target
     const isCheckboxClick = targetElement
       ? targetElement?.classList.contains('arco-checkbox') ||
-        targetElement?.classList.contains('arco-checkbox-input') ||
-        targetElement?.closest('.arco-checkbox')
+      targetElement?.classList.contains('arco-checkbox-input') ||
+      targetElement?.closest('.arco-checkbox')
       : false
     // 排除干扰点击
 
@@ -1152,9 +1156,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           item.direct = record.borrow !== 0 && record.loan === 0 ? 1 : 2
           item.items = Array.isArray(item.items)
             ? item.items.map((e) => ({
-                ...e,
-                value: e.itemcode ? `${e.itemcode || ''}-${e.itemname || ''}` : '',
-              }))
+              ...e,
+              value: e.itemcode ? `${e.itemcode || ''}-${e.itemname || ''}` : '',
+            }))
             : []
 
           // 异步更新表单值
@@ -1709,7 +1713,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                         hideControl
                         prefix='¥'
                         allowClear
-                        autocomplete='off'
+                        autoComplete='off'
                         precision={1}
                         step={0.01}
                         formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
