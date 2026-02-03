@@ -1,4 +1,4 @@
-import { Button, Message, Modal, Table, Tooltip, Typography } from '@arco-design/web-react'
+import { Button, Message, Modal, Table, Typography } from '@arco-design/web-react'
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 
@@ -30,13 +30,8 @@ const OnlineUser = () => {
       title: '代理',
       dataIndex: 'user_agent',
       align: 'center',
-      render: (text) => (
-        <Tooltip content={text}>
-          <Typography.Text ellipsis className='mb-0!'>
-            {text}
-          </Typography.Text>
-        </Tooltip>
-      ),
+      ellipsis: true,
+      render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
     },
     {
       title: '设备码',

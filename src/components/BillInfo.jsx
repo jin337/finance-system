@@ -1,19 +1,7 @@
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 
-import {
-  Button,
-  Form,
-  Input,
-  InputNumber,
-  Layout,
-  Modal,
-  Radio,
-  Select,
-  Table,
-  Tooltip,
-  Typography,
-} from '@arco-design/web-react'
+import { Button, Form, Input, InputNumber, Layout, Modal, Radio, Select, Table, Typography } from '@arco-design/web-react'
 
 // 公共方法
 import { useEffect } from 'react'
@@ -164,21 +152,28 @@ const BillInfo = ({ billParams, onSelect }) => {
           pagination={false}
           scroll={{ y: pageHeight - 44 }}
           columns={[
-            { title: '类别', dataIndex: 'modename', width: 210 },
-            { title: '业务日期', dataIndex: 'bdate', width: 120 },
+            {
+              title: '类别',
+              dataIndex: 'modename',
+              width: 200,
+              ellipsis: true,
+              render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
+            },
+            { title: '业务日期', dataIndex: 'bdate', width: 110 },
             {
               title: '单据号',
               dataIndex: 'sericnum',
               width: 190,
-              render: (text) => (
-                <Tooltip content={text}>
-                  <Typography.Text ellipsis className='mb-0!'>
-                    {text}
-                  </Typography.Text>
-                </Tooltip>
-              ),
+              ellipsis: true,
+              render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
             },
-            { title: '摘要', dataIndex: 'summary' },
+            {
+              title: '摘要',
+              dataIndex: 'summary',
+              width: 269,
+              ellipsis: true,
+              render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
+            },
             {
               title: '金额',
               dataIndex: 'money',

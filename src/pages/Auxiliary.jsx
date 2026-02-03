@@ -12,7 +12,6 @@ import {
   Modal,
   Select,
   Table,
-  Tooltip,
   Typography,
 } from '@arco-design/web-react'
 import { IconExport, IconSearch } from '@arco-design/web-react/icon'
@@ -57,13 +56,8 @@ const Auxiliary = () => {
       title: '科目名称',
       dataIndex: 'name',
       width: 150,
-      render: (text) => (
-        <Tooltip content={text}>
-          <Typography.Text ellipsis className='mb-0!'>
-            {text}
-          </Typography.Text>
-        </Tooltip>
-      ),
+      ellipsis: true,
+      render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
     },
     {
       title: '记账日期',
@@ -99,13 +93,8 @@ const Auxiliary = () => {
       title: '摘要',
       dataIndex: 'summary',
       width: 180,
-      render: (text) => (
-        <Tooltip content={text}>
-          <Typography.Text ellipsis className='mb-0!'>
-            {text}
-          </Typography.Text>
-        </Tooltip>
-      ),
+      ellipsis: true,
+      render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
     },
     {
       title: '借方',
@@ -262,10 +251,11 @@ const Auxiliary = () => {
           title: e.name,
           dataIndex: e.id,
           align: 'center',
+          ellipsis: true,
           render: (text, record) => (
-            <div className='group flex items-center justify-between gap-1 text-left'>
-              {text}
-              <span className='translate-x-2 cursor-pointer text-base text-blue-500 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100'>
+            <div className='group relative'>
+              <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>
+              <span className='absolute top-0 right-0 z-1 translate-x-2 cursor-pointer bg-[#f7f8fa] text-base text-blue-500 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100'>
                 <IconExport onClick={() => onExport(record, e)} />
               </span>
             </div>

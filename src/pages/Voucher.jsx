@@ -21,7 +21,6 @@ import {
   Table,
   Tag,
   Timeline,
-  Tooltip,
   Typography,
 } from '@arco-design/web-react'
 import {
@@ -416,6 +415,8 @@ const Voucher = () => {
     setVoucherParams(params)
     setVoucherVisible(true)
     dispatch(setCloseVoucherDetail(false))
+
+    setSeqnoId(null)
   }
 
   // 提交
@@ -442,7 +443,7 @@ const Voucher = () => {
   const [seqnoId, setSeqnoId] = useState(null)
   const onOpenSeqno = (record) => {
     seqnoForm.resetFields()
-    setSeqnoId(record.id)
+    setSeqnoId(!seqnoId ? record.id : null)
   }
   const onNumberMove = async (record) => {
     const values = await seqnoForm.validate()
@@ -505,15 +506,16 @@ const Voucher = () => {
             icon={null}
             position='right'
             title='凭证序号更改'
+            className='voucher-popconfirm w-72!'
             popupVisible={record?.id === seqnoId}
+            onDoubleClick={(e) => e.stopPropagation()}
             content={
               <Form
                 layout='inline'
                 form={seqnoForm}
                 autoComplete='off'
                 requiredSymbol={false}
-                labelCol={{ style: { paddingRight: 0 } }}
-                className='-ml-6.5'>
+                labelCol={{ style: { paddingRight: 0 } }}>
                 <Descriptions
                   border
                   column={1}
@@ -534,7 +536,15 @@ const Voucher = () => {
                 />
               </Form>
             }
-            onOk={() => onNumberMove(record)}>
+            onOk={() => onNumberMove(record)}
+            onCancel={() => setSeqnoId(null)}
+            triggerProps={{
+              onClickOutside: () => {
+                if (record?.id === seqnoId) {
+                  setSeqnoId(null)
+                }
+              },
+            }}>
             {Inner}
           </Popconfirm>
         )
@@ -544,13 +554,8 @@ const Voucher = () => {
       title: '摘要',
       dataIndex: 'summary',
       width: 280,
-      render: (text) => (
-        <Tooltip content={text}>
-          <Typography.Text ellipsis className='mb-0!'>
-            {text}
-          </Typography.Text>
-        </Tooltip>
-      ),
+      ellipsis: true,
+      render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
     },
     {
       title: '记账日期',

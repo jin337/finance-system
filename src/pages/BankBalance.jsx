@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 
-import { Button, DatePicker, Drawer, Form, Layout, Table, Tabs, Tooltip, Typography } from '@arco-design/web-react'
+import { Button, DatePicker, Drawer, Form, Layout, Table, Tabs, Typography } from '@arco-design/web-react'
 import { useSelector } from 'react-redux'
 
 // 公共方法
@@ -76,13 +76,8 @@ const BankBalance = () => {
     {
       title: '摘要',
       dataIndex: 'summary',
-      render: (text) => (
-        <Tooltip content={text}>
-          <Typography.Text ellipsis className='mb-0!'>
-            {text}
-          </Typography.Text>
-        </Tooltip>
-      ),
+      ellipsis: true,
+      render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
     },
     {
       title: '借方',

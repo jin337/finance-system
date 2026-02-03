@@ -1,19 +1,7 @@
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 
-import {
-  Button,
-  Checkbox,
-  DatePicker,
-  Drawer,
-  Input,
-  Layout,
-  Menu,
-  Modal,
-  Table,
-  Tooltip,
-  Typography,
-} from '@arco-design/web-react'
+import { Button, Checkbox, DatePicker, Drawer, Input, Layout, Menu, Modal, Table, Typography } from '@arco-design/web-react'
 import { IconCalendar, IconExport } from '@arco-design/web-react/icon'
 import { useSelector } from 'react-redux'
 
@@ -130,14 +118,11 @@ const Balance = () => {
       title: '科目名称',
       dataIndex: 'name',
       width: 150,
+      ellipsis: true,
       render: (text, record) => (
-        <div className='group flex items-center justify-between gap-1 text-left'>
-          <Tooltip content={text}>
-            <Typography.Text ellipsis className='mb-0!'>
-              {text}
-            </Typography.Text>
-          </Tooltip>
-          <span className='translate-x-2 cursor-pointer text-base text-blue-500 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100'>
+        <div className='group relative'>
+          <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>
+          <span className='absolute top-0 right-0 z-1 translate-x-2 cursor-pointer bg-[#f7f8fa] text-base text-blue-500 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100'>
             <IconExport onClick={() => onExport(record)} />
           </span>
         </div>
@@ -150,13 +135,23 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'nc_borrow',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
         {
           title: '贷方',
           dataIndex: 'nc_loan',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
       ],
     },
@@ -168,13 +163,23 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'qc_borrow',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
         {
           title: '贷方',
           dataIndex: 'qc_loan',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
       ],
     },
@@ -191,13 +196,23 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'bq_borrow',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
         {
           title: '贷方',
           dataIndex: 'bq_loan',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
       ],
     },
@@ -209,13 +224,23 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'bn_borrow',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
         {
           title: '贷方',
           dataIndex: 'bn_loan',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
       ],
     },
@@ -227,13 +252,23 @@ const Balance = () => {
           title: '借方',
           dataIndex: 'qm_borrow',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
         {
           title: '贷方',
           dataIndex: 'qm_loan',
           align: 'center',
-          render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
+          ellipsis: true,
+          render: (text) => (
+            <Typography.Ellipsis showTooltip>
+              {!!text && <span className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</span>}
+            </Typography.Ellipsis>
+          ),
         },
       ],
     },

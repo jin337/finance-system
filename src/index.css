@@ -236,3 +236,7 @@ strong {
 #newseqno_input {
   padding-left: 0;
 }
+.voucher-popconfirm .arco-popconfirm-inner-content {
+  padding-left: 0;
+  margin-top: 10px;
+}

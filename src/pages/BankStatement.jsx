@@ -11,7 +11,6 @@ import {
   Modal,
   Space,
   Table,
-  Tooltip,
   Typography,
 } from '@arco-design/web-react'
 import {
@@ -88,13 +87,8 @@ const BankStatement = () => {
     {
       title: '名称',
       dataIndex: 'name',
-      render: (text) => (
-        <Tooltip content={text}>
-          <Typography.Text ellipsis className='mb-0!'>
-            {text}
-          </Typography.Text>
-        </Tooltip>
-      ),
+      ellipsis: true,
+      render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
     },
     {
       title: '创建时间',

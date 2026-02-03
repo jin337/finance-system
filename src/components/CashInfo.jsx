@@ -14,7 +14,6 @@ import {
   Space,
   Table,
   Tag,
-  Tooltip,
   Typography,
 } from '@arco-design/web-react'
 import { IconMore } from '@arco-design/web-react/icon'
@@ -177,13 +176,8 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
       title: '名称',
       dataIndex: 'name',
       width: 300,
-      render: (text) => (
-        <Tooltip content={text}>
-          <Typography.Text ellipsis className='mb-0!'>
-            {text}
-          </Typography.Text>
-        </Tooltip>
-      ),
+      ellipsis: true,
+      render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
     },
     {
       title: '流向',
@@ -256,13 +250,8 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
     {
       title: '摘要',
       dataIndex: 'summary',
-      render: (text) => (
-        <Tooltip content={text}>
-          <Typography.Text ellipsis className='mb-0!'>
-            {text}
-          </Typography.Text>
-        </Tooltip>
-      ),
+      ellipsis: true,
+      render: (text) => <Typography.Ellipsis showTooltip>{text}</Typography.Ellipsis>,
     },
     {
       title: '方向',
