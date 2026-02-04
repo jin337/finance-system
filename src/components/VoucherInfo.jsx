@@ -156,6 +156,20 @@ const transNum = (num, index) => {
   return targetChar === 'X' || targetChar === '-' ? '' : targetChar || ''
 }
 
+// 移除 acccode 前缀
+const removeAccCodeFromFullname = (fullname, code) => {
+  if (!fullname || !code) return fullname
+  const regex = new RegExp(`^${code}\\s*`, 'g')
+  return fullname.replace(regex, '')
+}
+
+// 拼接 acccode 和 fullname
+const addAccCodeToFullname = (fullname, code) => {
+  if (!code) return fullname
+  const cleanFullname = removeAccCodeFromFullname(fullname, code)
+  return `${code} ${cleanFullname}`
+}
+
 const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const { pageHeight, isAdmin, currentCompany } = useSelector((state) => state.commonReducer)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -206,12 +220,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       title: '科目',
       dataIndex: 'accfullname',
       width: 360,
-      render: (text, record) => {
-        if (record?.acccode && text) {
-          return record.acccode + ' ' + text
-        }
-        return text
-      },
+      render: (text, record) => addAccCodeToFullname(text, record.acccode),
     },
     {
       title: '借方',
@@ -830,19 +839,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     )
   }
 
-  // 公共方法：移除 acccode 前缀
-  const removeAccCodeFromFullname = (fullname, code) => {
-    if (!fullname || !code) return fullname
-    const regex = new RegExp(`^${code}\\s*`, 'g')
-    return fullname.replace(regex, '')
-  }
-
-  // 公共方法：拼接 acccode 和 fullname
-  const addAccCodeToFullname = (fullname, code) => {
-    if (!code) return fullname
-    const cleanFullname = removeAccCodeFromFullname(fullname, code)
-    return `${code} ${cleanFullname}`
-  }
   // 表格行
   const EditableRow = memo((props) => {
     const { record, index, className, children, ...rest } = props
@@ -1143,8 +1139,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     const targetElement = e?.target
     const isCheckboxClick = targetElement
       ? targetElement?.classList.contains('arco-checkbox') ||
-      targetElement?.classList.contains('arco-checkbox-input') ||
-      targetElement?.closest('.arco-checkbox')
+        targetElement?.classList.contains('arco-checkbox-input') ||
+        targetElement?.closest('.arco-checkbox')
       : false
     // 排除干扰点击
 
@@ -1156,9 +1152,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           item.direct = record.borrow !== 0 && record.loan === 0 ? 1 : 2
           item.items = Array.isArray(item.items)
             ? item.items.map((e) => ({
-              ...e,
-              value: e.itemcode ? `${e.itemcode || ''}-${e.itemname || ''}` : '',
-            }))
+                ...e,
+                value: e.itemcode ? `${e.itemcode || ''}-${e.itemname || ''}` : '',
+              }))
             : []
 
           // 异步更新表单值
