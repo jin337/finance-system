@@ -1,8 +1,6 @@
 import dayjs from 'dayjs'
-import { createContext, memo, useContext, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-
-const EditableContext = createContext({})
 
 // 拖拽
 import { DndContext, closestCenter } from '@dnd-kit/core'
@@ -176,6 +174,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
 
   const [pageForm] = Form.useForm()
   const [selectForm] = Form.useForm()
+  const [tableForm] = Form.useForm()
 
   const [pageProof, setPageProof] = useState()
   const [pageBill, setPageBill] = useState()
@@ -210,17 +209,52 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       dataIndex: 'order',
       width: 75,
       align: 'center',
-      render: (text, record, index) => index + 1,
+      render: (text, record, index) =>
+        isEditRows.includes(record.id) ? (
+          <Space>
+            <IconCheck className='text-xl! text-blue-600!' onClick={() => onSaveRow(record)} />
+            <IconClose className='text-xl! text-red-600!' onClick={() => onCancelRow(record)} />
+          </Space>
+        ) : (
+          index + 1
+        ),
     },
     {
       title: '摘要',
       dataIndex: 'summary',
+      render: (text, record) => {
+        const onBlur = async () => {
+          await tableForm.validate([`summary-${record.id}`])
+        }
+        return isEditRows.includes(record.id) ? (
+          <Form.Item className='mb-0!' field={`summary-${record.id}`} rules={[{ required: true, message: '摘要不能为空' }]}>
+            <Input.TextArea rows={1} onBlur={onBlur} />
+          </Form.Item>
+        ) : (
+          text
+        )
+      },
     },
     {
       title: '科目',
       dataIndex: 'accfullname',
       width: 360,
-      render: (text, record) => addAccCodeToFullname(text, record.acccode),
+      render: (text, record) =>
+        isEditRows.includes(record.id) ? (
+          <div className='flex items-center gap-2'>
+            <Form.Item
+              className='mb-0! flex-1'
+              field={`accfullname-${record.id}`}
+              rules={[{ required: true, message: '科目不能为空' }]}>
+              <Input.TextArea className='flex-1' />
+            </Form.Item>
+            <Form.Item className='mb-0! w-5!'>
+              <IconMore className='text-xl!' onClick={() => openAccount(record)} />
+            </Form.Item>
+          </div>
+        ) : (
+          text
+        ),
     },
     {
       title: '借方',
@@ -238,7 +272,27 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               props: {},
             }
             if (isEditRows.includes(record.id)) {
+              const auxiliary = record?.assistitems?.items && record?.assistitems?.items?.length > 0 ? 1 : 0
+              const isLoanFilled = tableForm.getFieldValue(`loan-${record.id}`)
+
               obj.props.colSpan = 11
+              obj.children = (
+                <Form.Item
+                  className='mb-0!'
+                  field={`borrow-${record.id}`}
+                  rules={validateDebitCredit(record)}
+                  disabled={auxiliary === 1 || isLoanFilled}>
+                  <InputNumber
+                    className='w-full'
+                    prefix={'¥'}
+                    hideControl
+                    autoComplete='off'
+                    precision={1}
+                    step={0.01}
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  />
+                </Form.Item>
+              )
             }
             return obj
           },
@@ -430,7 +484,27 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               props: {},
             }
             if (isEditRows.includes(record.id)) {
+              const auxiliary = record?.assistitems?.items && record?.assistitems?.items?.length > 0 ? 1 : 0
+              const isBorrowFilled = tableForm.getFieldValue(`borrow-${record.id}`)
+
               obj.props.colSpan = 11
+              obj.children = (
+                <Form.Item
+                  className='mb-0!'
+                  field={`loan-${record.id}`}
+                  rules={validateDebitCredit(record)}
+                  disabled={auxiliary === 1 || isBorrowFilled}>
+                  <InputNumber
+                    className='w-full'
+                    prefix={'¥'}
+                    hideControl
+                    autoComplete='off'
+                    precision={1}
+                    step={0.01}
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  />
+                </Form.Item>
+              )
             }
             return obj
           },
@@ -599,6 +673,48 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     },
   ]
 
+  // 借贷输入框校验
+  const validateDebitCredit = (record) => [
+    {
+      validator(_, cb) {
+        const borrow = tableForm.getFieldValue(`borrow-${record.id}`)
+        const loan = tableForm.getFieldValue(`loan-${record.id}`)
+
+        if (!borrow && !loan) {
+          return cb('借贷必须输入一个')
+        } else {
+          return cb()
+        }
+      },
+    },
+  ]
+  // 取消行编辑
+  const onCancelRow = (record) => {
+    setIsEditRows((prev) => prev.filter((id) => id !== record.id))
+  }
+  // 保存行数据
+  const onSaveRow = async (record) => {
+    const values = await tableForm.validate()
+    const rowData = {
+      summary: values[`summary-${record.id}`],
+      accfullname: values[`accfullname-${record.id}`],
+      borrow: values[`borrow-${record.id}`],
+      loan: values[`loan-${record.id}`],
+    }
+
+    setTableData((prev) =>
+      prev.map((item) =>
+        item.id === record.id
+          ? {
+              ...item,
+              ...rowData,
+            }
+          : item
+      )
+    )
+
+    onCancelRow(record)
+  }
   // 保存&暂存
   const submitBill = async (type) => {
     // -1 暂存凭证 0凭证保存
@@ -689,19 +805,40 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     // }
   }
   // 保存辅助账
-  const onSaveAssist = (record) => {
-    if (record?.assistitems?.direct === 1) {
-      record.borrow = record?.assistitems?.money
-      record.loan = 0
+  const onSaveAssist = async (record) => {
+    const selectValues = await selectForm.validate()
+    if (selectValues) {
+      setIsEditRows((prev) => prev.filter((e) => e !== record.id))
     }
-    if (record?.assistitems?.direct === 2) {
-      record.borrow = 0
-      record.loan = record?.assistitems?.money
+  }
+
+  // 监控辅助账金额和方向
+  const onChangeAssist = (v, vs) => {
+    let assistitems = vs.assistitems
+    const key = Object.keys(v)[0]
+
+    let borrow = assistitems?.direct === 1 ? assistitems.money : 0
+    let loan = assistitems?.direct === 2 ? assistitems.money : 0
+
+    const newItems = {
+      ...vs,
+      borrow,
+      loan,
     }
 
-    setSelectRow(record)
-    setIsEditRows((prev) => prev.filter((e) => e !== record.id))
-    setTableData((prev) => prev.map((e) => (e.id === record.id ? record : e)))
+    setSelectRow(newItems)
+    setTableData((prev) => prev.map((e) => (e.id === vs.id ? newItems : e)))
+
+    if (key === 'assistitems.money' || key === 'assistitems.direct') {
+      const formData = {
+        [`borrow-${vs.id}`]: borrow,
+        [`loan-${vs.id}`]: loan,
+      }
+
+      // 设置表单值
+      tableForm.setFieldsValue(formData)
+    }
+    onSumTotal()
   }
   // 确认-辅助账选择
   const onAssistEntry = (record) => {
@@ -764,7 +901,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         project_off_set: selectRow.project_off_set,
         summary: selectRow.summary,
       }
-      console.log(item, selectRow)
       setTableData((prev) => prev.map((e) => (e.id === selectRow.id ? item : e)))
 
       // 选中
@@ -826,6 +962,13 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       setBillParams(params)
     }
   }
+  // 表格行
+  const EditableRow = (props) => {
+    const { record, index, ...rest } = props
+    const { setNodeRef, transform, transition } = useSortable({ id: record.id, index })
+
+    return <tr index={index} {...rest} ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} />
+  }
   // 拖拽元素
   const SortableItem = ({ id, children }) => {
     const { attributes, listeners } = useSortable({
@@ -838,231 +981,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       </div>
     )
   }
-
-  // 表格行
-  const EditableRow = memo((props) => {
-    const { record, index, className, children, ...rest } = props
-    const { setNodeRef, transform, transition } = useSortable({ id: record.id, index })
-
-    const refForm = useRef(null)
-    const getForm = () => refForm.current
-
-    // 保存-行内容
-    const onSaveRow = async () => {
-      const newData = await getForm().validate()
-      const item = { ...record, ...newData }
-      if (item.accfullname && item.acccode) {
-        item.accfullname = removeAccCodeFromFullname(item.accfullname, item.acccode)
-      }
-
-      setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
-      setIsEditRows((prev) => prev.filter((e) => e !== item.id))
-    }
-
-    // 取消-行编辑
-    const onRemoveRow = () => {
-      const isTemporaryId = record?.id && typeof record.id === 'string' && record.id.includes('index_id_')
-
-      if (isTemporaryId) {
-        onDeleteRow(record)
-      } else {
-        setIsEditRows((prev) => prev.filter((e) => e !== record.id))
-      }
-    }
-
-    // 失去焦点
-    const onBlurCell = (key, e) => {
-      const value = e.target.value
-      let newValue = value
-
-      if (key === 'accfullname' && record?.acccode) {
-        newValue = addAccCodeToFullname(value, record.acccode)
-      }
-
-      // 检查值是否实际发生变化，避免不必要的状态更新
-      if (newValue !== record[key]) {
-        const item = {
-          ...record,
-          [key]: newValue,
-        }
-
-        // 延迟更新状态，避免立即重新渲染
-        setTimeout(() => {
-          setTableData((prev) => prev.map((e) => (e.id === item?.id ? item : e)))
-        }, 0)
-      }
-    }
-
-    return (
-      <EditableContext.Provider value={{ onSaveRow, onRemoveRow, onBlurCell, getForm }}>
-        <Form
-          autoComplete='off'
-          children={children}
-          ref={refForm}
-          wrapper='tr'
-          wrapperProps={{ ...rest, ref: setNodeRef }}
-          className={`${className} table-row!`}
-          style={{ transform: CSS.Transform.toString(transform), transition }}
-        />
-      </EditableContext.Provider>
-    )
-  })
-  // 单元格
-  const EditableCell = memo((props) => {
-    const { children, className, rowData, column } = props
-    const { onSaveRow, onRemoveRow, onBlurCell, getForm } = useContext(EditableContext)
-    const auxiliary = rowData?.assistitems?.items && rowData?.assistitems?.items?.length > 0 ? 1 : 0
-    const wrapperCol = { span: 24 }
-    // 借贷输入校验
-    const borrowLoanValidator = (fieldName) => [
-      {
-        validator(value, cb) {
-          const formValues = getForm().getFieldsValue()
-          const otherField = fieldName === 'borrow' ? 'loan' : 'borrow'
-          const otherValue = formValues[otherField]
-
-          const hasCurrentValue = value != null && value !== '' && Number(value) !== 0
-          const hasOtherValue = otherValue != null && otherValue !== '' && Number(otherValue) !== 0
-
-          if (!hasCurrentValue && !hasOtherValue) {
-            return cb('借贷必须输入一个')
-          }
-          if (hasCurrentValue && hasOtherValue) {
-            return cb('借贷只能输入一个')
-          }
-          return cb()
-        },
-      },
-    ]
-
-    // 切换输入框内容
-    const onSwitchField = (fieldName, e) => {
-      e.preventDefault()
-      const formValues = getForm().getFieldsValue()
-      const sourceValue = formValues[fieldName]
-
-      // 如果源字段没有值，则不执行切换操作
-      if (!sourceValue && sourceValue !== 0) {
-        return
-      }
-
-      const targetField = fieldName === 'borrow' ? 'loan' : 'borrow'
-      const fieldUpdates = {
-        [fieldName]: '',
-        [targetField]: sourceValue,
-      }
-
-      getForm().setFieldsValue(fieldUpdates)
-
-      setTableData((prev) => prev.map((e) => (e.id === rowData.id ? { ...e, ...fieldUpdates } : e)))
-    }
-
-    if (isEditRows.includes(rowData.id)) {
-      // 序号
-      if (column.dataIndex === 'order') {
-        return (
-          <Space>
-            <IconCheck className='text-xl! text-blue-600!' onClick={() => onSaveRow()} />
-            <IconClose className='text-xl! text-red-600!' onClick={() => onRemoveRow()} />
-          </Space>
-        )
-      }
-      // 摘要
-      if (column.dataIndex === 'summary') {
-        return (
-          <Form.Item
-            key={`${rowData.id}-${column.dataIndex}`}
-            className='mb-0!'
-            wrapperCol={wrapperCol}
-            field={column.dataIndex}
-            initialValue={rowData[column.dataIndex]}
-            rules={[{ required: true, message: '摘要不能为空' }]}>
-            <Input.TextArea defaultValue={rowData[column.dataIndex]} rows={1} onBlur={(e) => onBlurCell(column.dataIndex, e)} />
-          </Form.Item>
-        )
-      }
-      // 科目
-      if (column.dataIndex === 'accfullname' && [0, 2].includes(rowData?.authtype)) {
-        const initialValue = addAccCodeToFullname(rowData[column.dataIndex], rowData?.acccode)
-
-        return (
-          <div className='flex items-center gap-2'>
-            <Form.Item
-              key={`${rowData.id}-${column.dataIndex}`}
-              className='mb-0! flex-1'
-              wrapperCol={wrapperCol}
-              field={column.dataIndex}
-              initialValue={initialValue}
-              rules={[{ required: true, message: '科目不能为空' }]}>
-              <Input.TextArea
-                defaultValue={rowData.acccode ? `${rowData?.acccode} ${rowData[column.dataIndex]}` : rowData[column.dataIndex]}
-                className='flex-1'
-                onBlur={(e) => onBlurCell(column.dataIndex, e)}
-              />
-            </Form.Item>
-            <Form.Item className='mb-0! w-5!' wrapperCol={wrapperCol}>
-              <IconMore className='text-xl!' onClick={() => openAccount(rowData)} />
-            </Form.Item>
-          </div>
-        )
-      }
-      // 借方
-      if (column.dataIndex === 'borrow_10') {
-        const fieldName = column.dataIndex.split('_')[0]
-        return (
-          <Form.Item
-            key={`${rowData.id}-${column.dataIndex}`}
-            className='mb-0!'
-            wrapperCol={wrapperCol}
-            field={fieldName}
-            initialValue={rowData[fieldName]}
-            rules={borrowLoanValidator(fieldName)}
-            disabled={auxiliary === 1}>
-            <InputNumber
-              prefix={'¥'}
-              hideControl
-              autoComplete='off'
-              precision={1}
-              step={0.01}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              defaultValue={rowData[fieldName] || ''}
-              onDoubleClick={(e) => onSwitchField(fieldName, e)}
-              onBlur={(e) => onBlurCell(fieldName, e)}
-            />
-          </Form.Item>
-        )
-      }
-
-      // 贷方
-      if (column.dataIndex === 'loan_10') {
-        const fieldName = column.dataIndex.split('_')[0]
-        return (
-          <Form.Item
-            key={`${rowData.id}-${column.dataIndex}`}
-            className='mb-0!'
-            wrapperCol={wrapperCol}
-            field={fieldName}
-            initialValue={rowData[fieldName]}
-            rules={borrowLoanValidator(fieldName)}
-            disabled={auxiliary === 1}>
-            <InputNumber
-              hideControl
-              prefix={'¥'}
-              autoComplete='off'
-              precision={1}
-              step={0.01}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              defaultValue={rowData[fieldName] || ''}
-              onDoubleClick={(e) => onSwitchField(fieldName, e)}
-              onBlur={(e) => onBlurCell(fieldName, e)}
-            />
-          </Form.Item>
-        )
-      }
-    }
-
-    return <div className={className}>{children}</div>
-  })
   // 结束拖拽
   const handleDragEnd = (event) => {
     const { active, over } = event
@@ -1131,6 +1049,17 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const onRowEdit = (record) => {
     if ([3, 4].includes(pageType?.id)) {
       setIsEditRows((prev) => [...prev, record.id])
+
+      // 构造表单数据
+      const formData = {
+        [`summary-${record.id}`]: record.summary,
+        [`accfullname-${record.id}`]: addAccCodeToFullname(record.accfullname, record.acccode),
+        [`borrow-${record.id}`]: record.borrow,
+        [`loan-${record.id}`]: record.loan,
+      }
+
+      // 设置表单值
+      tableForm.setFieldsValue(formData)
     }
   }
 
@@ -1357,6 +1286,20 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     setTableLoading(false)
   }
 
+  // 计算页面合计
+  const onSumTotal = () => {
+    const totalBorrow = tableData.reduce((acc, item) => acc + Number(item.borrow) || 0, 0).toFixed(2)
+    const totalLoan = tableData.reduce((acc, item) => acc + Number(item.loan) || 0, 0).toFixed(2)
+    const totalcn = numberToChinese(totalBorrow)
+
+    setPageProof((prev) => ({
+      ...prev,
+      totalcn,
+      total: totalBorrow,
+      borrow: totalBorrow,
+      loan: totalLoan,
+    }))
+  }
   // 监控表格-计算合计
   useEffect(() => {
     const totalBorrow = tableData.reduce((acc, item) => acc + Number(item.borrow) || 0, 0).toFixed(2)
@@ -1605,48 +1548,49 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               {/* 表格 */}
               <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} coordinates={sortableKeyboardCoordinates}>
                 <SortableContext items={tableData.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-                  <Table
-                    size='small'
-                    rowKey={'id'}
-                    border={false}
-                    borderCell
-                    pagination={false}
-                    loading={tableLoading}
-                    columns={columns}
-                    data={tableData}
-                    style={{ height: pageHeight - (isCollapsed ? 210 : 298) }}
-                    scroll={{ y: pageHeight - 372 }}
-                    rowClassName={(record) =>
-                      [
-                        'h-15',
-                        record.id === selectRow?.id ? 'table-select' : '',
-                        isEditRows.includes(record.id) ? 'table-edit' : '',
-                      ].join(' ')
-                    }
-                    rowSelection={{
-                      type: 'checkbox',
-                      selectedRowKeys: selectList,
-                      onChange: (e) => setSelectList(e),
-                      renderCell: (originNode, _, record) =>
-                        pageType?.id === 2 ? (
-                          originNode
-                        ) : (
-                          <SortableItem id={record.id}>
-                            <IconDragDotVertical className='cursor-move text-xl!' />
-                          </SortableItem>
-                        ),
-                    }}
-                    onRow={(record) => ({
-                      onClick: (e) => onRowSelect(record, e),
-                      onDoubleClick: () => onRowEdit(record),
-                    })}
-                    components={{
-                      body: {
-                        row: EditableRow,
-                        cell: EditableCell,
-                      },
-                    }}
-                  />
+                  <Form form={tableForm} className='w-full' autoComplete='off' wrapperCol={{ span: 24 }}>
+                    <Table
+                      size='small'
+                      rowKey={'id'}
+                      border={false}
+                      borderCell
+                      pagination={false}
+                      loading={tableLoading}
+                      columns={columns}
+                      data={tableData}
+                      style={{ height: pageHeight - (isCollapsed ? 210 : 298) }}
+                      scroll={{ y: pageHeight - 372 }}
+                      rowClassName={(record) =>
+                        [
+                          'h-15',
+                          record.id === selectRow?.id ? 'table-select' : '',
+                          isEditRows.includes(record.id) ? 'table-edit' : '',
+                        ].join(' ')
+                      }
+                      rowSelection={{
+                        type: 'checkbox',
+                        selectedRowKeys: selectList,
+                        onChange: (e) => setSelectList(e),
+                        renderCell: (originNode, _, record) =>
+                          pageType?.id === 2 ? (
+                            originNode
+                          ) : (
+                            <SortableItem id={record.id}>
+                              <IconDragDotVertical className='cursor-move text-xl!' />
+                            </SortableItem>
+                          ),
+                      }}
+                      onRow={(record) => ({
+                        onClick: (e) => onRowSelect(record, e),
+                        onDoubleClick: () => onRowEdit(record),
+                      })}
+                      components={{
+                        body: {
+                          row: EditableRow,
+                        },
+                      }}
+                    />
+                  </Form>
                 </SortableContext>
               </DndContext>
               <div className='flex justify-between border-t border-neutral-200 p-3'>
@@ -1687,7 +1631,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                     labelCol={{ style: { flexBasis: 110 } }}
                     wrapperCol={{ style: { flexBasis: `calc(100% - ${110}px)` } }}
                     validateMessages={{ required: (_, { label }) => `${label}不能为空` }}
-                    disabled={!isEditRows.includes(selectRow?.id)}>
+                    disabled={!isEditRows.includes(selectRow?.id)}
+                    onChange={onChangeAssist}>
                     <Form.Item label='业务日期' field={'assistitems.bdate'} rules={[{ required: true }]}>
                       <DatePicker className='w-full!' defaultPickerValue={pageProof?.defaultStart} />
                     </Form.Item>
@@ -1704,21 +1649,37 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       hidden={selectRow?.isbj !== 1}>
                       <DatePicker className='w-full!' />
                     </Form.Item>
-                    <Form.Item label='本位币金额' field={'assistitems.money'} rules={[{ required: true }]}>
+                    <Form.Item
+                      label='本位币金额'
+                      field={'assistitems.money'}
+                      rules={[
+                        { required: true },
+                        {
+                          validator: (value, cb) => {
+                            if (value === '' || value === null || value === undefined || isNaN(value)) {
+                              return cb('本位币金额不能为空')
+                            }
+                            return cb()
+                          },
+                        },
+                      ]}>
                       <InputNumber
                         hideControl
                         prefix='¥'
-                        allowClear
                         autoComplete='off'
                         precision={1}
                         step={0.01}
-                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        formatter={(value) => value && `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                       />
                     </Form.Item>
                     <Form.Item shouldUpdate noStyle>
                       {(values) => {
                         return values?.assistitems?.items?.map((item, index) => (
-                          <Form.Item key={index} label={item.typename} field={`assistitems.items[${index}].value`}>
+                          <Form.Item
+                            key={index}
+                            label={item.typename}
+                            field={`assistitems.items[${index}].value`}
+                            rules={[{ required: true }]}>
                             <Input
                               placeholder='请输入'
                               suffix={
@@ -1737,7 +1698,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       field={'assistitems.summary'}
                       rules={[{ required: true }]}
                       style={{ marginBottom: 0 }}>
-                      <Input.TextArea rows={2} autoSize />
+                      <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} />
                     </Form.Item>
                     <Form.Item shouldUpdate noStyle>
                       {(values) => {

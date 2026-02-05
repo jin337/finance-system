@@ -62,7 +62,7 @@ const AssistInfo = ({ assistParams, onSelect }) => {
       haslevel: values.haslevel ? '1' : '0',
       name: values?.name || '',
       typeid: assistParams?.typeid,
-      groupid: assistParams?.groupid,
+      groupid: assistParams?.limitgroup === '1' ? assistParams?.groupid : null,
     }
     const { code, data } = await Http.post('/assist/list', params)
     if (code === 200) {

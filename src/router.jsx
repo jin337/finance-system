@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router'
 
+import Demo from 'src/views/Demo1'
 import ExcelView from 'src/views/ExcelView'
 import Home from 'src/views/Home'
 import Login from 'src/views/Login'
@@ -40,6 +41,10 @@ export const router = createBrowserRouter([
   {
     path: '/*',
     element: <NotAuth />,
+  },
+  {
+    path: '/demo',
+    element: <Demo />,
   },
   {
     path: '/login',
