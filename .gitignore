@@ -25,3 +25,4 @@ dist-ssr
 /pnpm-lock.yaml
 /.vscode
 /package-lock.json
+/.qoder
