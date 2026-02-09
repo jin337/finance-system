@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
 // 拖拽
@@ -69,7 +69,7 @@ import pay_collect from 'src/assets/images/pay_collect.png'
 import rename from 'src/assets/images/rename.png'
 
 // 数据状态
-const buttonlist = [
+const tylelist = [
   { id: '', name: '全部', color: '#606266' },
   { id: '-1', name: '暂存', color: '#df4126' },
   { id: '0', name: '待提交', color: '#D78400' },
@@ -154,26 +154,11 @@ const transNum = (num, index) => {
   return targetChar === 'X' || targetChar === '-' ? '' : targetChar || ''
 }
 
-// 移除 acccode 前缀
-const removeAccCodeFromFullname = (fullname, code) => {
-  if (!fullname || !code) return fullname
-  const regex = new RegExp(`^${code}\\s*`, 'g')
-  return fullname.replace(regex, '')
-}
-
-// 拼接 acccode 和 fullname
-const addAccCodeToFullname = (fullname, code) => {
-  if (!code) return fullname
-  const cleanFullname = removeAccCodeFromFullname(fullname, code)
-  return `${code} ${cleanFullname}`
-}
-
 const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const { pageHeight, isAdmin, currentCompany } = useSelector((state) => state.commonReducer)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const [pageForm] = Form.useForm()
-  const [selectForm] = Form.useForm()
   const [tableForm] = Form.useForm()
 
   const [pageProof, setPageProof] = useState()
@@ -191,18 +176,20 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
 
   const [sessionnoId, setSessionId] = useState()
 
-  // 会计科目选择
-  const [visibleAccount, setVisibleAccount] = useState(false)
-  const [accountParams, setAccountParams] = useState({})
-
   // 新建账单选择
   const [visibleBill, setVisibleBill] = useState(false)
   const [billParams, setBillParams] = useState({})
 
-  // 辅助账
-  const [visibleAssist, setVisibleAssist] = useState(false)
-  const [assistInfo, setAssistInfo] = useState()
+  // 会计科目选择
+  const [visibleAccount, setVisibleAccount] = useState(false)
+  const [accountParams, setAccountParams] = useState({})
 
+  // 辅助账
+  const [assistForm] = Form.useForm()
+  const [visibleAssist, setVisibleAssist] = useState(false)
+  const [assistParams, setAssistParams] = useState()
+
+  // 表格列
   const columns = [
     {
       title: '序号',
@@ -222,39 +209,41 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     {
       title: '摘要',
       dataIndex: 'summary',
-      render: (text, record) => {
-        const onBlur = async () => {
-          await tableForm.validate([`summary-${record.id}`])
-        }
-        return isEditRows.includes(record.id) ? (
-          <Form.Item className='mb-0!' field={`summary-${record.id}`} rules={[{ required: true, message: '摘要不能为空' }]}>
-            <Input.TextArea rows={1} onBlur={onBlur} />
+      render: (text, record) =>
+        isEditRows.includes(record.id) ? (
+          <Form.Item
+            className='mb-0!'
+            field={`summary-${record.id}`}
+            rules={[{ required: true, message: '摘要不能为空' }]}
+            initialValue={text}>
+            <Input.TextArea id={`summary-${record.id}`} rows={1} autoFocus />
+          </Form.Item>
+        ) : (
+          text
+        ),
+    },
+    {
+      title: '科目',
+      dataIndex: 'accfullnameCode',
+      width: 360,
+      render: (text, record) => (
+        isEditRows.includes(record.id) && [0, 2].includes(record?.authtype) ? (
+          <Form.Item required className='mb-0!'>
+            <div className='flex items-center gap-2'>
+              <Form.Item
+                className='mb-0! flex-1'
+                field={`accfullnameCode-${record.id}`}
+                rules={[{ required: true, message: '科目不能为空' }]}
+                initialValue={text}>
+                <Input.TextArea id={`accfullnameCode-${record.id}`} rows={2} />
+              </Form.Item>
+              <IconMore className='text-xl!' onClick={() => openAccount(record)} />
+            </div>
           </Form.Item>
         ) : (
           text
         )
-      },
-    },
-    {
-      title: '科目',
-      dataIndex: 'accfullname',
-      width: 360,
-      render: (text, record) =>
-        isEditRows.includes(record.id) ? (
-          <div className='flex items-center gap-2'>
-            <Form.Item
-              className='mb-0! flex-1'
-              field={`accfullname-${record.id}`}
-              rules={[{ required: true, message: '科目不能为空' }]}>
-              <Input.TextArea className='flex-1' />
-            </Form.Item>
-            <Form.Item className='mb-0! w-5!'>
-              <IconMore className='text-xl!' onClick={() => openAccount(record)} />
-            </Form.Item>
-          </div>
-        ) : (
-          text
-        ),
+      )
     },
     {
       title: '借方',
@@ -268,29 +257,43 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 10)}</span>,
+              children: transNum(record?.borrow, 10),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
-              const auxiliary = record?.assistitems?.items && record?.assistitems?.items?.length > 0 ? 1 : 0
-              const isLoanFilled = tableForm.getFieldValue(`loan-${record.id}`)
-
               obj.props.colSpan = 11
+
+              const auxiliary = record?.assistitems?.items && record?.assistitems?.items?.length > 0 ? 1 : 0
               obj.children = (
-                <Form.Item
-                  className='mb-0!'
-                  field={`borrow-${record.id}`}
-                  rules={validateDebitCredit(record)}
-                  disabled={auxiliary === 1 || isLoanFilled}>
-                  <InputNumber
-                    className='w-full'
-                    prefix={'¥'}
-                    hideControl
-                    autoComplete='off'
-                    precision={1}
-                    step={0.01}
-                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  />
+                <Form.Item shouldUpdate noStyle>
+                  {
+                    (values) => {
+                      return <Form.Item
+                        className='mb-0!'
+                        field={`borrow-${record.id}`}
+                        initialValue={record?.borrow}
+                        rules={validateDebitCredit(record)}
+                        disabled={auxiliary === 1 || values[`loan-${record.id}`]}>
+                        <InputNumber
+                          id={`borrow-${record.id}`}
+                          className='w-full'
+                          prefix={'¥'}
+                          hideControl
+                          autoComplete='off'
+                          precision={1}
+                          step={0.01}
+                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                          onDoubleClick={() => {
+                            const num = values[`borrow-${record.id}`]
+                            if (!!num && num !== 0) {
+                              tableForm.setFieldValue(`loan-${record.id}`, num)
+                              tableForm.setFieldValue(`borrow-${record.id}`, 0)
+                            }
+                          }}
+                        />
+                      </Form.Item>
+                    }
+                  }
                 </Form.Item>
               )
             }
@@ -304,7 +307,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 9)}</span>,
+              children: transNum(record?.borrow, 9),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -318,10 +321,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_8',
           className: 'row-money',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 8)}</span>,
+              children: transNum(record?.borrow, 9),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -335,10 +337,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_7',
           className: 'row-money row-blue',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 7)}</span>,
+              children: transNum(record?.borrow, 7),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -352,10 +353,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_6',
           className: 'row-money',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 6)}</span>,
+              children: transNum(record?.borrow, 6),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -369,10 +369,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_5',
           className: 'row-money',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 5)}</span>,
+              children: transNum(record?.borrow, 5),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -386,10 +385,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_4',
           className: 'row-money row-blue',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 4)}</span>,
+              children: transNum(record?.borrow, 4),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -403,10 +401,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_3',
           className: 'row-money',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 3)}</span>,
+              children: transNum(record?.borrow, 3),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -420,10 +417,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_2',
           className: 'row-money',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 2)}</span>,
+              children: transNum(record?.borrow, 2),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -437,10 +433,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_1',
           className: 'row-money row-red',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 1)}</span>,
+              children: transNum(record?.borrow, 1),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -454,10 +449,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           dataIndex: 'borrow_0',
           className: 'row-money',
           width: 20,
-
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.borrow <= 0 ? 'text-red-500' : ''}>{transNum(record?.borrow, 0)}</span>,
+              children: transNum(record?.borrow, 0),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -480,29 +474,43 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 10)}</span>,
+              children: transNum(record?.loan, 10),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
-              const auxiliary = record?.assistitems?.items && record?.assistitems?.items?.length > 0 ? 1 : 0
-              const isBorrowFilled = tableForm.getFieldValue(`borrow-${record.id}`)
-
               obj.props.colSpan = 11
+
+              const auxiliary = record?.assistitems?.items && record?.assistitems?.items?.length > 0 ? 1 : 0
               obj.children = (
-                <Form.Item
-                  className='mb-0!'
-                  field={`loan-${record.id}`}
-                  rules={validateDebitCredit(record)}
-                  disabled={auxiliary === 1 || isBorrowFilled}>
-                  <InputNumber
-                    className='w-full'
-                    prefix={'¥'}
-                    hideControl
-                    autoComplete='off'
-                    precision={1}
-                    step={0.01}
-                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  />
+                <Form.Item shouldUpdate noStyle>
+                  {
+                    (values) => {
+                      return <Form.Item
+                        className='mb-0!'
+                        field={`loan-${record.id}`}
+                        initialValue={record?.loan}
+                        rules={validateDebitCredit(record)}
+                        disabled={auxiliary === 1 || values[`borrow-${record.id}`]}>
+                        <InputNumber
+                          id={`loan-${record.id}`}
+                          className='w-full'
+                          prefix={'¥'}
+                          hideControl
+                          autoComplete='off'
+                          precision={1}
+                          step={0.01}
+                          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                          onDoubleClick={() => {
+                            const num = values[`loan-${record.id}`]
+                            if (!!num && num !== 0) {
+                              tableForm.setFieldValue(`borrow-${record.id}`, num)
+                              tableForm.setFieldValue(`loan-${record.id}`, 0)
+                            }
+                          }}
+                        />
+                      </Form.Item>
+                    }
+                  }
                 </Form.Item>
               )
             }
@@ -516,7 +524,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 9)}</span>,
+              children: transNum(record?.loan, 9),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -532,7 +540,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 8)}</span>,
+              children: transNum(record?.loan, 8),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -548,7 +556,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 7)}</span>,
+              children: transNum(record?.loan, 7),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -564,7 +572,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 6)}</span>,
+              children: transNum(record?.loan, 6),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -580,7 +588,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 5)}</span>,
+              children: transNum(record?.loan, 5),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -596,7 +604,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 4)}</span>,
+              children: transNum(record?.loan, 4),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -612,7 +620,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 3)}</span>,
+              children: transNum(record?.loan, 3),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -628,7 +636,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 2)}</span>,
+              children: transNum(record?.loan, 2),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -644,7 +652,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 1)}</span>,
+              children: transNum(record?.loan, 1),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -660,7 +668,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: <span className={record?.loan <= 0 ? 'text-red-500' : ''}>{transNum(record?.loan, 0)}</span>,
+              children: transNum(record?.loan, 0),
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -672,49 +680,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       ],
     },
   ]
-
-  // 借贷输入框校验
-  const validateDebitCredit = (record) => [
-    {
-      validator(_, cb) {
-        const borrow = tableForm.getFieldValue(`borrow-${record.id}`)
-        const loan = tableForm.getFieldValue(`loan-${record.id}`)
-
-        if (!borrow && !loan) {
-          return cb('借贷必须输入一个')
-        } else {
-          return cb()
-        }
-      },
-    },
-  ]
-  // 取消行编辑
-  const onCancelRow = (record) => {
-    setIsEditRows((prev) => prev.filter((id) => id !== record.id))
-  }
-  // 保存行数据
-  const onSaveRow = async (record) => {
-    const values = await tableForm.validate()
-    const rowData = {
-      summary: values[`summary-${record.id}`],
-      accfullname: values[`accfullname-${record.id}`],
-      borrow: values[`borrow-${record.id}`],
-      loan: values[`loan-${record.id}`],
-    }
-
-    setTableData((prev) =>
-      prev.map((item) =>
-        item.id === record.id
-          ? {
-              ...item,
-              ...rowData,
-            }
-          : item
-      )
-    )
-
-    onCancelRow(record)
-  }
   // 保存&暂存
   const submitBill = async (type) => {
     // -1 暂存凭证 0凭证保存
@@ -775,10 +740,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       cashiername: values.cashiername || '', // 出纳人
       seqno: pageProof.seqno, // 凭证序号
       vno: pageProof.vno, // 凭证号
-      borrow: Number(pageProof.borrow), // 借方合计
-      loan: Number(pageProof.loan), // 贷方合计
-      total: Number(pageProof.total), // 合计
-      totalcn: pageProof.totalcn, // 合计中文
+      ...getTotals(tableForm.getFieldsValue()),
       stocktype: pageProof.stocktype, // 出入库类型 0=非出入库凭证1=入库2=出库
       stockpzid: pageProof.stockpzid, // 出入库关联凭证
       sessionno: sessionnoId,
@@ -804,115 +766,239 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     //   Message.error(message || '新增凭证出错了')
     // }
   }
-  // 保存辅助账
-  const onSaveAssist = async (record) => {
-    const selectValues = await selectForm.validate()
-    if (selectValues) {
-      setIsEditRows((prev) => prev.filter((e) => e !== record.id))
+  // 借贷输入框校验 借方和贷方至少有一项不为0
+  const validateDebitCredit = (record) => [
+    {
+      validator(_, cb) {
+        const borrow = tableForm.getFieldValue(`borrow-${record.id}`)
+        const loan = tableForm.getFieldValue(`loan-${record.id}`)
+        if ((!borrow || borrow === 0) && (!loan || loan === 0)) {
+          return cb('借贷必须输入一个')
+        } else {
+          return cb()
+        }
+      },
+    },
+  ]
+  // 取消行编辑
+  const onCancelRow = (record) => {
+    // 从编辑状态中移除
+    setIsEditRows((prev) => prev.filter((id) => id !== record.id))
+
+    // 取消选中状态
+    setSelectRow(undefined)
+
+    // 重置表单字段到原始值
+    const currentRecord = record.oldRow
+    if (currentRecord) {
+      tableForm.setFieldsValue({
+        [`summary-${record.id}`]: currentRecord.summary,
+        [`accfullnameCode-${record.id}`]: currentRecord.accfullnameCode,
+        [`borrow-${record.id}`]: currentRecord.borrow,
+        [`loan-${record.id}`]: currentRecord.loan,
+      })
+      setTableData((prev) => prev.map((item) => item.id === record.id ? currentRecord : item))
+    } else {
+      const list = [
+        `summary-${record.id}`,
+        `accfullnameCode-${record.id}`,
+        `borrow-${record.id}`,
+        `loan-${record.id}`]
+      tableForm.clearFields(list)
+      setTableData((prev) => prev.filter((item) => item.id !== record.id))
     }
   }
+  // 保存行数据
+  const onSaveRow = async (record) => {
+    const fields = [`summary-${record.id}`, `accfullnameCode-${record.id}`, `borrow-${record.id}`, `loan-${record.id}`]
+    const rowData = await tableForm.validate(fields)
 
-  // 监控辅助账金额和方向
-  const onChangeAssist = (v, vs) => {
-    let assistitems = vs.assistitems
-    const key = Object.keys(v)[0]
-
-    let borrow = assistitems?.direct === 1 ? assistitems.money : 0
-    let loan = assistitems?.direct === 2 ? assistitems.money : 0
-
-    const newItems = {
-      ...vs,
-      borrow,
-      loan,
-    }
-
-    setSelectRow(newItems)
-    setTableData((prev) => prev.map((e) => (e.id === vs.id ? newItems : e)))
-
-    if (key === 'assistitems.money' || key === 'assistitems.direct') {
-      const formData = {
-        [`borrow-${vs.id}`]: borrow,
-        [`loan-${vs.id}`]: loan,
+    // 查找当前记录在tableData中的索引
+    const rowIndex = tableData.findIndex((item) => item.id === record.id)
+    if (rowIndex !== -1) {
+      // 更新数据
+      const updatedRecord = {
+        ...tableData[rowIndex],
+        summary: rowData[`summary-${record.id}`],
+        accfullnameCode: rowData[`accfullnameCode-${record.id}`],
+        borrow: rowData[`borrow-${record.id}`],
+        loan: rowData[`loan-${record.id}`],
       }
 
-      // 设置表单值
-      tableForm.setFieldsValue(formData)
+      // 更新整个数据数组
+      const newTableData = [...tableData]
+      newTableData[rowIndex] = {
+        ...updatedRecord,
+        oldRow: updatedRecord
+      }
+      console.log(newTableData)
+
+      // 更新tableData状态
+      setTableData(newTableData)
+
+      // 移除编辑状态
+      setIsEditRows((prev) => prev.filter((id) => id !== record.id))
     }
-    onSumTotal()
   }
+  // 保存-辅助账选择
+  const onSaveAssist = async () => {
+    const values = await assistForm.validate()
+    const newSelelct = {
+      ...selectRow,
+      borrow: values.direct === 1 ? values.money : 0,
+      loan: values.direct === 2 ? values.money : 0,
+      assistitems: values,
+    }
+    // 更新tableData中的对应行
+    setTableData((prev) => prev.map((item) => (item.id === newSelelct.id ? newSelelct : item)))
+
+    //取消行编辑状态
+    setIsEditRows(isEditRows.filter((id) => id !== newSelelct.id))
+  }
+  // 监控辅助账数据（防抖版）
+  const throttleRef = useRef(null)
+  const onChangeAssist = useCallback(
+    (v, vs) => {
+      // 清除之前的定时器，实现防抖（Debounce），确保最后一次修改生效
+      if (throttleRef.current) {
+        clearTimeout(throttleRef.current)
+      }
+
+      throttleRef.current = setTimeout(() => {
+        if (!selectRow?.id) return
+
+        const { direct, money } = vs
+        const borrow = direct === 1 ? (Number(money) || 0) : 0
+        const loan = direct === 2 ? (Number(money) || 0) : 0
+
+        const key = Object.keys(v)[0]
+        // 当修改方向或金额时，同步更新主表单的借贷列
+        if (key === 'direct' || key === 'money') {
+          tableForm.setFieldsValue({
+            [`borrow-${selectRow.id}`]: borrow,
+            [`loan-${selectRow.id}`]: loan,
+          })
+        }
+
+        const updatedRow = {
+          ...selectRow,
+          borrow,
+          loan,
+          assistitems: {
+            ...vs,
+            money: Number(money) || 0,
+          },
+        }
+
+        // 同步更新表格数据和当前选中行，确保 UI 一致性
+        setTableData((prev) => prev.map((item) => (item.id === updatedRow.id ? updatedRow : item)))
+        setSelectRow(updatedRow)
+
+        throttleRef.current = null
+      }, 300)
+    },
+    [selectRow, tableForm]
+  )
   // 确认-辅助账选择
   const onAssistEntry = (record) => {
-    const item = {
+    const newItem = {
+      ...assistParams,
       itemcode: record.code,
       itemfullname: record.fullname,
       itemid: record.id,
       itemname: record.name,
-      typeid: assistInfo.typeid,
-      typename: assistInfo.typename,
+      codeName: record.code ? `${record.code || ''}-${record.name || ''}` : '',
     }
 
-    const updatedItems = selectRow.assistitems.items.map((e) => (e.typeid === assistInfo.typeid ? item : e))
-
-    const fuzhuData = selectForm.getFields()
-    const newRow = {
-      ...selectRow,
-      assistitems: {
-        ...fuzhuData.assistitems,
-        items: updatedItems,
-      },
+    // 更新数据
+    const updateSelectRowWithNewItem = (newItem) => {
+      const values = assistForm.getFields()
+      const updatedItems = values.items.map((item) => (item.typeid === newItem.typeid ? newItem : item))
+      return {
+        ...selectRow,
+        borrow: values.direct === 1 ? values.money : 0,
+        loan: values.direct === 2 ? values.money : 0,
+        assistitems: {
+          ...values,
+          items: updatedItems,
+        },
+      }
     }
+    const updatedSelectRow = updateSelectRowWithNewItem(newItem)
 
-    onRowSelect(newRow)
+    // 更新assistForm
+    assistForm.setFieldsValue(updatedSelectRow.assistitems)
+    // 更新选中行数据
+    onRowSelect(updatedSelectRow)
+    // 更新tableData中的对应行
+    setTableData((prev) => prev.map((item) => (item.id === updatedSelectRow.id ? updatedSelectRow : item)))
+    // 关闭弹窗
     setVisibleAssist(false)
+    // 清空参数
+    setAssistParams(null)
   }
   // 打开-辅助账选择
   const openAssist = (record) => {
-    setAssistInfo(record)
+    setAssistParams(record)
     setVisibleAssist(true)
   }
-  // 确认-会计科目选择
+  // 确认-科目选择
   const onAccountEntry = async (record) => {
+    const borrow = tableForm.getFieldValue(`borrow-${selectRow.id}`)
+    const loan = tableForm.getFieldValue(`loan-${selectRow.id}`)
+    const summary = tableForm.getFieldValue(`summary-${selectRow.id}`)
+
     const { code, data } = await Http.post(`/account/${record.id}`)
     if (code === 200) {
       const direct = data.direct == '借' ? 1 : 2
-      const item = {
-        id: selectRow.id,
+      const amount = borrow || loan
+      const newAcc = {
+        ...selectRow,
         acccode: data.code,
         accfullname: data.fullname,
         accname: data.name,
-        assistitems: {
-          bdate: pageForm.getFieldValue('bdate'),
-          summary: selectRow.summary,
-          money: direct === 1 ? Number(selectRow.borrow) : Number(selectRow.loan),
-          items: (data.assistitems || []).map((e) => ({
-            typename: e.name,
-            typeid: e.id,
-            value: null,
-          })),
-        },
-        authtype: selectRow.authtype,
-        autobuild: selectRow.autobuild,
-        borrow: direct === 1 ? Number(selectRow.borrow) : 0,
-        brachflag: '',
+        accfullnameCode: `${data.code} ${data.fullname}`,
         classid: data.classid,
-        edate: '',
         isbj: data.isbj,
-        loan: direct === 2 ? Number(selectRow.loan) : 0,
-        project_off_set: selectRow.project_off_set,
-        summary: selectRow.summary,
+        borrow: direct === 1 ? amount : 0,
+        loan: direct === 2 ? amount : 0,
+        assistitems: data.assistitems?.length > 0
+          ? {
+            bdate: pageForm.getFieldValue('bdate'),
+            summary: summary,
+            money: amount || '',
+            direct: direct,
+            items: (data.assistitems || []).map((e) => ({
+              typename: e.name,
+              typeid: e.id,
+              limitgroup: e.limitgroup,
+              sourcetype: e.sourcetype,
+            })),
+          }
+          : null,
       }
-      setTableData((prev) => prev.map((e) => (e.id === selectRow.id ? item : e)))
 
-      // 选中
-      onRowSelect(item)
-      // 编辑
-      onRowEdit(item)
+      // 更新tableData中的对应行
+      setTableData((prev) => prev.map((item) => (item.id === selectRow.id ? newAcc : item)))
+      // 更新selectRow
+      setSelectRow(newAcc)
+      // 更新tableForm
+      tableForm.setFieldsValue({
+        [`accfullnameCode-${selectRow.id}`]: newAcc.accfullnameCode,
+        [`borrow-${selectRow.id}`]: newAcc.borrow,
+        [`loan-${selectRow.id}`]: newAcc.loan,
+      })
+
+      assistForm.setFieldsValue(newAcc.assistitems)
+
       // 关闭弹窗
       setVisibleAccount(false)
+      // 请款参数
+      setAccountParams(null)
     }
   }
-  // 打开-会计科目选择
-  const openAccount = async (record) => {
+  // 打开-科目选择
+  const openAccount = (record) => {
     const params = {
       shortname: currentCompany?.shortname,
       classid: record.classid,
@@ -920,7 +1006,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     setAccountParams(params)
     setVisibleAccount(true)
   }
-  // 确认-选择账单
+  // 确认-账单选择
   const onBillEntry = async (params) => {
     const { code, data, message } = await Http.post('/bill/entry', params)
     if (code === 200) {
@@ -930,8 +1016,24 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         ...e,
         id: 'index_id_' + i,
         autobuild: 1,
+        accfullnameCode: `${e.acccode} ${e.accfullname}`,
       }))
       setTableData(entrysTable)
+
+      const newEntrys = [...(pageProof?.entrys || []), ...entrysTable]
+      const values = newEntrys.reduce((acc, item) => {
+        if (item?.id) {
+          acc[`summary-${item.id}`] = item.summary
+          acc[`accfullnameCode-${item.id}`] = item.accfullnameCode
+          acc[`borrow-${item.id}`] = item.borrow
+          acc[`loan-${item.id}`] = item.loan
+        }
+        return acc
+      }, {})
+      tableForm.setFieldsValue(values)
+
+
+      setPageProof((prev) => ({ ...prev, entrys: newEntrys }))
 
       onEditType(3)
       setVisibleBill(false)
@@ -939,7 +1041,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       Message.error(message)
     }
   }
-  // 新建账单
+  // 打开-账单选择
   const openBill = async (item) => {
     if (item.type === 'add') {
       onEditType(3)
@@ -962,46 +1064,23 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       setBillParams(params)
     }
   }
-  // 表格行
-  const EditableRow = (props) => {
-    const { record, index, ...rest } = props
-    const { setNodeRef, transform, transition } = useSortable({ id: record.id, index })
+  // 删除-已存在的账单
+  const clearBill = () => {
+    setPageBill()
+    onEditType(0)
+    setTableData([])
+    setSelectRow()
+    setIsEditRows([])
 
-    return <tr index={index} {...rest} ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} />
-  }
-  // 拖拽元素
-  const SortableItem = ({ id, children }) => {
-    const { attributes, listeners } = useSortable({
-      id,
-    })
-
-    return (
-      <div {...attributes} {...listeners}>
-        {children}
-      </div>
-    )
-  }
-  // 结束拖拽
-  const handleDragEnd = (event) => {
-    const { active, over } = event
-
-    if (active.id !== over.id) {
-      setTableData((prev) => {
-        const activeIndex = prev.findIndex((item) => item.id === active.id)
-        const overIndex = prev.findIndex((item) => item.id === over.id)
-        const newItems = [...prev]
-        newItems.splice(activeIndex, 1)
-        newItems.splice(overIndex, 0, prev[activeIndex])
-        return newItems
-      })
-    }
+    assistForm.resetFields()
+    tableForm.clearFields()
   }
   //行-新增
   const onAddRow = () => {
-    const id = 'index_id_' + uuid()
     const newRow = {
-      id,
+      id: 'index_id_' + uuid(),
       summary: tableData[tableData?.length - 1]?.summary || '',
+      accfullnameCode: '',
       authtype: 0,
       autobuild: 1,
       assistitems: null,
@@ -1009,7 +1088,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     const newTableData = [...tableData, newRow]
     setTableData(newTableData)
     setSelectRow(newRow)
-    setIsEditRows((prev) => [...prev, id])
+    setIsEditRows((prev) => [...prev, newRow.id])
   }
   //行-插入
   const onInsertRow = (record) => {
@@ -1018,10 +1097,10 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     } else {
       let index = tableData?.findIndex((e) => e.id === record?.id)
       if (index !== -1) {
-        const id = 'index_id_' + uuid()
         const newRow = {
-          id,
-          summary: tableData[index]?.summary || '',
+          id: 'index_id_' + uuid(),
+          summary: tableData[tableData?.length - 1]?.summary || '',
+          accfullnameCode: '',
           authtype: 0,
           autobuild: 1,
           assistitems: null,
@@ -1030,7 +1109,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         const newTableData = [...tableData.slice(0, index), newRow, ...tableData.slice(index)]
         setTableData(newTableData)
         setSelectRow(newRow)
-        setIsEditRows((prev) => [...prev, id])
+        setIsEditRows((prev) => [...prev, newRow.id])
       } else {
         onAddRow()
       }
@@ -1048,54 +1127,52 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   // 行-编辑
   const onRowEdit = (record) => {
     if ([3, 4].includes(pageType?.id)) {
-      setIsEditRows((prev) => [...prev, record.id])
-
-      // 构造表单数据
-      const formData = {
-        [`summary-${record.id}`]: record.summary,
-        [`accfullname-${record.id}`]: addAccCodeToFullname(record.accfullname, record.acccode),
-        [`borrow-${record.id}`]: record.borrow,
-        [`loan-${record.id}`]: record.loan,
-      }
-
-      // 设置表单值
-      tableForm.setFieldsValue(formData)
+      setIsEditRows((prev) => (prev.includes(record.id) ? prev : [...prev, record.id]))
+      // 延迟聚焦摘要输入框
+      setTimeout(() => {
+        const input = document.getElementById(`summary-${record.id}`)
+        input?.focus()
+      }, 100)
     }
   }
-
   // 行-选择
   const onRowSelect = (record, e) => {
     const targetElement = e?.target
     const isCheckboxClick = targetElement
       ? targetElement?.classList.contains('arco-checkbox') ||
-        targetElement?.classList.contains('arco-checkbox-input') ||
-        targetElement?.closest('.arco-checkbox')
+      targetElement?.classList.contains('arco-checkbox-input') ||
+      targetElement?.closest('.arco-checkbox')
       : false
     // 排除干扰点击
 
     if (!isCheckboxClick) {
-      selectForm.resetFields()
-      setSelectRow(() => {
-        const item = record?.assistitems
-        if (item) {
-          item.direct = record.borrow !== 0 && record.loan === 0 ? 1 : 2
-          item.items = Array.isArray(item.items)
-            ? item.items.map((e) => ({
-                ...e,
-                value: e.itemcode ? `${e.itemcode || ''}-${e.itemname || ''}` : '',
-              }))
-            : []
+      // 设置选中行
+      setSelectRow(record)
 
-          // 异步更新表单值
-          Promise.resolve().then(() => {
-            selectForm.setFieldsValue({
-              ...record,
-              assistitems: item,
-            })
-          })
+      // 焦点处理
+      if (isEditRows.includes(record.id)) {
+        // 焦点处理：如果点击的是输入框且未禁用，则确保其获得焦点
+        const input = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA'
+          ? targetElement
+          : targetElement.closest('td')?.querySelector('input, textarea')
+        if (input && !input.classList.contains('arco-input-disabled')) {
+          setTimeout(() => {
+            input.focus()
+          }, 0)
         }
-        return record
-      })
+      }
+
+      // 处理辅助账信息
+      const assistInfo = record?.assistitems
+      const updatedAssistItems = {
+        ...assistInfo,
+        direct: record?.borrow !== 0 ? 1 : 2,
+        items: (assistInfo?.items || [])?.map((item) => ({
+          ...item,
+          codeName: item?.itemid ? `${item?.itemcode}-${item?.itemname}` : '',
+        })),
+      }
+      assistForm.setFieldsValue(updatedAssistItems)
     }
   }
   // 黏贴
@@ -1177,14 +1254,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     getProofNumber()
     getFileCount()
   }
-
-  // 删除已存在的账单
-  const clearBill = () => {
-    setPageBill()
-    onEditType(0)
-    setTableData([])
-    setSelectRow()
-  }
   // 页面状态改变
   const onEditType = (type) => {
     // 0新建 1查看 2编辑 3新建编辑
@@ -1265,9 +1334,29 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       }))
 
       const { entrys, ...restProof } = proof
-      const key = buttonlist.find((item) => String(item.id) == String(restProof.status)) || {}
+
+      const newEntrys = entrys.map((item) => {
+        return {
+          ...item,
+          accfullnameCode: `${item.acccode} ${item.accfullname}`,
+        }
+      })
+      const values = newEntrys.reduce((acc, item) => {
+        if (item?.id) {
+          acc[`summary-${item.id}`] = item.summary
+          acc[`accfullnameCode-${item.id}`] = item.accfullnameCode
+          acc[`borrow-${item.id}`] = item.borrow
+          acc[`loan-${item.id}`] = item.loan
+        }
+        return acc
+      }, {})
+      tableForm.setFieldsValue(values)
+      setTableData(newEntrys || [])
+
+
+      const key = tylelist.find((item) => String(item.id) == String(restProof.status)) || {}
       const itemProof = {
-        ...restProof,
+        ...proof,
         status_name: key?.name,
         status_color: key?.color,
         range: `${restProof?.year}年${restProof?.month}期`,
@@ -1279,42 +1368,70 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       }
       setPageProof(itemProof)
       pageForm.setFieldsValue(itemProof)
-
-      setTableData(entrys || [])
     }
 
     setTableLoading(false)
   }
+  // 表格行
+  const EditableRow = (props) => {
+    const { record, index, ...rest } = props
+    const { setNodeRef, transform, transition } = useSortable({ id: record.id, index })
 
-  // 计算页面合计
-  const onSumTotal = () => {
-    const totalBorrow = tableData.reduce((acc, item) => acc + Number(item.borrow) || 0, 0).toFixed(2)
-    const totalLoan = tableData.reduce((acc, item) => acc + Number(item.loan) || 0, 0).toFixed(2)
-    const totalcn = numberToChinese(totalBorrow)
-
-    setPageProof((prev) => ({
-      ...prev,
-      totalcn,
-      total: totalBorrow,
-      borrow: totalBorrow,
-      loan: totalLoan,
-    }))
+    return <tr index={index} {...rest} ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} />
   }
-  // 监控表格-计算合计
-  useEffect(() => {
-    const totalBorrow = tableData.reduce((acc, item) => acc + Number(item.borrow) || 0, 0).toFixed(2)
-    const totalLoan = tableData.reduce((acc, item) => acc + Number(item.loan) || 0, 0).toFixed(2)
-    const totalcn = numberToChinese(totalBorrow)
+  // 拖拽元素
+  const SortableItem = ({ id, children }) => {
+    const { attributes, listeners } = useSortable({
+      id,
+    })
 
-    setPageProof((prev) => ({
-      ...prev,
-      totalcn,
-      total: totalBorrow,
-      borrow: totalBorrow,
-      loan: totalLoan,
-    }))
-  }, [tableData])
+    return (
+      <div {...attributes} {...listeners}>
+        {children}
+      </div>
+    )
+  }
+  // 结束拖拽
+  const handleDragEnd = (event) => {
+    const { active, over } = event
 
+    if (active.id !== over.id) {
+      setTableData((prev) => {
+        const activeIndex = prev.findIndex((item) => item.id === active.id)
+        const overIndex = prev.findIndex((item) => item.id === over.id)
+        const newItems = [...prev]
+        newItems.splice(activeIndex, 1)
+        newItems.splice(overIndex, 0, prev[activeIndex])
+        return newItems
+      })
+    }
+  }
+  // 计算页面合计
+  const getTotals = (vs) => {
+    let totalBorrow = 0
+    let totalLoan = 0
+
+    Object.entries(vs || {}).forEach(([key, val]) => {
+      if (key.startsWith('borrow-')) {
+        totalBorrow += Number(val) || 0
+      }
+      if (key.startsWith('loan-')) {
+        totalLoan += Number(val) || 0
+      }
+    })
+
+    const totalBorrowStr = totalBorrow.toFixed(2)
+    const totalLoanStr = totalLoan.toFixed(2)
+
+    return {
+      totalcn: numberToChinese(totalBorrowStr),
+      total: totalBorrowStr,
+      borrow: totalBorrowStr,
+      loan: totalLoanStr,
+    }
+  }
+
+  // 页面默认执行，依赖 voucherParams
   useEffect(() => {
     setTableData([])
     setPageProof()
@@ -1325,7 +1442,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     setIsEditRows([])
 
     pageForm.resetFields()
-    selectForm.resetFields()
+    assistForm.resetFields()
+    tableForm.clearFields()
 
     if (voucherParams?.type) {
       const { id, type } = voucherParams
@@ -1365,7 +1483,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             )}
 
             {pageType?.id === 2 && (
-              <>
+              <Space>
                 {[-1, 0, 2, 3].includes(pageProof?.status) && (
                   <Button type='primary' status='success' size='small' onClick={() => onEditType(2)}>
                     编辑
@@ -1376,7 +1494,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                     审核
                   </Button>
                 )}
-              </>
+              </Space>
             )}
 
             {/* 是否是弹窗 */}
@@ -1548,7 +1666,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               {/* 表格 */}
               <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} coordinates={sortableKeyboardCoordinates}>
                 <SortableContext items={tableData.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-                  <Form form={tableForm} className='w-full' autoComplete='off' wrapperCol={{ span: 24 }}>
+                  <Form autoComplete='off' form={tableForm} className='w-full' wrapperCol={{ span: 24 }}>
                     <Table
                       size='small'
                       rowKey={'id'}
@@ -1590,68 +1708,72 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                         },
                       }}
                     />
+                    <Form.Item shouldUpdate noStyle>
+                      {(values) => {
+                        const totals = getTotals(values)
+                        return (
+                          <div className='flex justify-between border-t border-neutral-200 p-3'>
+                            <div>
+                              合计：
+                              <span className='font-bold text-blue-600'>
+                                {Number(totals.total) < 0 && '负'} {totals.totalcn || '零元整'}
+                              </span>
+                            </div>
+                            <Space size='large'>
+                              <div>
+                                借方：<span className='font-bold text-blue-600'>{totals.borrow || '0.00'}</span>
+                              </div>
+                              <div>
+                                贷方：<span className='font-bold text-blue-600'>{totals.loan || '0.00'}</span>
+                              </div>
+                            </Space>
+                          </div>
+                        )
+                      }}
+                    </Form.Item>
                   </Form>
                 </SortableContext>
               </DndContext>
-              <div className='flex justify-between border-t border-neutral-200 p-3'>
-                <div>
-                  合计：
-                  <span className='font-bold text-blue-600'>
-                    {pageProof?.total < 0 && '负'} {pageProof?.totalcn || '零元整'}
-                  </span>
-                </div>
-                <Space size='large'>
-                  <div>
-                    借方：<span className='font-bold text-blue-600'>{pageProof?.borrow || '0.00'}</span>
-                  </div>
-                  <div>
-                    贷方：<span className='font-bold text-blue-600'>{pageProof?.loan || '0.00'}</span>
-                  </div>
-                </Space>
-              </div>
             </div>
             {tableData.length > 0 && (
               <div className='w-90 border-l border-neutral-200'>
                 <div className='flex items-center justify-between border-b border-neutral-200 px-4 py-3'>
                   <div className='text-base'>辅助账</div>
                   {isEditRows.includes(selectRow?.id) && selectRow?.assistitems?.items?.length > 0 && (
-                    <Button type='primary' size='small' onClick={() => onSaveAssist(selectForm.getFields())}>
+                    <Button type='primary' size='small' onClick={onSaveAssist}>
                       确定
                     </Button>
                   )}
                 </div>
                 {selectRow && selectRow?.assistitems?.items?.length > 0 ? (
                   <Form
-                    form={selectForm}
+                    form={assistForm}
                     size='small'
                     layout='vertical'
                     autoComplete='off'
                     className='overflow-y-auto p-4'
-                    style={{ height: pageHeight - (isCollapsed ? 161 : 248) }}
                     labelCol={{ style: { flexBasis: 110 } }}
                     wrapperCol={{ style: { flexBasis: `calc(100% - ${110}px)` } }}
                     validateMessages={{ required: (_, { label }) => `${label}不能为空` }}
                     disabled={!isEditRows.includes(selectRow?.id)}
-                    onChange={onChangeAssist}>
-                    <Form.Item label='业务日期' field={'assistitems.bdate'} rules={[{ required: true }]}>
+                    onChange={(v, vs) => onChangeAssist(v, vs)}>
+                    <Form.Item label='业务日期' field={'bdate'} rules={[{ required: true }]}>
                       <DatePicker className='w-full!' defaultPickerValue={pageProof?.defaultStart} />
                     </Form.Item>
-                    <Form.Item label='方向' field={'assistitems.direct'} rules={[{ required: true }]}>
+                    <Form.Item label='方向' field={'direct'} rules={[{ required: true }]}>
                       <Radio.Group>
                         <Radio value={1}>借</Radio>
                         <Radio value={2}>贷</Radio>
                       </Radio.Group>
                     </Form.Item>
-                    <Form.Item
-                      label='到期日期'
-                      field={'assistitems.edate'}
-                      rules={[{ required: true }]}
-                      hidden={selectRow?.isbj !== 1}>
-                      <DatePicker className='w-full!' />
-                    </Form.Item>
+                    {selectRow?.isbj === 1 && (
+                      <Form.Item label='到期日期' field={'edate'} rules={[{ required: true }]}>
+                        <DatePicker className='w-full!' />
+                      </Form.Item>
+                    )}
                     <Form.Item
                       label='本位币金额'
-                      field={'assistitems.money'}
+                      field={'money'}
                       rules={[
                         { required: true },
                         {
@@ -1673,12 +1795,12 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       />
                     </Form.Item>
                     <Form.Item shouldUpdate noStyle>
-                      {(values) => {
-                        return values?.assistitems?.items?.map((item, index) => (
+                      {(values) =>
+                        (values?.items || [])?.map((item, index) => (
                           <Form.Item
                             key={index}
                             label={item.typename}
-                            field={`assistitems.items[${index}].value`}
+                            field={`items[${index}].codeName`}
                             rules={[{ required: true }]}>
                             <Input
                               placeholder='请输入'
@@ -1691,42 +1813,29 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                             />
                           </Form.Item>
                         ))
-                      }}
+                      }
                     </Form.Item>
-                    <Form.Item
-                      label='摘要'
-                      field={'assistitems.summary'}
-                      rules={[{ required: true }]}
-                      style={{ marginBottom: 0 }}>
+                    <Form.Item label='摘要' field={'summary'} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                       <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} />
                     </Form.Item>
                     <Form.Item shouldUpdate noStyle>
                       {(values) => {
-                        if (['1221.003', '2241.005'].includes(values.acccode)) {
+                        if (['1221.003', '2241.005'].includes(selectRow.acccode)) {
                           return values?.project_off_set?.map((item, index) => (
                             <>
-                              <Form.Item
-                                triggerPropName='checked'
-                                style={{ marginTop: 20 }}
-                                field={`assistitems.project_off_set[${index}].id`}>
+                              <Form.Item triggerPropName='checked' style={{ marginTop: 20 }} field={`project_off_set[${index}].id`}>
                                 <Checkbox>冲抵项目款</Checkbox>
                               </Form.Item>
                               <Form.Item
                                 label='供应商'
-                                field={`assistitems.project_off_set[${index}].suppliername`}
+                                field={`project_off_set[${index}].suppliername`}
                                 rules={[{ required: true }]}>
                                 <Input placeholder='请输入' />
                               </Form.Item>
-                              <Form.Item
-                                label='项目'
-                                field={`assistitems.project_off_set[${index}].projectname`}
-                                rules={[{ required: true }]}>
+                              <Form.Item label='项目' field={`project_off_set[${index}].projectname`} rules={[{ required: true }]}>
                                 <Input placeholder='请输入' />
                               </Form.Item>
-                              <Form.Item
-                                label='合同号'
-                                field={`assistitems.project_off_set[${index}].contractno`}
-                                rules={[{ required: true }]}>
+                              <Form.Item label='合同号' field={`project_off_set[${index}].contractno`} rules={[{ required: true }]}>
                                 <Input placeholder='请输入' />
                               </Form.Item>
                             </>
@@ -1800,11 +1909,11 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       <Drawer
         visible={visibleAssist}
         width={'52%'}
-        title={assistInfo?.typename}
+        title={assistParams?.typename}
         footer={null}
         onCancel={() => setVisibleAssist(false)}>
         {visibleAssist && (
-          <AssistInfo assistParams={{ ...assistInfo, groupid: voucherParams?.groupid }} onSelect={onAssistEntry} />
+          <AssistInfo assistParams={{ ...assistParams, groupid: voucherParams?.groupid }} onSelect={onAssistEntry} />
         )}
       </Drawer>
     </>

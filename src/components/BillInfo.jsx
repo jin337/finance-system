@@ -26,7 +26,7 @@ const BillInfo = ({ billParams, onSelect }) => {
     }
     const { code, data } = await Http.post('/bill/list', params)
     if (code === 200) {
-      const list = data?.list || []
+      const list = (data?.list || []).map((e, i) => ({ ...e, billid_index: i + 1 }))
       setBillList(list)
     }
   }
@@ -146,7 +146,7 @@ const BillInfo = ({ billParams, onSelect }) => {
         <Table
           className='mt-1'
           size='small'
-          rowKey={'billid'}
+          rowKey={'billid_index'}
           border
           borderCell
           pagination={false}
