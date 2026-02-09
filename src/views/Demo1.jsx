@@ -45,6 +45,7 @@ const Demo1 = () => {
   // table数据
   const [tableForm] = Form.useForm()
   const [tableData, setTableData] = useState([])
+  const [selectList, setSelectList] = useState([])
 
   // 选中行数据
   const [selectRow, setSelectRow] = useState()
@@ -67,45 +68,47 @@ const Demo1 = () => {
       ...selectRow,
       borrow: values.direct === 1 ? values.money : 0,
       loan: values.direct === 2 ? values.money : 0,
-      assistitems: values
+      assistitems: values,
     }
     // 更新tableData中的对应行
-    setTableData(prev => prev.map(item => item.id === newSelelct.id ? newSelelct : item));
+    setTableData((prev) => prev.map((item) => (item.id === newSelelct.id ? newSelelct : item)))
 
     //取消行编辑状态
-    setIsEditRows(isEditRows.filter(id => id !== newSelelct.id))
+    setIsEditRows(isEditRows.filter((id) => id !== newSelelct.id))
   }
   // 监控辅助账数据（节流版）
-  const throttleRef = useRef(null);
-  const onChangeAssist = useCallback((v, vs) => {
-    // 使用 useRef 实现节流
-    if (!throttleRef.current) {
-      throttleRef.current = setTimeout(() => {
-        const key = Object.keys(v)[0];
-        if (key === 'direct' || key === 'money') {
-          const newValues = {
-            [`borrow-${selectRow.id}`]: vs.direct === 1 ? vs.money : 0,
-            [`loan-${selectRow.id}`]: vs.direct === 2 ? vs.money : 0,
+  const throttleRef = useRef(null)
+  const onChangeAssist = useCallback(
+    (v, vs) => {
+      // 使用 useRef 实现节流
+      if (!throttleRef.current) {
+        throttleRef.current = setTimeout(() => {
+          const key = Object.keys(v)[0]
+          if (key === 'direct' || key === 'money') {
+            const newValues = {
+              [`borrow-${selectRow.id}`]: vs.direct === 1 ? vs.money : 0,
+              [`loan-${selectRow.id}`]: vs.direct === 2 ? vs.money : 0,
+            }
+            // 更新tableForm
+            tableForm.setFieldsValue(newValues)
+            // 更新tableData中的对应行
+            const newRow = {
+              ...selectRow,
+              borrow: vs.direct === 1 ? vs.money : 0,
+              loan: vs.direct === 2 ? vs.money : 0,
+              assistitems: {
+                ...selectRow.assistitems,
+                money: vs.money,
+              },
+            }
+            setTableData((prev) => prev.map((item) => (item.id === newRow.id ? newRow : item)))
           }
-          // 更新tableForm
-          tableForm.setFieldsValue(newValues)
-          // 更新tableData中的对应行
-          const newRow = {
-            ...selectRow,
-            borrow: vs.direct === 1 ? vs.money : 0,
-            loan: vs.direct === 2 ? vs.money : 0,
-            assistitems: {
-              ...selectRow.assistitems,
-              money: vs.money,
-            },
-          }
-          setTableData(prev => prev.map(item => item.id === newRow.id ? newRow : item));
-
-        }
-        throttleRef.current = null;
-      }, 300); // 300ms 节流间隔
-    }
-  }, [selectRow, tableForm]);
+          throttleRef.current = null
+        }, 300) // 300ms 节流间隔
+      }
+    },
+    [selectRow, tableForm]
+  )
 
   // 确认-辅助账选择
   const onAssistEntry = (record) => {
@@ -135,11 +138,11 @@ const Demo1 = () => {
     const updatedSelectRow = updateSelectRowWithNewItem(newItem)
 
     // 更新assistForm
-    assistForm.setFieldsValue(updatedSelectRow.assistitems);
+    assistForm.setFieldsValue(updatedSelectRow.assistitems)
     // 更新选中行数据
     onSelectRow(updatedSelectRow)
     // 更新tableData中的对应行
-    setTableData(prev => prev.map(item => item.id === updatedSelectRow.id ? updatedSelectRow : item));
+    setTableData((prev) => prev.map((item) => (item.id === updatedSelectRow.id ? updatedSelectRow : item)))
     // 关闭弹窗
     setVisibleAssist(false)
     // 清空参数
@@ -168,32 +171,34 @@ const Demo1 = () => {
         isbj: data.isbj,
         borrow: direct === 1 ? amount : 0,
         loan: direct === 2 ? amount : 0,
-        assistitems: data.assistitems.length ? {
-          bdate: pageForm.getFieldValue('bdate'),
-          summary: selectRow.summary,
-          money: amount || '',
-          direct: direct,
-          items: (data.assistitems || []).map((e) => ({
-            typename: e.name,
-            typeid: e.id,
-            limitgroup: e.limitgroup,
-            sourcetype: e.sourcetype,
-          })),
-        } : {}
+        assistitems: data.assistitems.length
+          ? {
+              bdate: pageForm.getFieldValue('bdate'),
+              summary: selectRow.summary,
+              money: amount || '',
+              direct: direct,
+              items: (data.assistitems || []).map((e) => ({
+                typename: e.name,
+                typeid: e.id,
+                limitgroup: e.limitgroup,
+                sourcetype: e.sourcetype,
+              })),
+            }
+          : {},
       }
 
       // 更新tableData中的对应行
-      setTableData(prev => prev.map(item => item.id === selectRow.id ? newAcc : item));
+      setTableData((prev) => prev.map((item) => (item.id === selectRow.id ? newAcc : item)))
       // 更新selectRow
-      setSelectRow(newAcc);
+      setSelectRow(newAcc)
       // 更新tableForm
       tableForm.setFieldsValue({
         [`accfullnameCode-${selectRow.id}`]: newAcc.accfullnameCode,
         [`borrow-${selectRow.id}`]: newAcc.borrow,
         [`loan-${selectRow.id}`]: newAcc.loan,
-      });
+      })
 
-      assistForm.setFieldsValue(newAcc.assistitems);
+      assistForm.setFieldsValue(newAcc.assistitems)
 
       // 关闭弹窗
       setVisibleAccount(false)
@@ -226,25 +231,20 @@ const Demo1 = () => {
       authtype: 0,
       autobuild: 1,
       assistitems: null,
-    };
+    }
     // 添加新行数据
-    setTableData([...tableData, newRow]);
+    setTableData([...tableData, newRow])
     // 添加编辑状态
-    setIsEditRows([...isEditRows, newRow.id]);
+    setIsEditRows([...isEditRows, newRow.id])
   }
 
   // 保存行数据
   const onSaveRow = async (record) => {
-    const fields = [
-      `summary-${record.id}`,
-      `accfullnameCode-${record.id}`,
-      `borrow-${record.id}`,
-      `loan-${record.id}`,
-    ]
+    const fields = [`summary-${record.id}`, `accfullnameCode-${record.id}`, `borrow-${record.id}`, `loan-${record.id}`]
     const rowData = await tableForm.validate(fields)
 
     // 查找当前记录在tableData中的索引
-    const rowIndex = tableData.findIndex(item => item.id === record.id);
+    const rowIndex = tableData.findIndex((item) => item.id === record.id)
     if (rowIndex !== -1) {
       // 更新数据
       const updatedRecord = {
@@ -253,43 +253,49 @@ const Demo1 = () => {
         accfullnameCode: rowData[`accfullnameCode-${record.id}`],
         borrow: rowData[`borrow-${record.id}`],
         loan: rowData[`loan-${record.id}`],
-      };
+      }
 
       // 更新整个数据数组
-      const newTableData = [...tableData];
-      newTableData[rowIndex] = updatedRecord;
+      const newTableData = [...tableData]
+      newTableData[rowIndex] = updatedRecord
 
       // 更新tableData状态
-      setTableData(newTableData);
+      setTableData(newTableData)
 
       // 移除编辑状态
-      setIsEditRows(prev => prev.filter(id => id !== record.id));
+      setIsEditRows((prev) => prev.filter((id) => id !== record.id))
     }
   }
 
   // 取消行编辑
   const onCancelRow = (record) => {
     // 从编辑状态中移除
-    setIsEditRows(prev => prev.filter(id => id !== record.id));
+    setIsEditRows((prev) => prev.filter((id) => id !== record.id))
 
     // 取消选中状态
     setSelectRow(undefined)
 
     // 重置表单字段到原始值
-    const currentRecord = (pageProof?.entrys || [])?.find(item => item.id === record.id);
+    const currentRecord = (pageProof?.entrys || [])?.find((item) => item.id === record.id)
     if (currentRecord) {
       tableForm.setFieldsValue({
         [`summary-${record.id}`]: currentRecord.summary,
         [`accfullnameCode-${record.id}`]: `${currentRecord.acccode} ${currentRecord.accfullname}`,
         [`borrow-${record.id}`]: currentRecord.borrow,
         [`loan-${record.id}`]: currentRecord.loan,
-      });
-      setTableData(prev => prev.map(item => item.id === record.id ? {
-        ...currentRecord,
-        accfullnameCode: `${item.acccode} ${item.accfullname}`
-      } : item));
+      })
+      setTableData((prev) =>
+        prev.map((item) =>
+          item.id === record.id
+            ? {
+                ...currentRecord,
+                accfullnameCode: `${item.acccode} ${item.accfullname}`,
+              }
+            : item
+        )
+      )
     } else {
-      setTableData(prev => prev.filter(item => item.id !== record.id))
+      setTableData((prev) => prev.filter((item) => item.id !== record.id))
     }
   }
 
@@ -305,7 +311,7 @@ const Demo1 = () => {
           return cb()
         }
       },
-    }
+    },
   ]
 
   // 表格列
@@ -330,7 +336,11 @@ const Demo1 = () => {
       dataIndex: 'summary',
       render: (text, record) =>
         isEditRows.includes(record.id) ? (
-          <Form.Item className='mb-0!' field={`summary-${record.id}`} rules={[{ required: true, message: '摘要不能为空' }]} initialValue={text}>
+          <Form.Item
+            className='mb-0!'
+            field={`summary-${record.id}`}
+            rules={[{ required: true, message: '摘要不能为空' }]}
+            initialValue={text}>
             <Input.TextArea rows={1} />
           </Form.Item>
         ) : (
@@ -345,7 +355,11 @@ const Demo1 = () => {
         isEditRows.includes(record.id) && [0, 2].includes(record?.authtype) ? (
           <Form.Item required className='mb-0!'>
             <div className='flex items-center gap-2'>
-              <Form.Item className='mb-0! flex-1' field={`accfullnameCode-${record.id}`} rules={[{ required: true, message: '科目不能为空' }]} initialValue={text}>
+              <Form.Item
+                className='mb-0! flex-1'
+                field={`accfullnameCode-${record.id}`}
+                rules={[{ required: true, message: '科目不能为空' }]}
+                initialValue={text}>
                 <Input.TextArea rows={2} />
               </Form.Item>
               <IconMore className='text-xl!' onClick={() => openAccount(record)} />
@@ -379,8 +393,10 @@ const Demo1 = () => {
               obj.children = (
                 <Form.Item
                   className='mb-0!'
-                  field={`borrow-${record.id}`} initialValue={record?.borrow}
-                  rules={validateDebitCredit(record)} disabled={auxiliary === 1 || isLoanFilled}>
+                  field={`borrow-${record.id}`}
+                  initialValue={record?.borrow}
+                  rules={validateDebitCredit(record)}
+                  disabled={auxiliary === 1 || isLoanFilled}>
                   <InputNumber
                     className='w-full'
                     prefix={'¥'}
@@ -580,8 +596,10 @@ const Demo1 = () => {
               obj.children = (
                 <Form.Item
                   className='mb-0!'
-                  field={`loan-${record.id}`} initialValue={record?.loan}
-                  rules={validateDebitCredit(record)} disabled={auxiliary === 1 || isBorrowFilled}>
+                  field={`loan-${record.id}`}
+                  initialValue={record?.loan}
+                  rules={validateDebitCredit(record)}
+                  disabled={auxiliary === 1 || isBorrowFilled}>
                   <InputNumber
                     className='w-full'
                     prefix={'¥'}
@@ -770,18 +788,19 @@ const Demo1 = () => {
     const updatedAssistItems = {
       ...assistInfo,
       direct: record?.borrow !== 0 ? 1 : 2,
-      items: (assistInfo?.items || [])?.map(item => ({
+      items: (assistInfo?.items || [])?.map((item) => ({
         ...item,
-        codeName: item?.itemid ? `${item?.itemcode}-${item?.itemname}` : ''
-      }))
-    };
-    assistForm.setFieldsValue(updatedAssistItems);
+        codeName: item?.itemid ? `${item?.itemcode}-${item?.itemname}` : '',
+      })),
+    }
+    assistForm.setFieldsValue(updatedAssistItems)
   }
 
   // 行编辑
   const onEditRow = (record) => {
     setIsEditRows((prev) => [...prev, record.id])
   }
+
   // 页面加载时执行
   useEffect(() => {
     const { proof } = proofInfo
@@ -790,7 +809,7 @@ const Demo1 = () => {
     const newEntrys = entrys.map((item) => {
       return {
         ...item,
-        accfullnameCode: `${item.acccode} ${item.accfullname}`
+        accfullnameCode: `${item.acccode} ${item.accfullname}`,
       }
     })
     setTableData(newEntrys)
@@ -834,9 +853,15 @@ const Demo1 = () => {
               summary={() => (
                 <Table.Summary fixed='bottom'>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell colSpan={3}>合计: {pageProof.totalcn || '-'}</Table.Summary.Cell>
-                    <Table.Summary.Cell colSpan={11} className='text-right!'>{pageProof.borrow || '-'}</Table.Summary.Cell>
-                    <Table.Summary.Cell colSpan={11} className='text-right!'>{pageProof.loan || '-'}</Table.Summary.Cell>
+                    <Table.Summary.Cell colSpan={3}>
+                      合计：<span className='font-bold text-blue-600'>{pageProof.totalcn || '-'}</span>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell colSpan={11} className='text-right!'>
+                      借方：<span className='font-bold text-blue-600'>{pageProof.borrow || '-'}</span>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell colSpan={11} className='text-right!'>
+                      贷方：<span className='font-bold text-blue-600'>{pageProof.loan || '-'}</span>
+                    </Table.Summary.Cell>
                   </Table.Summary.Row>
                 </Table.Summary>
               )}
@@ -847,6 +872,11 @@ const Demo1 = () => {
                   isEditRows.includes(record.id) ? 'table-edit' : '',
                 ].join(' ')
               }
+              rowSelection={{
+                type: 'checkbox',
+                selectedRowKeys: selectList,
+                onChange: (e) => setSelectList(e),
+              }}
               onRow={(record) => ({
                 onClick: () => onSelectRow(record),
                 onDoubleClick: () => onEditRow(record),
@@ -885,12 +915,11 @@ const Demo1 = () => {
                       <Radio value={2}>贷</Radio>
                     </Radio.Group>
                   </Form.Item>
-                  {
-                    selectRow?.isbj === 1 &&
+                  {selectRow?.isbj === 1 && (
                     <Form.Item label='到期日期' field={'edate'} rules={[{ required: true }]}>
                       <DatePicker className='w-full!' />
                     </Form.Item>
-                  }
+                  )}
                   <Form.Item
                     label='本位币金额'
                     field={'money'}
@@ -946,7 +975,10 @@ const Demo1 = () => {
                             <Form.Item triggerPropName='checked' style={{ marginTop: 20 }} field={`project_off_set[${index}].id`}>
                               <Checkbox>冲抵项目款</Checkbox>
                             </Form.Item>
-                            <Form.Item label='供应商' field={`project_off_set[${index}].suppliername`} rules={[{ required: true }]}>
+                            <Form.Item
+                              label='供应商'
+                              field={`project_off_set[${index}].suppliername`}
+                              rules={[{ required: true }]}>
                               <Input placeholder='请输入' />
                             </Form.Item>
                             <Form.Item label='项目' field={`project_off_set[${index}].projectname`} rules={[{ required: true }]}>
