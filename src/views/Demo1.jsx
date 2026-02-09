@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import { Button, DatePicker, Drawer, Empty, Form, Input, InputNumber, Radio, Space, Table } from '@arco-design/web-react'
-import { IconCheck, IconClose, IconMore } from '@arco-design/web-react/icon'
+import { IconCheck, IconClose, IconDragDotVertical, IconMore } from '@arco-design/web-react/icon'
 
 // 组件
 import AccountInfo from 'src/components/AccountInfo'
@@ -173,17 +173,17 @@ const Demo1 = () => {
         loan: direct === 2 ? amount : 0,
         assistitems: data.assistitems.length
           ? {
-              bdate: pageForm.getFieldValue('bdate'),
-              summary: selectRow.summary,
-              money: amount || '',
-              direct: direct,
-              items: (data.assistitems || []).map((e) => ({
-                typename: e.name,
-                typeid: e.id,
-                limitgroup: e.limitgroup,
-                sourcetype: e.sourcetype,
-              })),
-            }
+            bdate: pageForm.getFieldValue('bdate'),
+            summary: selectRow.summary,
+            money: amount || '',
+            direct: direct,
+            items: (data.assistitems || []).map((e) => ({
+              typename: e.name,
+              typeid: e.id,
+              limitgroup: e.limitgroup,
+              sourcetype: e.sourcetype,
+            })),
+          }
           : {},
       }
 
@@ -288,9 +288,9 @@ const Demo1 = () => {
         prev.map((item) =>
           item.id === record.id
             ? {
-                ...currentRecord,
-                accfullnameCode: `${item.acccode} ${item.accfullname}`,
-              }
+              ...currentRecord,
+              accfullnameCode: `${item.acccode} ${item.accfullname}`,
+            }
             : item
         )
       )
@@ -876,6 +876,7 @@ const Demo1 = () => {
                 type: 'checkbox',
                 selectedRowKeys: selectList,
                 onChange: (e) => setSelectList(e),
+                renderCell: (originNode, _, record) => <IconDragDotVertical className='cursor-move text-xl!' />
               }}
               onRow={(record) => ({
                 onClick: () => onSelectRow(record),
