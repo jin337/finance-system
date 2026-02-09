@@ -885,9 +885,12 @@ const Demo1 = () => {
                       <Radio value={2}>贷</Radio>
                     </Radio.Group>
                   </Form.Item>
-                  <Form.Item label='到期日期' field={'edate'} rules={[{ required: true }]} hidden={selectRow?.isbj !== 1}>
-                    <DatePicker className='w-full!' />
-                  </Form.Item>
+                  {
+                    selectRow?.isbj === 1 &&
+                    <Form.Item label='到期日期' field={'edate'} rules={[{ required: true }]}>
+                      <DatePicker className='w-full!' />
+                    </Form.Item>
+                  }
                   <Form.Item
                     label='本位币金额'
                     field={'money'}
