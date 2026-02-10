@@ -651,7 +651,7 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                   hideControl
                   prefix='¥'
                   allowClear
-                  autocomplete='off'
+                  autoComplete='off'
                   precision={1}
                   step={0.01}
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}

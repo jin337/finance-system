@@ -284,7 +284,7 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
           defaultValue={record?.money}
           prefix='¥'
           hideControl
-          autocomplete='off'
+          autoComplete='off'
           precision={1}
           step={0.01}
           formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}

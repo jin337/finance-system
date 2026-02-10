@@ -116,7 +116,7 @@ const BillInfo = ({ billParams, onSelect }) => {
               hideControl
               placeholder='请输入金额'
               prefix='¥'
-              autocomplete='off'
+              autoComplete='off'
               precision={1}
               step={0.01}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}

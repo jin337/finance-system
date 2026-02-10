@@ -216,7 +216,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
             field={`summary-${record.id}`}
             rules={[{ required: true, message: '摘要不能为空' }]}
             initialValue={text}>
-            <Input.TextArea id={`summary-${record.id}`} rows={1} autoFocus />
+            <Input.TextArea rows={1} />
           </Form.Item>
         ) : (
           text
@@ -235,7 +235,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                 field={`accfullnameCode-${record.id}`}
                 rules={[{ required: true, message: '科目不能为空' }]}
                 initialValue={text}>
-                <Input.TextArea id={`accfullnameCode-${record.id}`} rows={2} />
+                <Input.TextArea rows={2} />
               </Form.Item>
               <IconMore className='text-xl!' onClick={() => openAccount(record)} />
             </div>
@@ -275,7 +275,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                         rules={validateDebitCredit(record)}
                         disabled={auxiliary === 1 || values[`loan-${record.id}`]}>
                         <InputNumber
-                          id={`borrow-${record.id}`}
                           className='w-full'
                           prefix={'¥'}
                           hideControl
@@ -492,7 +491,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                         rules={validateDebitCredit(record)}
                         disabled={auxiliary === 1 || values[`borrow-${record.id}`]}>
                         <InputNumber
-                          id={`loan-${record.id}`}
                           className='w-full'
                           prefix={'¥'}
                           hideControl
@@ -1130,40 +1128,38 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       setIsEditRows((prev) => (prev.includes(record.id) ? prev : [...prev, record.id]))
       // 延迟聚焦摘要输入框
       setTimeout(() => {
-        const input = document.getElementById(`summary-${record.id}`)
-        input?.focus()
+        const input = document.getElementById(`summary-${record.id}_input`)
+        input && input.focus()
       }, 100)
     }
   }
   // 行-选择
   const onRowSelect = (record, e) => {
+    // 排除干扰点击
     const targetElement = e?.target
     const isCheckboxClick = targetElement
       ? targetElement?.classList.contains('arco-checkbox') ||
       targetElement?.classList.contains('arco-checkbox-input') ||
       targetElement?.closest('.arco-checkbox')
       : false
+
     // 排除干扰点击
+    if (isCheckboxClick) return
 
-    if (!isCheckboxClick) {
-      // 设置选中行
-      setSelectRow(record)
 
-      // 焦点处理
-      if (isEditRows.includes(record.id)) {
-        // 焦点处理：如果点击的是输入框且未禁用，则确保其获得焦点
-        const input = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA'
-          ? targetElement
-          : targetElement.closest('td')?.querySelector('input, textarea')
-        if (input && !input.classList.contains('arco-input-disabled')) {
-          setTimeout(() => {
-            input.focus()
-          }, 0)
-        }
-      }
+    // 焦点处理
+    if (isEditRows.includes(record?.id)) {
+      targetElement && targetElement.focus()
+    }
 
-      // 处理辅助账信息
-      const assistInfo = record?.assistitems
+    // 防止重复点击同一行
+    if (record?.id === selectRow?.id) return
+    // 设置选中行
+    setSelectRow(record)
+
+    // 初始化辅助账表单数据
+    const assistInfo = record?.assistitems
+    if (assistInfo) {
       const updatedAssistItems = {
         ...assistInfo,
         direct: record?.borrow !== 0 ? 1 : 2,
@@ -1173,8 +1169,11 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         })),
       }
       assistForm.setFieldsValue(updatedAssistItems)
+    } else {
+      assistForm.resetFields()
     }
   }
+
   // 黏贴
   const onPaste = () => {
     const copyInfo = localGetItem('VOUCHER-COPYPASTE') || []
