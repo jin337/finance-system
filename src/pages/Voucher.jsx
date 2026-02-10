@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { setCloseVoucherDetail } from 'src/store/reducers/home'
 
 import {
   Button,
@@ -43,9 +44,7 @@ import FileInfo from 'src/components/FileInfo'
 import VoucherInfo from 'src/components/VoucherInfo'
 
 // 图片
-import { useRef } from 'react'
 import status from 'src/assets/images/status.png'
-import { setCloseVoucherDetail } from 'src/store/reducers/home'
 
 const buttonlist = [
   { id: '', name: '全部', color: '#606266' },
@@ -186,7 +185,6 @@ const Voucher = () => {
   const [visibleCash, setVisibleCash] = useState(false)
 
   // 详情
-  const refVoucher = useRef()
   const [voucherVisible, setVoucherVisible] = useState(false)
   const [voucherParams, setVoucherParams] = useState()
 
@@ -400,18 +398,18 @@ const Voucher = () => {
     const params =
       type === 1
         ? {
-            type,
-            year: Number(searchData.year),
-            month: Number(searchData.month),
-            ...baseParams,
-          }
+          type,
+          year: Number(searchData.year),
+          month: Number(searchData.month),
+          ...baseParams,
+        }
         : {
-            type,
-            id: record.id,
-            year: record.year,
-            month: record.month,
-            ...baseParams,
-          }
+          type,
+          id: record.id,
+          year: record.year,
+          month: record.month,
+          ...baseParams,
+        }
     setVoucherParams(params)
     setVoucherVisible(true)
     dispatch(setCloseVoucherDetail(false))
@@ -681,10 +679,10 @@ const Voucher = () => {
             !tableTyle.finish &&
             tableTyle.ischeckout === 0) ||
             (record.status !== 1 && tableTyle.ischeckout === 1 && record.ischeckout === '1' && !tableTyle.finish)) && (
-            <Button type='test' size='small' onClick={() => onDel(record)}>
-              删除
-            </Button>
-          )}
+              <Button type='test' size='small' onClick={() => onDel(record)}>
+                删除
+              </Button>
+            )}
 
           {(record.status === 0 || record.status === 1 || record.status === 2) &&
             !tableTyle.finish &&
@@ -854,7 +852,7 @@ const Voucher = () => {
 
   return (
     <>
-      <Layout className='relative h-full w-full' ref={refVoucher}>
+      <Layout className='relative h-full w-full' id='voucherWrap' >
         <Layout.Sider width={114} className='h-full border-r border-neutral-200'>
           <DatePicker.YearPicker
             value={String(searchData?.year)}
@@ -1005,7 +1003,7 @@ const Voucher = () => {
           closable={false}
           escToExit={false}
           bodyStyle={{ padding: 0, overflow: 'hidden' }}
-          getPopupContainer={() => refVoucher && refVoucher?.current}
+          getPopupContainer={() => document.getElementById('voucherWrap')}
           visible={voucherVisible}
           onCancel={() => setVoucherVisible(false)}>
           <VoucherInfo voucherParams={voucherParams} onBack={() => setVoucherVisible(false)} onReview={(e) => onOpenExamine(e)} />

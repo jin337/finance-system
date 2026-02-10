@@ -682,6 +682,15 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     // -1 暂存凭证 0凭证保存
     const values = await pageForm.validate()
 
+    if (tableData.length <= 0) {
+      Message.error('分录不能为空')
+      return
+    }
+    if (isEditRows.length > 0) {
+      Message.error('存在未保存的分录')
+      return
+    }
+
     // 获取附件id
     const fileids = []
     const fileParams = {
@@ -749,6 +758,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     if (voucherParams?.id) {
       params.id = voucherParams.id
     }
+    console.log(params)
     // const url = voucherParams?.id ? '/proof/update' : '/proof/new'
     // const { code: Billcode, data: Billdata, message } = await Http.post(url, params)
     // if (Billcode === 200) {
