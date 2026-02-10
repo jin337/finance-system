@@ -226,7 +226,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       title: '科目',
       dataIndex: 'accfullnameCode',
       width: 360,
-      render: (text, record) => (
+      render: (text, record) =>
         isEditRows.includes(record.id) && [0, 2].includes(record?.authtype) ? (
           <Form.Item required className='mb-0!'>
             <div className='flex items-center gap-2'>
@@ -242,8 +242,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           </Form.Item>
         ) : (
           text
-        )
-      )
+        ),
     },
     {
       title: '借方',
@@ -266,9 +265,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               const auxiliary = record?.assistitems?.items && record?.assistitems?.items?.length > 0 ? 1 : 0
               obj.children = (
                 <Form.Item shouldUpdate noStyle>
-                  {
-                    (values) => {
-                      return <Form.Item
+                  {(values) => {
+                    return (
+                      <Form.Item
                         className='mb-0!'
                         field={`borrow-${record.id}`}
                         initialValue={record?.borrow}
@@ -291,8 +290,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                           }}
                         />
                       </Form.Item>
-                    }
-                  }
+                    )
+                  }}
                 </Form.Item>
               )
             }
@@ -482,9 +481,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
               const auxiliary = record?.assistitems?.items && record?.assistitems?.items?.length > 0 ? 1 : 0
               obj.children = (
                 <Form.Item shouldUpdate noStyle>
-                  {
-                    (values) => {
-                      return <Form.Item
+                  {(values) => {
+                    return (
+                      <Form.Item
                         className='mb-0!'
                         field={`loan-${record.id}`}
                         initialValue={record?.loan}
@@ -507,8 +506,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                           }}
                         />
                       </Form.Item>
-                    }
-                  }
+                    )
+                  }}
                 </Form.Item>
               )
             }
@@ -795,13 +794,9 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         [`borrow-${record.id}`]: currentRecord.borrow,
         [`loan-${record.id}`]: currentRecord.loan,
       })
-      setTableData((prev) => prev.map((item) => item.id === record.id ? currentRecord : item))
+      setTableData((prev) => prev.map((item) => (item.id === record.id ? currentRecord : item)))
     } else {
-      const list = [
-        `summary-${record.id}`,
-        `accfullnameCode-${record.id}`,
-        `borrow-${record.id}`,
-        `loan-${record.id}`]
+      const list = [`summary-${record.id}`, `accfullnameCode-${record.id}`, `borrow-${record.id}`, `loan-${record.id}`]
       tableForm.clearFields(list)
       setTableData((prev) => prev.filter((item) => item.id !== record.id))
     }
@@ -827,7 +822,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       const newTableData = [...tableData]
       newTableData[rowIndex] = {
         ...updatedRecord,
-        oldRow: updatedRecord
+        oldRow: updatedRecord,
       }
       console.log(newTableData)
 
@@ -866,8 +861,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         if (!selectRow?.id) return
 
         const { direct, money } = vs
-        const borrow = direct === 1 ? (Number(money) || 0) : 0
-        const loan = direct === 2 ? (Number(money) || 0) : 0
+        const borrow = direct === 1 ? Number(money) || 0 : 0
+        const loan = direct === 2 ? Number(money) || 0 : 0
 
         const key = Object.keys(v)[0]
         // 当修改方向或金额时，同步更新主表单的借贷列
@@ -960,20 +955,21 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         isbj: data.isbj,
         borrow: direct === 1 ? amount : 0,
         loan: direct === 2 ? amount : 0,
-        assistitems: data.assistitems?.length > 0
-          ? {
-            bdate: pageForm.getFieldValue('bdate'),
-            summary: summary,
-            money: amount || '',
-            direct: direct,
-            items: (data.assistitems || []).map((e) => ({
-              typename: e.name,
-              typeid: e.id,
-              limitgroup: e.limitgroup,
-              sourcetype: e.sourcetype,
-            })),
-          }
-          : null,
+        assistitems:
+          data.assistitems?.length > 0
+            ? {
+              bdate: pageForm.getFieldValue('bdate'),
+              summary: summary,
+              money: amount || '',
+              direct: direct,
+              items: (data.assistitems || []).map((e) => ({
+                typename: e.name,
+                typeid: e.id,
+                limitgroup: e.limitgroup,
+                sourcetype: e.sourcetype,
+              })),
+            }
+            : null,
       }
 
       // 更新tableData中的对应行
@@ -1029,7 +1025,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         return acc
       }, {})
       tableForm.setFieldsValue(values)
-
 
       setPageProof((prev) => ({ ...prev, entrys: newEntrys }))
 
@@ -1137,23 +1132,29 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
   const onRowSelect = (record, e) => {
     // 排除干扰点击
     const targetElement = e?.target
+
+    // 检查是否点击的是输入框或其相关元素
+    const isInputClick = targetElement
+      ? targetElement?.tagName === 'INPUT' ||
+      targetElement?.tagName === 'TEXTAREA' ||
+      targetElement?.closest('input') ||
+      targetElement?.closest('textarea') ||
+      targetElement?.classList.contains('arco-input') ||
+      targetElement?.closest('.arco-input')
+      : false
+
     const isCheckboxClick = targetElement
       ? targetElement?.classList.contains('arco-checkbox') ||
       targetElement?.classList.contains('arco-checkbox-input') ||
       targetElement?.closest('.arco-checkbox')
       : false
 
-    // 排除干扰点击
-    if (isCheckboxClick) return
-
-
-    // 焦点处理
-    if (isEditRows.includes(record?.id)) {
-      targetElement && targetElement.focus()
-    }
+    // 排除输入框和复选框的点击
+    if (isInputClick || isCheckboxClick) return
 
     // 防止重复点击同一行
     if (record?.id === selectRow?.id) return
+
     // 设置选中行
     setSelectRow(record)
 
@@ -1351,7 +1352,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       }, {})
       tableForm.setFieldsValue(values)
       setTableData(newEntrys || [])
-
 
       const key = tylelist.find((item) => String(item.id) == String(restProof.status)) || {}
       const itemProof = {
@@ -1677,13 +1677,12 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       data={tableData}
                       style={{ height: pageHeight - (isCollapsed ? 210 : 298) }}
                       scroll={{ y: pageHeight - 372 }}
-                      rowClassName={(record) =>
-                        [
-                          'h-15',
-                          record.id === selectRow?.id ? 'table-select' : '',
-                          isEditRows.includes(record.id) ? 'table-edit' : '',
-                        ].join(' ')
-                      }
+                      rowClassName={(record) => {
+                        const baseClass = 'h-15'
+                        const selectedClass = record.id === selectRow?.id ? ' table-select' : ''
+                        const editingClass = isEditRows.includes(record.id) ? ' table-edit' : ''
+                        return baseClass + selectedClass + editingClass
+                      }}
                       rowSelection={{
                         type: 'checkbox',
                         selectedRowKeys: selectList,
@@ -1822,7 +1821,10 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                         if (['1221.003', '2241.005'].includes(selectRow.acccode)) {
                           return values?.project_off_set?.map((item, index) => (
                             <>
-                              <Form.Item triggerPropName='checked' style={{ marginTop: 20 }} field={`project_off_set[${index}].id`}>
+                              <Form.Item
+                                triggerPropName='checked'
+                                style={{ marginTop: 20 }}
+                                field={`project_off_set[${index}].id`}>
                                 <Checkbox>冲抵项目款</Checkbox>
                               </Form.Item>
                               <Form.Item
@@ -1831,10 +1833,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                                 rules={[{ required: true }]}>
                                 <Input placeholder='请输入' />
                               </Form.Item>
-                              <Form.Item label='项目' field={`project_off_set[${index}].projectname`} rules={[{ required: true }]}>
+                              <Form.Item
+                                label='项目'
+                                field={`project_off_set[${index}].projectname`}
+                                rules={[{ required: true }]}>
                                 <Input placeholder='请输入' />
                               </Form.Item>
-                              <Form.Item label='合同号' field={`project_off_set[${index}].contractno`} rules={[{ required: true }]}>
+                              <Form.Item
+                                label='合同号'
+                                field={`project_off_set[${index}].contractno`}
+                                rules={[{ required: true }]}>
                                 <Input placeholder='请输入' />
                               </Form.Item>
                             </>
