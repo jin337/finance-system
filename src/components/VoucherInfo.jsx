@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
 // 拖拽
@@ -1461,6 +1461,24 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     }
   }
 
+  // 页面高度
+  const pageHeightSum = useMemo(() => {
+    let h = pageHeight
+    if (voucherParams?.isdrawer === 1) {
+      h = pageHeight + 108
+    }
+    return h - (isCollapsed ? 210 : 298)
+  }, [isCollapsed, voucherParams?.isdrawer])
+
+  // 滚动高度
+  const scrollYSum = useMemo(() => {
+    let h = pageHeight
+    if (voucherParams?.isdrawer === 1) {
+      h = pageHeight + 108
+    }
+    return h - 372
+  }, [voucherParams?.isdrawer])
+
   // 页面默认执行，依赖 voucherParams
   useEffect(() => {
     setTableData([])
@@ -1706,8 +1724,8 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       loading={tableLoading}
                       columns={columns}
                       data={tableData}
-                      style={{ height: pageHeight - (isCollapsed ? 210 : 298) }}
-                      scroll={{ y: pageHeight - 372 }}
+                      style={{ height: pageHeightSum }}
+                      scroll={{ y: scrollYSum }}
                       rowClassName={(record) => {
                         const baseClass = 'h-15'
                         const selectedClass = record.id === selectRow?.id ? ' table-select' : ''

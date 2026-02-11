@@ -196,7 +196,7 @@ const Expense = () => {
         </Layout.Content>
       </Layout>
 
-      <Drawer width='80%' title={null} footer={null} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+      <Drawer width='80%' title={null} footer={null} bodyStyle={{ padding: 0 }} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
         <VoucherInfo voucherParams={voucherParams} />
       </Drawer>
     </>
