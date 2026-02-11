@@ -209,6 +209,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     {
       title: '摘要',
       dataIndex: 'summary',
+      width: window.innerWidth < 1600 ? 200 : 'auto',
       render: (text, record) =>
         isEditRows.includes(record.id) ? (
           <Form.Item
@@ -225,7 +226,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     {
       title: '科目',
       dataIndex: 'accfullnameCode',
-      width: 360,
+      width: window.innerWidth < 1600 ? 200 : 300,
       render: (text, record) =>
         isEditRows.includes(record.id) && [0, 2].includes(record?.authtype) ? (
           <Form.Item required className='mb-0!'>
@@ -1725,7 +1726,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                       columns={columns}
                       data={tableData}
                       style={{ height: pageHeightSum }}
-                      scroll={{ y: scrollYSum }}
+                      scroll={{ y: scrollYSum, x: true }}
                       rowClassName={(record) => {
                         const baseClass = 'h-15'
                         const selectedClass = record.id === selectRow?.id ? ' table-select' : ''
@@ -1798,6 +1799,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                     size='small'
                     layout='vertical'
                     autoComplete='off'
+                    style={{ height: pageHeightSum + 48 }}
                     className='overflow-y-auto p-4'
                     labelCol={{ style: { flexBasis: 110 } }}
                     wrapperCol={{ style: { flexBasis: `calc(100% - ${110}px)` } }}
