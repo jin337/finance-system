@@ -235,7 +235,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                 field={`accfullnameCode-${record.id}`}
                 rules={[{ required: true, message: '科目不能为空' }]}
                 initialValue={text}>
-                <Input.TextArea rows={2} />
+                <Input.TextArea rows={2} onPressEnter={() => onPressEnter(record)} />
               </Form.Item>
               <IconMore className='text-xl!' onClick={() => openAccount(record)} />
             </div>
@@ -945,60 +945,81 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
     setAssistParams(record)
     setVisibleAssist(true)
   }
-  // 确认-科目选择
-  const onAccountEntry = async (record) => {
+
+  // 转换科目数据
+  const transAccount = (data) => {
     const borrow = tableForm.getFieldValue(`borrow-${selectRow.id}`)
     const loan = tableForm.getFieldValue(`loan-${selectRow.id}`)
     const summary = tableForm.getFieldValue(`summary-${selectRow.id}`)
 
-    const { code, data } = await Http.post(`/account/${record.id}`)
+    const direct = data.direct == '借' ? 1 : 2
+    const amount = borrow || loan
+    const newAcc = {
+      ...selectRow,
+      acccode: data.code,
+      accfullname: data.fullname,
+      accname: data.name,
+      accfullnameCode: `${data.code} ${data.fullname}`,
+      classid: data.classid,
+      isbj: data.isbj,
+      borrow: direct === 1 ? amount : 0,
+      loan: direct === 2 ? amount : 0,
+      assistitems:
+        data.assistitems?.length > 0
+          ? {
+            bdate: pageForm.getFieldValue('bdate'),
+            summary: summary,
+            money: amount || '',
+            direct: direct,
+            items: (data.assistitems || []).map((e) => ({
+              typename: e.name,
+              typeid: e.id,
+              limitgroup: e.limitgroup,
+              sourcetype: e.sourcetype,
+            })),
+          }
+          : null,
+    }
+
+    // 更新tableData中的对应行
+    setTableData((prev) => prev.map((item) => (item.id === selectRow.id ? newAcc : item)))
+    // 更新selectRow
+    setSelectRow(newAcc)
+    // 更新tableForm
+    tableForm.setFieldsValue({
+      [`accfullnameCode-${selectRow.id}`]: newAcc.accfullnameCode,
+      [`borrow-${selectRow.id}`]: newAcc.borrow,
+      [`loan-${selectRow.id}`]: newAcc.loan,
+    })
+
+    assistForm.setFieldsValue(newAcc.assistitems)
+
+    // 关闭弹窗
+    setVisibleAccount(false)
+    // 请款参数
+    setAccountParams(null)
+  }
+
+  // 按下回车键-选择科目
+  const onPressEnter = async (record) => {
+    const value = tableForm.getFieldValue(`accfullnameCode-${record.id}`)
+    const params = {
+      code: value,
+    }
+    const { code, data, message } = await Http.post(`/account/code`, params)
     if (code === 200) {
-      const direct = data.direct == '借' ? 1 : 2
-      const amount = borrow || loan
-      const newAcc = {
-        ...selectRow,
-        acccode: data.code,
-        accfullname: data.fullname,
-        accname: data.name,
-        accfullnameCode: `${data.code} ${data.fullname}`,
-        classid: data.classid,
-        isbj: data.isbj,
-        borrow: direct === 1 ? amount : 0,
-        loan: direct === 2 ? amount : 0,
-        assistitems:
-          data.assistitems?.length > 0
-            ? {
-              bdate: pageForm.getFieldValue('bdate'),
-              summary: summary,
-              money: amount || '',
-              direct: direct,
-              items: (data.assistitems || []).map((e) => ({
-                typename: e.name,
-                typeid: e.id,
-                limitgroup: e.limitgroup,
-                sourcetype: e.sourcetype,
-              })),
-            }
-            : null,
-      }
-
-      // 更新tableData中的对应行
-      setTableData((prev) => prev.map((item) => (item.id === selectRow.id ? newAcc : item)))
-      // 更新selectRow
-      setSelectRow(newAcc)
-      // 更新tableForm
-      tableForm.setFieldsValue({
-        [`accfullnameCode-${selectRow.id}`]: newAcc.accfullnameCode,
-        [`borrow-${selectRow.id}`]: newAcc.borrow,
-        [`loan-${selectRow.id}`]: newAcc.loan,
-      })
-
-      assistForm.setFieldsValue(newAcc.assistitems)
-
-      // 关闭弹窗
-      setVisibleAccount(false)
-      // 请款参数
-      setAccountParams(null)
+      transAccount(data)
+    } else {
+      Message.error(message || '查询科目出错了')
+    }
+  }
+  // 确认-科目选择
+  const onAccountEntry = async (record) => {
+    const { code, data, message } = await Http.post(`/account/${record.id}`)
+    if (code === 200) {
+      transAccount(data)
+    } else {
+      Message.error(message || '查询科目出错了')
     }
   }
   // 打开-科目选择

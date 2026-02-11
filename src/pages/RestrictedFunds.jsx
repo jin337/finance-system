@@ -18,6 +18,9 @@ import {
   Table,
 } from '@arco-design/web-react'
 
+// 公共方法
+import { formatNumber } from 'src/utils/common'
+
 const RestrictedFunds = () => {
   const [editForm] = Form.useForm()
   const { currentCompany, pageHeight } = useSelector((state) => state.commonReducer)
@@ -61,6 +64,7 @@ const RestrictedFunds = () => {
       dataIndex: 'money',
       width: 160,
       align: 'center',
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '备注',
@@ -105,9 +109,9 @@ const RestrictedFunds = () => {
       ...prev,
       ctypeList: vs['month']
         ? [
-            { value: 1, label: '本月增加' },
-            { value: 2, label: '本月减少' },
-          ]
+          { value: 1, label: '本月增加' },
+          { value: 2, label: '本月减少' },
+        ]
         : [{ value: 0, label: '期初' }],
     }))
 

@@ -260,6 +260,12 @@ const Inventory = () => {
   // 选择项目
   const changeProject = async (key, id) => {
     setProjectKey(key)
+    // 清空之前的数据
+    setStockList({
+      stock_fp: [],
+      stock_zg: []
+    })
+    setTableLoading(true)
 
     const params = {
       groupid: currentCompany?.id,
@@ -270,6 +276,7 @@ const Inventory = () => {
     if (code === 200) {
       setStockList(data)
     }
+    setTableLoading(false)
   }
 
   // 搜索供应商
@@ -363,12 +370,11 @@ const Inventory = () => {
                 min={0.2}
                 panes={[
                   <Table
-                    rowKey='vno'
                     size='small'
                     className='h-full'
                     loading={tableLoading}
                     columns={columnsLeft}
-                    data={stockList?.stock_zg}
+                    data={stockList?.stock_zg || []}
                     border={{ wrapper: true, cell: true }}
                     pagination={false}
                     scroll={{ x: 637, y: pageHeight - 154 }}
@@ -380,11 +386,10 @@ const Inventory = () => {
                   />,
                   <Table
                     className='h-full'
-                    rowKey='vno'
                     size='small'
                     columns={columnsRight}
                     loading={tableLoading}
-                    data={stockList?.stock_fp}
+                    data={stockList?.stock_fp || []}
                     border={{ wrapper: true, cell: true }}
                     pagination={false}
                     scroll={{ x: 1100, y: pageHeight - 154 }}

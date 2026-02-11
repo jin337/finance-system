@@ -128,9 +128,6 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
     }
 
     setTableData((prev) => [...prev, newRow])
-
-    const uniqueList = processUniqueList(tableCashData)
-    setTableOptions(uniqueList)
   }
   // 清空
   const handleClear = async () => {
@@ -151,8 +148,12 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
   }
   // 载入
   const handleLoad = () => {
+    // 过滤掉 tableData 中已存在的数据（通过 eid 字段判断）
+    const existingEids = new Set(tableData.map(item => item.eid))
+    const filteredCashData = tableCashData.filter(element => !existingEids.has(element.eid))
+
     const list = []
-    tableCashData.forEach((element) => {
+    filteredCashData.forEach((element) => {
       const item = {
         ...element,
         id: uuid(),
@@ -161,10 +162,7 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
       }
       list.push(item)
     })
-    setTableData(list)
-
-    const uniqueList = processUniqueList(tableCashData)
-    setTableOptions(uniqueList)
+    setTableData(prev => [...prev, ...list])
   }
 
   const columnsProject = [
@@ -220,32 +218,35 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
   const columns = [
     {
       title: '序号',
-      dataIndex: '',
+      dataIndex: 'sort',
       width: 70,
       align: 'center',
-      render: (_, record, index) => index + 1,
     },
     {
       title: '对方科目',
       dataIndex: 'acccode',
       width: 270,
-      render: (text, record, index) => (
-        <Select
-          options={tableOptions}
-          defaultValue={text}
-          renderFormat={(_, value) => value + record?.accfullname}
-          style={{ maxWidth: 235 }}
-          triggerProps={{
-            autoAlignPopupWidth: false,
-            autoAlignPopupMinWidth: true,
-            position: 'bl',
-          }}
-          onChange={(e) => {
-            const item = tableOptions.find((item) => item?.acccode === e)
-            setTableData((prev) => prev.map((t, i) => (i === index ? { ...t, ...item } : t)))
-          }}
-        />
-      ),
+      render: (text, record, index) => {
+        const eids = tableData.map(e => e.eid)
+        const op = tableOptions.filter(f => !(eids.includes(f.eid) && f.eid !== record.eid))
+        return (
+          <Select
+            options={op || []}
+            defaultValue={text}
+            renderFormat={(_, value) => value + record?.accfullname}
+            style={{ maxWidth: 235 }}
+            triggerProps={{
+              autoAlignPopupWidth: false,
+              autoAlignPopupMinWidth: true,
+              position: 'bl',
+            }}
+            onChange={(e) => {
+              const item = tableOptions.find((item) => item?.eid === e)
+              setTableData((prev) => prev.map((t, i) => (i === index ? { ...t, ...item } : t)))
+            }}
+          />
+        )
+      },
     },
     {
       title: '摘要',
@@ -293,23 +294,19 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
     },
   ]
   const processUniqueList = (arr) => {
-    return Array.from(
-      new Map(
-        arr.map((item) => [
-          item.cashcode,
-          {
-            ...item,
-            value: item.acccode,
-            label: (
-              <div className='flex items-center justify-between gap-2'>
-                <span>{item.accfullname}</span>
-                <span>{item.acccode}</span>
-              </div>
-            ),
-          },
-        ])
-      ).values()
-    )
+    const newArr = [...arr].map(e => {
+      return {
+        ...e,
+        value: e.eid,
+        label: (
+          <div className='flex items-center justify-between gap-2'>
+            <span>{e.accfullname}</span>
+            <span>{e.acccode}</span>
+          </div>
+        ),
+      }
+    })
+    return newArr
   }
 
   // 获取现金流量表
@@ -330,9 +327,6 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
         .filter(Boolean) // 移除未匹配的项
       setTableData(mergedList)
 
-      const uniqueList = processUniqueList(mergedList)
-      setTableOptions(uniqueList)
-
       let total = 0
       mergedList.forEach((m) => {
         if (m.cashflow && m.eid) {
@@ -340,9 +334,10 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
           total += money
         }
       })
+
       setAccountMony((prev) => ({
         ...prev,
-        cashflowmoney: total,
+        cashflowmoney: Math.abs(total),
       }))
     }
   }
@@ -359,7 +354,9 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
       account.cashflowType = type
       setAccountMony(account)
       setTableCashData(list)
+      setTableOptions(processUniqueList(list))
       getCashTable(item.id, list)
+
     }
   }
 

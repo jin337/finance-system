@@ -203,7 +203,11 @@ const CashFlow = () => {
             columns={columns}
             pagination={false}
             scroll={{ y: pageHeight - 34 }}
-            rowClassName={(record) => (record.leftmargin === 4 ? 'table-summary-sum' : '')}
+            rowClassName={(record) => {
+              const sumClass = record.leftmargin === 4 ? 'table-summary-sum' : ''
+              const openClass = record.accounts ? 'cursor-pointer' : ''
+              return sumClass + openClass
+            }}
             onRow={(record, index) => {
               return {
                 onDoubleClick: () => onRowClick(record, index),
@@ -218,6 +222,7 @@ const CashFlow = () => {
         title={null}
         footer={null}
         visible={visibleDrawer}
+        bodyStyle={{ padding: 0 }}
         onCancel={() => {
           setVisibleDrawer(false)
         }}>

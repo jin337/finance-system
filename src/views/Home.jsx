@@ -691,7 +691,6 @@ const Home = () => {
             {menuSelect?.children?.length > 0 ? (
               <Layout.Sider width={menuSelect.siderWidth} className='h-full overflow-y-auto'>
                 <Menu
-                  className='h-[calc(100%-62px)] overflow-y-auto'
                   autoOpen
                   onClickMenuItem={onChildrenItem}
                   selectedKeys={[menuSelect?.childrenSelect?.key]}>
