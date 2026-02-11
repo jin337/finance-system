@@ -464,7 +464,7 @@ const Voucher = () => {
     {
       title: '凭证号',
       dataIndex: 'vno',
-      width: 170,
+      width: 180,
       sorter: true,
       filters: [
         {
@@ -565,7 +565,7 @@ const Voucher = () => {
       dataIndex: 'total',
       align: 'right',
       width: 130,
-      render: (text) => formatNumber(text),
+      render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
       title: '现金流量',

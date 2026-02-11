@@ -151,7 +151,7 @@ const transNum = (num, index) => {
   if (!num || num === 0) return ''
   const paddedNum = Number(num).toFixed(2).replace('.', '').padStart(11, 'X')
   const targetChar = paddedNum[paddedNum.length - 1 - index]
-  return targetChar === 'X' || targetChar === '-' ? '' : targetChar || ''
+  return targetChar === 'X' || targetChar
 }
 
 const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
@@ -257,7 +257,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 10),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 10)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -306,7 +306,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 9),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 9)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -322,7 +322,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 9),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 8)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -334,11 +334,11 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         {
           title: '十',
           dataIndex: 'borrow_7',
-          className: 'row-money row-blue',
+          className: 'row-money',
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 7),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 7)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -354,7 +354,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 6),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 6)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -370,7 +370,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 5),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 5)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -382,11 +382,11 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         {
           title: '百',
           dataIndex: 'borrow_4',
-          className: 'row-money row-blue',
+          className: 'row-money',
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 4),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 4)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -402,7 +402,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 3),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 3)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -418,7 +418,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 2),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 2)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -434,7 +434,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 1),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 1)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -450,7 +450,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.borrow, 0),
+              children: <span className={record.borrow < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.borrow, 0)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -473,7 +473,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 10),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 10)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -522,7 +522,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 9),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 9)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -538,7 +538,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 8),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 8)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -550,11 +550,11 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         {
           title: '十',
           dataIndex: 'loan_7',
-          className: 'row-money row-blue',
+          className: 'row-money',
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 7),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 7)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -570,7 +570,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 6),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 6)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -586,7 +586,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 5),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 5)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -598,11 +598,11 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         {
           title: '百',
           dataIndex: 'loan_4',
-          className: 'row-money row-blue',
+          className: 'row-money',
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 4),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 4)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -618,7 +618,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 3),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 3)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -634,7 +634,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 2),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 2)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -650,7 +650,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 1),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 1)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -666,7 +666,7 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
           width: 20,
           render: (_, record) => {
             const obj = {
-              children: transNum(record?.loan, 0),
+              children: <span className={record.loan < 0 ? 'text-red-600' : 'text-blue-600'}>{transNum(record?.loan, 0)}</span>,
               props: {},
             }
             if (isEditRows.includes(record.id)) {
@@ -835,7 +835,6 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
         ...updatedRecord,
         oldRow: updatedRecord,
       }
-      console.log(newTableData)
 
       // 更新tableData状态
       setTableData(newTableData)
