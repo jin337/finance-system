@@ -24,6 +24,7 @@ const Balance = () => {
 
   const [visibleDrawer, setVisibleDrawer] = useState(false)
   const [drawerData, setDrawerData] = useState([])
+  const [balanceDetail, setBalanceDetail] = useState()
 
   const [voucherVisible, setVoucherVisible] = useState(false)
   const [voucherParams, setVoucherParams] = useState()
@@ -341,6 +342,8 @@ const Balance = () => {
   // 行点击
   const onRowClick = async (record) => {
     setVisibleDrawer(true)
+
+    setBalanceDetail(record)
     const params = {
       catid: menuSelect.catid,
       groupid: currentCompany?.id,
@@ -448,12 +451,14 @@ const Balance = () => {
 
       <Drawer
         width='80%'
-        title={null}
+        title={<div>
+          <span>{balanceDetail?.code}-</span>
+          <span>{balanceDetail?.name}</span>
+        </div>}
         footer={null}
+        bodyStyle={{ padding: 0 }}
         visible={visibleDrawer}
-        onCancel={() => {
-          setVisibleDrawer(false)
-        }}>
+        onCancel={() => setVisibleDrawer(false)}>
         <Table
           className='z-10'
           rowKey={'index_id'}
