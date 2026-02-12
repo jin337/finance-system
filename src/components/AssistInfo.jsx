@@ -101,39 +101,41 @@ const AssistInfo = ({ assistParams, onSelect }) => {
               确认选择
             </Button>
           </Form.Item>
-          <Form.Item>
-            <Popover
-              trigger='click'
-              position='br'
-              className='w-80'
-              popupVisible={visible}
-              content={
-                <Form
-                  form={createForm}
-                  validateMessages={{ required: (_, { label }) => `请输入${label}` }}
-                  labelCol={{ style: { flexBasis: 70 } }}
-                  wrapperCol={{ style: { flexBasis: `calc(100% - ${70}px)` } }}>
-                  <Form.Item label='编码' field={'code'} rules={[{ required: true }]}>
-                    <Input placeholder='请输入编码' />
-                  </Form.Item>
-                  <Form.Item label='名称' field={'name'} rules={[{ required: true }]}>
-                    <Input placeholder='请输入名称' />
-                  </Form.Item>
-                  <Form.Item className='mb-0! text-right' wrapperCol={{ span: 24 }}>
-                    <Space>
-                      <Button type='text' onClick={() => setVisible(false)}>
-                        取消
-                      </Button>
-                      <Button type='primary' onClick={onAssistAdd}>
-                        确认
-                      </Button>
-                    </Space>
-                  </Form.Item>
-                </Form>
-              }>
-              <Button onClick={openCreate}>新增核算项目</Button>
-            </Popover>
-          </Form.Item>
+          <UserPermissions auth={['AssistAdd']}>
+            {assistParams?.sourcetype !== 1 && <Form.Item>
+              <Popover
+                trigger='click'
+                position='br'
+                className='w-80'
+                popupVisible={visible}
+                content={
+                  <Form
+                    form={createForm}
+                    validateMessages={{ required: (_, { label }) => `请输入${label}` }}
+                    labelCol={{ style: { flexBasis: 70 } }}
+                    wrapperCol={{ style: { flexBasis: `calc(100% - ${0}px)` } }}>
+                    <Form.Item label='编码' field={'code'} rules={[{ required: true }]}>
+                      <Input placeholder='请输入编码' />
+                    </Form.Item>
+                    <Form.Item label='名称' field={'name'} rules={[{ required: true }]}>
+                      <Input placeholder='请输入名称' />
+                    </Form.Item>
+                    <Form.Item className='mb-0! text-right' wrapperCol={{ span: 24 }}>
+                      <Space>
+                        <Button type='text' onClick={() => setVisible(false)}>
+                          取消
+                        </Button>
+                        <Button type='primary' onClick={onAssistAdd}>
+                          确认
+                        </Button>
+                      </Space>
+                    </Form.Item>
+                  </Form>
+                }>
+                <Button onClick={openCreate}>新增核算项目</Button>
+              </Popover>
+            </Form.Item>}
+          </UserPermissions>
         </Form>
       </Layout.Header>
       <Layout.Content className='mt-1'>

@@ -266,7 +266,9 @@ const CashInfo = ({ visible = false, cashParams, onCancel }) => {
       render: (_, record, index) => (
         <div className='flex items-center justify-between gap-2'>
           <Input.TextArea rows={1} height={'auto'} value={record?.cashcode && record?.cashcode + record?.cashname} />
-          <IconMore className='cursor-pointer' onClick={() => getCashProjectList(record, index)} />
+          <UserPermissions auth={['CashFlowSet']}>
+            <IconMore className='cursor-pointer' onClick={() => getCashProjectList(record, index)} />
+          </UserPermissions>
         </div>
       ),
     },

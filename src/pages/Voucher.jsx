@@ -9,6 +9,7 @@ import {
   Descriptions,
   Drawer,
   Dropdown,
+  Empty,
   Form,
   Input,
   Layout,
@@ -22,7 +23,7 @@ import {
   Table,
   Tag,
   Timeline,
-  Typography,
+  Typography
 } from '@arco-design/web-react'
 import {
   IconCalendar,
@@ -464,7 +465,7 @@ const Voucher = () => {
     {
       title: '凭证号',
       dataIndex: 'vno',
-      width: 180,
+      width: 210,
       sorter: true,
       filters: [
         {
@@ -488,63 +489,73 @@ const Voucher = () => {
             {record.isbuild === 1 && <IconFilePdf style={{ color: '#ff4400', fontSize: '16px' }} />}
             {record.isbuild === 0 && <IconFile style={{ color: '#165dff', fontSize: '16px' }} />}
             {text}
+            {record.isrelatetrans === 1 && <Tag size='small' color='#00b42a'>联</Tag>}
             {record.status === 1 && (
-              <IconPrinter
-                onClick={() => openPdf(record)}
-                className='cursor-pointer'
-                style={{ color: '#165dff', fontSize: '16px' }}
-              />
+              <UserPermissions auth={['DocBuild']}>
+                <IconPrinter
+                  onClick={() => openPdf(record)}
+                  className='cursor-pointer'
+                  style={{ color: '#165dff', fontSize: '16px' }}
+                />
+              </UserPermissions>
             )}
           </div>
         )
         return tableTyle?.finish ? (
           Inner
         ) : (
-          <Popconfirm
-            icon={null}
-            position='right'
-            title='凭证序号更改'
-            className='voucher-popconfirm w-72!'
-            popupVisible={record?.id === seqnoId}
-            onDoubleClick={(e) => e.stopPropagation()}
-            content={
-              <Form
-                layout='inline'
-                form={seqnoForm}
-                autoComplete='off'
-                requiredSymbol={false}
-                labelCol={{ style: { paddingRight: 0 } }}>
-                <Descriptions
-                  border
-                  column={1}
-                  data={[
-                    { label: '原凭证号', value: text },
-                    {
-                      label: '新凭证号',
-                      value: (
-                        <Form.Item
-                          className='mr-0! mb-0!'
-                          field={'newseqno'}
-                          rules={[{ required: true, message: '*新的凭证序号必填' }]}>
-                          <Input prefix={text.substring(0, text.lastIndexOf('-') + 1)} size='mini' />
-                        </Form.Item>
-                      ),
-                    },
-                  ]}
-                />
-              </Form>
-            }
-            onOk={() => onNumberMove(record)}
-            onCancel={() => setSeqnoId(null)}
-            triggerProps={{
-              onClickOutside: () => {
-                if (record?.id === seqnoId) {
-                  setSeqnoId(null)
+          <>
+            <UserPermissions auth={['DocMove']}>
+              <Popconfirm
+                icon={null}
+                position='right'
+                title='凭证序号更改'
+                className='voucher-popconfirm w-72!'
+                popupVisible={record?.id === seqnoId}
+                onDoubleClick={(e) => e.stopPropagation()}
+                content={
+                  <Form
+                    layout='inline'
+                    form={seqnoForm}
+                    autoComplete='off'
+                    requiredSymbol={false}
+                    labelCol={{ style: { paddingRight: 0 } }}>
+                    <Descriptions
+                      border
+                      column={1}
+                      data={[
+                        { label: '原凭证号', value: text },
+                        {
+                          label: '新凭证号',
+                          value: (
+                            <Form.Item
+                              className='mr-0! mb-0!'
+                              field={'newseqno'}
+                              rules={[{ required: true, message: '*新的凭证序号必填' }]}>
+                              <Input prefix={text.substring(0, text.lastIndexOf('-') + 1)} size='mini' />
+                            </Form.Item>
+                          ),
+                        },
+                      ]}
+                    />
+                  </Form>
                 }
-              },
-            }}>
-            {Inner}
-          </Popconfirm>
+                onOk={() => onNumberMove(record)}
+                onCancel={() => setSeqnoId(null)}
+                triggerProps={{
+                  onClickOutside: () => {
+                    if (record?.id === seqnoId) {
+                      setSeqnoId(null)
+                    }
+                  },
+                }}>
+                {Inner}
+              </Popconfirm>
+            </UserPermissions>
+            <UserPermissions noAuth={['DocMove']}>
+              {Inner}
+            </UserPermissions>
+          </>
         )
       },
     },
@@ -644,58 +655,80 @@ const Voucher = () => {
       render: (_, record) => (
         <>
           {record.status === 0 && !tableTyle.finish && (
-            <Button type='test' size='small' onClick={() => onSubmit(record)}>
-              提交
-            </Button>
+            <UserPermissions auth={['DocUpdate', 'DocAdd']}>
+              <Button type='test' size='small' onClick={() => onSubmit(record)}>
+                提交
+              </Button>
+            </UserPermissions>
           )}
 
           <Button type='test' size='small' onClick={() => onOpenEditView(2, record)}>
             查看
           </Button>
 
-          {(record.status === -1 || record.status === 0 || record.status === 2 || record.status === 3) &&
-            !tableTyle.finish &&
-            record.ischeckout === '0' && (
-              <Button type='test' size='small' onClick={() => onOpenEditView(3, record)}>
-                编辑
-              </Button>
-            )}
+          {
+            !tableTyle.finish && record.ischeckout === '0' && (
+              (record.status === -1 || record.status === 0 || record.status === 2) && (
+                <UserPermissions auth={['DocUpdate']}>
+                  <Button type='test' size='small' onClick={() => onOpenEditView(3, record)}>
+                    编辑
+                  </Button>
+                </UserPermissions>
+              ) || record.status === 3 && (
+                <UserPermissions auth={['DocAudit']}>
+                  <Button type='test' size='small' onClick={() => onOpenEditView(3, record)}>
+                    编辑
+                  </Button>
+                </UserPermissions>
+              )
+            )
+          }
 
           {(record.status === 2 || record.status === 3) &&
             !tableTyle.finish &&
             !(tableTyle.ischeckout === 1 && record.ischeckout === '0') && (
-              <Button type='test' size='small' onClick={() => onOpenExamine(record)}>
-                审核
-              </Button>
+              <UserPermissions auth={['DocAudit']}>
+                <Button type='test' size='small' onClick={() => onOpenExamine(record)}>
+                  审核
+                </Button>
+              </UserPermissions>
             )}
 
           {record.isbuild === 0 && record.status === 1 && (
-            <Button type='test' size='small' onClick={() => onBuild(record)}>
-              生成
-            </Button>
+            <UserPermissions auth={['DocBuild']}>
+              <Button type='test' size='small' onClick={() => onBuild(record)}>
+                生成
+              </Button>
+            </UserPermissions>
           )}
 
           {(((record.status === -1 || record.status === 0 || record.status === 2 || record.status === 5) &&
             !tableTyle.finish &&
             tableTyle.ischeckout === 0) ||
             (record.status !== 1 && tableTyle.ischeckout === 1 && record.ischeckout === '1' && !tableTyle.finish)) && (
-              <Button type='test' size='small' onClick={() => onDel(record)}>
-                删除
-              </Button>
+              <UserPermissions auth={['DocDelete']}>
+                <Button type='test' size='small' onClick={() => onDel(record)}>
+                  删除
+                </Button>
+              </UserPermissions>
             )}
 
           {(record.status === 0 || record.status === 1 || record.status === 2) &&
             !tableTyle.finish &&
             !(tableTyle.ischeckout === 1 && record.ischeckout === '0') && (
-              <Button type='test' size='small' onClick={() => onOpenCancel(record)}>
-                作废
-              </Button>
+              <UserPermissions auth={['DocCancel']}>
+                <Button type='test' size='small' onClick={() => onOpenCancel(record)}>
+                  作废
+                </Button>
+              </UserPermissions>
             )}
 
           {record.status === 1 && !tableTyle.finish && !(tableTyle.ischeckout === 1 && record.ischeckout === '0') && (
-            <Button type='test' size='small' onClick={() => onReset(record)}>
-              撤销
-            </Button>
+            <UserPermissions auth={['DocAudit']}>
+              <Button type='test' size='small' onClick={() => onReset(record)}>
+                撤销
+              </Button>
+            </UserPermissions>
           )}
 
           <Button type='test' size='small' onClick={() => onOpenLog(record)}>
@@ -852,7 +885,7 @@ const Voucher = () => {
 
   return (
     <>
-      <Layout className='relative h-full w-full' id='voucherWrap' >
+      <Layout className='relative h-full w-full' id='voucherWrap'>
         <Layout.Sider width={114} className='h-full border-r border-neutral-200'>
           <DatePicker.YearPicker
             value={String(searchData?.year)}
@@ -894,103 +927,122 @@ const Voucher = () => {
                 <>
                   {tableTyle.ischeckout === 0 && (
                     <Space>
-                      <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onOpenEditView(1)}>
-                        新建凭证
-                      </Button>
-                      <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onCheckout(1)}>
-                        生成转接凭证
-                      </Button>
+                      <UserPermissions auth={['DocAdd']}>
+                        <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onOpenEditView(1)}>
+                          新建凭证
+                        </Button>
+                      </UserPermissions>
+                      <UserPermissions auth={['DocCheckOut']}>
+                        <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onCheckout(1)}>
+                          生成转接凭证
+                        </Button>
+                      </UserPermissions>
                     </Space>
                   )}
                   {tableTyle.status === 1 && tableTyle.ischeckout === 1 && (
-                    <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onCheckout(2)}>
-                      月度结转
-                    </Button>
+                    <UserPermissions auth={['DocCheckOut']}>
+                      <Button shape='round' type='primary' icon={<IconSubscribeAdd />} onClick={() => onCheckout(2)}>
+                        月度结转
+                      </Button>
+                    </UserPermissions>
                   )}
                 </>
               )}
               {tableTyle.finish && tableTyle.ischeckout === 1 && tableTyle.status === 1 && (
-                <Button shape='round' type='primary' icon={<IconRedo />} onClick={() => onCheckout(0)}>
-                  撤销结转
-                </Button>
+                <UserPermissions auth={['DocCheckOut']}>
+                  <Button shape='round' type='primary' icon={<IconRedo />} onClick={() => onCheckout(0)}>
+                    撤销结转
+                  </Button>
+                </UserPermissions>
               )}
-              <Input.Group compact className='w-100!'>
-                <Select
-                  options={searchoptions}
-                  defaultValue={searchData?.type}
-                  placeholder='请选择'
-                  style={{ width: '30%' }}
-                  onChange={(e) => setSearchData((prev) => ({ ...prev, type: e }))}
-                />
-                <Input.Search
-                  searchButton
-                  allowClear
-                  style={{ width: '70%' }}
-                  placeholder='查询'
-                  onSearch={(e) => onChangeSearch({ value: e })}
-                  onClear={() => onChangeSearch({ value: null })}
-                />
-              </Input.Group>
+              <UserPermissions auth={['DocView']}>
+                <Input.Group compact className='w-100!'>
+                  <Select
+                    options={searchoptions}
+                    defaultValue={searchData?.type}
+                    placeholder='请选择'
+                    style={{ width: '30%' }}
+                    onChange={(e) => setSearchData((prev) => ({ ...prev, type: e }))}
+                  />
+                  <Input.Search
+                    searchButton
+                    allowClear
+                    style={{ width: '70%' }}
+                    placeholder='查询'
+                    onSearch={(e) => onChangeSearch({ value: e })}
+                    onClear={() => onChangeSearch({ value: null })}
+                  />
+                </Input.Group>
+              </UserPermissions>
               {selectList.length > 0 && (
-                <Button shape='round' type='primary' status='success' icon={<IconPrinter />} onClick={openPdfs}>
-                  打印凭证({selectList.length}/{tableData.pageSize})
-                </Button>
+                <UserPermissions auth={['DocBuild']}>
+                  <Button shape='round' type='primary' status='success' icon={<IconPrinter />} onClick={openPdfs}>
+                    打印凭证({selectList.length}/{tableData.pageSize})
+                  </Button>
+                </UserPermissions>
               )}
             </Space>
-            <Dropdown
-              trigger='click'
-              position='br'
-              droplist={
-                <Menu onClickMenuItem={onExportList} className='max-h-full!'>
-                  {exportMenu.map((item) => {
-                    if (!item.filter) {
-                      return <Menu.Item key={item.id}>{item.name}</Menu.Item>
-                    }
-                    const { isFinish, isAdmin, isQuarter } = item.filter
-                    const needQuarter = [3, 6, 9, 12].includes(Number(searchData?.month))
-                    const needAdmin = currentCompany?.id === 1
-                    // 检查是否满足显示条件
-                    const shouldShow =
-                      (isFinish === undefined || isFinish === tableTyle.finish) &&
-                      (isAdmin === undefined || isAdmin === needAdmin) &&
-                      (isQuarter === undefined || isQuarter === needQuarter)
-                    return shouldShow ? <Menu.Item key={item.id}>{item.name}</Menu.Item> : null
-                  })}
-                </Menu>
-              }>
-              <Button shape='round' icon={<IconExport />}>
-                导出
-              </Button>
-            </Dropdown>
+            <UserPermissions auth={['DocReportExport']}>
+              <Dropdown
+                trigger='click'
+                position='br'
+                droplist={
+                  <Menu onClickMenuItem={onExportList} className='max-h-full!'>
+                    {exportMenu.map((item) => {
+                      if (!item.filter) {
+                        return <Menu.Item key={item.id}>{item.name}</Menu.Item>
+                      }
+                      const { isFinish, isAdmin, isQuarter } = item.filter
+                      const needQuarter = [3, 6, 9, 12].includes(Number(searchData?.month))
+                      const needAdmin = currentCompany?.id === 1
+                      // 检查是否满足显示条件
+                      const shouldShow =
+                        (isFinish === undefined || isFinish === tableTyle.finish) &&
+                        (isAdmin === undefined || isAdmin === needAdmin) &&
+                        (isQuarter === undefined || isQuarter === needQuarter)
+                      return shouldShow ? <Menu.Item key={item.id}>{item.name}</Menu.Item> : null
+                    })}
+                  </Menu>
+                }>
+                <Button shape='round' icon={<IconExport />}>
+                  导出
+                </Button>
+              </Dropdown>
+            </UserPermissions>
           </Layout.Header>
           <Layout.Content className='h-full overflow-auto pb-3'>
-            <Table
-              size='small'
-              rowKey='id'
-              columns={columns}
-              data={tableData.list}
-              pagination={{
-                sizeCanChange: true,
-                showTotal: true,
-                pageSize: tableData.pageSize,
-                current: tableData.page,
-                total: tableData.total,
-                bufferSize: 1,
-                className: 'mr-3',
-              }}
-              onChange={changeTable}
-              scroll={{ x: true, y: pageHeight - 218 }}
-              rowSelection={{
-                type: 'checkbox',
-                selectedRowKeys: selectList,
-                onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
-              }}
-              onRow={(record) => {
-                return {
-                  onDoubleClick: () => onOpenEditView(2, record),
-                }
-              }}
-            />
+            <UserPermissions auth={['DocView']}>
+              <Table
+                size='small'
+                rowKey='id'
+                columns={columns}
+                data={tableData.list}
+                pagination={{
+                  sizeCanChange: true,
+                  showTotal: true,
+                  pageSize: tableData.pageSize,
+                  current: tableData.page,
+                  total: tableData.total,
+                  bufferSize: 1,
+                  className: 'mr-3',
+                }}
+                onChange={changeTable}
+                scroll={{ x: true, y: pageHeight - 218 }}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys: selectList,
+                  onChange: (selectedRowKeys) => setSelectList(selectedRowKeys),
+                }}
+                onRow={(record) => {
+                  return {
+                    onDoubleClick: () => onOpenEditView(2, record),
+                  }
+                }}
+              />
+            </UserPermissions>
+            <UserPermissions noAuth={['DocView']}>
+              <Empty description='暂无查看权限，请联系管理员' />
+            </UserPermissions>
           </Layout.Content>
         </Layout>
 

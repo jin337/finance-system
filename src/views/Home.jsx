@@ -47,6 +47,7 @@ const HomeList = [
     key: '6',
     pathName: '/auxiliary',
     siderWidth: 0,
+    havePermission: ['AssistView'],
   },
   {
     title: '科目余额查询',
@@ -54,10 +55,12 @@ const HomeList = [
     pathName: '/balance',
     siderWidth: 0,
     catid: 2,
+    havePermission: ['BalanceView'],
   },
   {
     title: '综合询析',
     key: '8',
+    havePermission: ['QueryView'],
     siderWidth: 180,
     children: [
       {
@@ -90,6 +93,7 @@ const HomeList = [
   {
     title: '财务明细查询',
     key: '9',
+    havePermission: ['QueryView'],
     siderWidth: 290,
     children: [
       {
@@ -277,18 +281,21 @@ const HomeList = [
     key: '10',
     pathName: '/bankBalance',
     siderWidth: 0,
+    havePermission: ['BankBalanceView'],
   },
   {
     title: '应收应付查询',
     key: '11',
     pathName: '/receivable',
     siderWidth: 0,
+    havePermission: ['InOutView'],
   },
   {
     title: '库存余额查询',
     key: '12',
     pathName: '/inventory',
     siderWidth: 0,
+    havePermission: ['StockBalanceView'],
   },
   {
     title: '现金流量查询',
@@ -296,12 +303,14 @@ const HomeList = [
     pathName: '/cashFlow',
     siderWidth: 0,
     catid: 2,
+    havePermission: ['CashFlowView'],
   },
   {
     title: '受限资金配置',
     key: '14',
     pathName: '/restrictedFunds',
     siderWidth: 0,
+    havePermission: ['CashLimitConfig'],
   },
 ]
 const sysList = [
@@ -374,7 +383,7 @@ const Home = () => {
   const navigation = useNavigate()
   const location = useLocation()
 
-  const { company, currentCompany, account, pageHeight, isAdmin } = useSelector((state) => state.commonReducer)
+  const { company, parmission, currentCompany, account, pageHeight, isAdmin } = useSelector((state) => state.commonReducer)
   const { menuSelect, menuList } = useSelector((state) => state.homeReducer)
   const [visible, setVisible] = useState(false)
 
@@ -405,12 +414,13 @@ const Home = () => {
   // 获取权限
   const getParmission = async () => {
     // 如果已经有公司数据，不再请求
-    if (account && account.id) {
+    if (parmission && parmission.length > 0) {
       return
     }
     const { code, data } = await Http.post('/user/grant/list')
     if (code === 200) {
-      dispatch(setParmission(data?.grant || []))
+      const grant = (data?.grant[1] || '').split(',')
+      dispatch(setParmission(grant || []))
     }
   }
 
@@ -439,7 +449,7 @@ const Home = () => {
 
   // 跳转首页
   const onBackHome = () => {
-    const targetList = HomeList
+    const targetList = hasPermission(HomeList)
     let selectedItem = targetList[0]
 
     if (!selectedItem) return
@@ -461,7 +471,7 @@ const Home = () => {
 
     // 检查是否为系统管理路径
     const isSys = findMenuItemByPath(sysList, pathname) !== -1
-    const targetList = isSys ? sysList : HomeList
+    const targetList = isSys ? sysList : hasPermission(HomeList)
     const index = findMenuItemByPath(targetList, pathname)
 
     // 获取选中的菜单项，如果未找到则默认选择第一个
@@ -476,6 +486,16 @@ const Home = () => {
     onMenuSelect({
       ...selectedItem,
       childrenSelect,
+    })
+  }
+
+  // 判断菜单项是否包含权限
+  const hasPermission = (arr) => {
+    return arr.filter((item) => {
+      if (item?.havePermission && item.havePermission.length > 0) {
+        return item.havePermission.some((permission) => parmission.includes(permission))
+      }
+      return true
     })
   }
 
@@ -639,7 +659,7 @@ const Home = () => {
             <Dropdown
               droplist={
                 <Menu onClickMenuItem={onSysItem}>
-                  {isAdmin && <Menu.Item key='1'>系统管理</Menu.Item>}
+                  {isAdmin ? <Menu.Item key='1'>系统管理</Menu.Item> : null}
                   <Menu.Item key='2'>修改密码</Menu.Item>
                   <Menu.Item key='3'>退出登录</Menu.Item>
                 </Menu>

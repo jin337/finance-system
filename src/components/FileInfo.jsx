@@ -464,36 +464,48 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
                 </Button>
                 {imgInfo.status !== 1 && (
                   <Space size='large'>
-                    <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
-                      删除
-                    </Button>
-                    {selectImgList.length === 1 && (
-                      <Button shape='round' type='secondary' icon={<IconEdit />} onClick={editName}>
-                        重命名
+                    <UserPermissions auth={['FileDel']}>
+                      <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
+                        删除
                       </Button>
+                    </UserPermissions>
+                    {selectImgList.length === 1 && (
+                      <UserPermissions auth={['FileRename']}>
+                        <Button shape='round' type='secondary' icon={<IconEdit />} onClick={editName}>
+                          重命名
+                        </Button>
+                      </UserPermissions>
                     )}
                   </Space>
                 )}
-                <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
-                  下载
-                </Button>
+                <UserPermissions auth={['FileRename']}>
+                  <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
+                    下载
+                  </Button>
+                </UserPermissions>
               </Space>
             ) : (
               <Space size='large'>
                 {imgInfo.status !== 1 && (
                   <Space size='large'>
-                    <Button shape='round' type='primary' icon={<IconScan />} disabled>
-                      扫描
-                    </Button>
-                    <Button shape='round' type='primary' icon={<IconUpload />} onClick={() => setUploadVisible(true)}>
-                      上传
-                    </Button>
+                    <UserPermissions auth={['FileScan']}>
+                      <Button shape='round' type='primary' icon={<IconScan />} disabled>
+                        扫描
+                      </Button>
+                    </UserPermissions>
+                    <UserPermissions auth={['FileUpload']}>
+                      <Button shape='round' type='primary' icon={<IconUpload />} onClick={() => setUploadVisible(true)}>
+                        上传
+                      </Button>
+                    </UserPermissions>
                   </Space>
                 )}
                 {tableImgData.length > 0 && (
-                  <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
-                    OA审批单
-                  </Button>
+                  <UserPermissions auth={['FileUpload']}>
+                    <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
+                      OA审批单
+                    </Button>
+                  </UserPermissions>
                 )}
                 <Button shape='round' type='outline' icon={<IconSync />} onClick={() => onImgInfo(imgInfo)}>
                   刷新

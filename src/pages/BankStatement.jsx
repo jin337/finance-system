@@ -324,26 +324,36 @@ const BankStatement = () => {
           <Layout.Header className='flex items-center justify-between border-b border-neutral-200 px-5 py-4'>
             {selectList.length > 0 ? (
               <Space size='large'>
-                <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
-                  删除
-                </Button>
-                {selectList.length === 1 && (
-                  <Button shape='round' type='secondary' icon={<IconEdit />} onClick={editName}>
-                    重命名
+                <UserPermissions auth={['FileDel']}>
+                  <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
+                    删除
                   </Button>
+                </UserPermissions>
+                {selectList.length === 1 && (
+                  <UserPermissions auth={['FileRename']}>
+                    <Button shape='round' type='secondary' icon={<IconEdit />} onClick={editName}>
+                      重命名
+                    </Button>
+                  </UserPermissions>
                 )}
-                <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
-                  下载
-                </Button>
+                <UserPermissions auth={['FileRename']}>
+                  <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
+                    下载
+                  </Button>
+                </UserPermissions>
               </Space>
             ) : (
               <Space size='large'>
-                <Button shape='round' type='primary' icon={<IconScan />} disabled>
-                  扫描
-                </Button>
-                <Button shape='round' type='primary' icon={<IconUpload />} onClick={() => setUploadVisible(true)}>
-                  上传
-                </Button>
+                <UserPermissions auth={['FileScan']}>
+                  <Button shape='round' type='primary' icon={<IconScan />} disabled>
+                    扫描
+                  </Button>
+                </UserPermissions>
+                <UserPermissions auth={['FileUpload']}>
+                  <Button shape='round' type='primary' icon={<IconUpload />} onClick={() => setUploadVisible(true)}>
+                    上传
+                  </Button>
+                </UserPermissions>
                 <Button
                   shape='round'
                   type='outline'
@@ -352,9 +362,11 @@ const BankStatement = () => {
                   刷新
                 </Button>
                 {menuSelect.catid === 1 && (
-                  <Button shape='round' type='outline' icon={<IconExport />} onClick={() => buildTable()}>
-                    生成财务报表
-                  </Button>
+                  <UserPermissions auth={['DocCheckOut']}>
+                    <Button shape='round' type='outline' icon={<IconExport />} onClick={() => buildTable()}>
+                      生成财务报表
+                    </Button>
+                  </UserPermissions>
                 )}
               </Space>
             )}
