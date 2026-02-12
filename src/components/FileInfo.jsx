@@ -60,6 +60,7 @@ const FileInfo = ({ onCancel, fileParams = {}, tableTyle = {} }) => {
   const [tableImgLoading, setTableImgLoading] = useState(false)
 
   const [srcList, setSrcList] = useState([])
+  const [srcIndex, setSrcIndex] = useState(0)
   const [selectImgList, setSelectImgList] = useState([])
   const [visibleViewImg, setVisibleViewImg] = useState(false)
   const [uploadVisible, setUploadVisible] = useState(false)
@@ -253,6 +254,10 @@ const FileInfo = ({ onCancel, fileParams = {}, tableTyle = {} }) => {
         },
       })
     } else {
+      const num = srcList.indexOf(record.filepathtrans)
+      if (num !== -1) {
+        setSrcIndex(num)
+      }
       setVisibleViewImg(true)
     }
   }
@@ -430,9 +435,8 @@ const FileInfo = ({ onCancel, fileParams = {}, tableTyle = {} }) => {
     if (code === 200) {
       const list = data?.list || []
       const imgList = list
-        .filter((item) => !['xlsx', 'docx', 'pdf', '.pdf'].includes(item.fileext))
+        .filter((item) => !['xlsx', 'docx', 'pdf', '.pdf', "zip"].includes(item.fileext))
         .map((item) => item.filepathtrans)
-
       setTableImgData(list)
       setSrcList(imgList)
     }
@@ -520,6 +524,7 @@ const FileInfo = ({ onCancel, fileParams = {}, tableTyle = {} }) => {
                   </Button>
                 </UserPermissions>
               )}
+
               <Button shape='round' type='outline' icon={<IconSync />} onClick={() => onImgInfo(imgInfo)}>
                 刷新
               </Button>
@@ -619,7 +624,7 @@ const FileInfo = ({ onCancel, fileParams = {}, tableTyle = {} }) => {
       </Layout>
 
       {/* 图片预览 */}
-      <Image.PreviewGroup srcList={srcList} visible={visibleViewImg} onVisibleChange={setVisibleViewImg} />
+      <Image.PreviewGroup srcList={srcList} current={srcIndex} visible={visibleViewImg} onVisibleChange={setVisibleViewImg} />
 
       {/* 上传模态框 */}
       <UploadModal

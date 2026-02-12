@@ -1087,7 +1087,7 @@ const Voucher = () => {
       </Drawer>
 
       {/* 附件清单 */}
-      <Drawer width={'50%'} title='附件清单' visible={visibleImg} footer={null} onCancel={() => setVisibleImg(false)}>
+      <Drawer width={'50%'} title='附件清单' bodyStyle={{ padding: 0 }} visible={visibleImg} footer={null} onCancel={() => setVisibleImg(false)}>
         {
           visibleImg && (
             <FileInfo
