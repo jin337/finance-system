@@ -54,7 +54,7 @@ import CashInfo from 'src/components/CashInfo'
 import FileInfo from 'src/components/FileInfo'
 
 // 公共方法
-import { localGetItem, localSetItem, numberToChinese, uuid } from 'src/utils/common'
+import { formatNumber, localGetItem, localSetItem, numberToChinese, uuid } from 'src/utils/common'
 
 // 图片
 import collection from 'src/assets/images/collection.png'
@@ -1768,10 +1768,10 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
                             </div>
                             <Space size='large'>
                               <div>
-                                借方：<span className='font-bold text-blue-600'>{totals.borrow || '0.00'}</span>
+                                借方：<span className='font-bold text-blue-600'>{formatNumber(Number(totals?.borrow || 0))}</span>
                               </div>
                               <div>
-                                贷方：<span className='font-bold text-blue-600'>{totals.loan || '0.00'}</span>
+                                贷方：<span className='font-bold text-blue-600'>{formatNumber(Number(totals?.loan || 0))}</span>
                               </div>
                             </Space>
                           </div>
