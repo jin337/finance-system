@@ -15,10 +15,9 @@ import {
   Message,
   Modal,
   Select,
-  Space,
   Table,
   Tabs,
-  Typography,
+  Typography
 } from '@arco-design/web-react'
 import {
   IconApps,
@@ -472,39 +471,10 @@ const FileInfo = ({ onCancel, fileParams = {}, tableTyle = {} }) => {
     <>
       <Layout>
         <Layout.Header className='flex items-center justify-between border-b border-neutral-200 px-5 py-4'>
-          {selectImgList.length > 0 ? (
-            <Space size='large'>
-              {imgInfo?.isdrawer === 1 && <UserPermissions auth={['FileUpload']}>
-                <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
-                  OA审批单
-                </Button>
-              </UserPermissions>}
-              {imgInfo.status !== 1 && (
-                <Space size='large'>
-                  <UserPermissions auth={['FileDel']}>
-                    <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
-                      删除
-                    </Button>
-                  </UserPermissions>
-                  {selectImgList.length === 1 && (
-                    <UserPermissions auth={['FileRename']}>
-                      <Button shape='round' type='secondary' icon={<IconEdit />} onClick={editName}>
-                        重命名
-                      </Button>
-                    </UserPermissions>
-                  )}
-                </Space>
-              )}
-              <UserPermissions auth={['FileRename']}>
-                <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
-                  下载
-                </Button>
-              </UserPermissions>
-            </Space>
-          ) : (
-            <Space size='large'>
-              {imgInfo.status !== 1 && (
-                <Space size='large'>
+          <div className='flex items-center gap-4'>
+            {imgInfo.status !== 1 && selectImgList.length === 0 && (
+              <UserPermissions orAuth={['FileScan', 'FileUpload']}>
+                <div className='flex items-center gap-4'>
                   <UserPermissions auth={['FileScan']}>
                     <Button shape='round' type='primary' icon={<IconScan />} disabled>
                       扫描
@@ -515,29 +485,58 @@ const FileInfo = ({ onCancel, fileParams = {}, tableTyle = {} }) => {
                       上传
                     </Button>
                   </UserPermissions>
-                </Space>
-              )}
-              {tableImgData.length > 0 && imgInfo?.isdrawer === 1 && (
-                <UserPermissions auth={['FileUpload']}>
-                  <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
-                    OA审批单
+                </div>
+              </UserPermissions>
+            )}
+
+            {tableImgData.length > 0 && imgInfo?.isdrawer === 1 && (
+              <UserPermissions auth={['FileUpload']}>
+                <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
+                  OA审批单
+                </Button>
+              </UserPermissions>
+            )}
+
+            {selectImgList.length > 0 ? (
+              <>
+                {imgInfo.status !== 1 && (
+                  <UserPermissions orAuth={['FileDel', 'FileRename']}>
+                    <div className='flex items-center gap-4' >
+                      <UserPermissions auth={['FileDel']}>
+                        <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
+                          删除
+                        </Button>
+                      </UserPermissions>
+                      {selectImgList.length === 1 && (
+                        <UserPermissions auth={['FileRename']}>
+                          <Button shape='round' type='secondary' icon={<IconEdit />} onClick={editName}>
+                            重命名
+                          </Button>
+                        </UserPermissions>
+                      )}
+                    </div>
+                  </UserPermissions>
+                )}
+                <UserPermissions auth={['FileRename']}>
+                  <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
+                    下载
                   </Button>
                 </UserPermissions>
-              )}
-
+              </>
+            ) : (
               <Button shape='round' type='outline' icon={<IconSync />} onClick={() => onImgInfo(imgInfo)}>
                 刷新
               </Button>
+            )}
 
-              {menuSelect.catid === 1 && (
-                <UserPermissions auth={['DocCheckOut']}>
-                  <Button shape='round' type='outline' icon={<IconExport />} onClick={() => buildTable()}>
-                    生成财务报表
-                  </Button>
-                </UserPermissions>
-              )}
-            </Space>
-          )}
+            {menuSelect.catid === 1 && (
+              <UserPermissions auth={['DocCheckOut']}>
+                <Button shape='round' type='outline' icon={<IconExport />} onClick={() => buildTable()}>
+                  生成财务报表
+                </Button>
+              </UserPermissions>
+            )}
+          </div>
 
           <Button.Group>
             <Button

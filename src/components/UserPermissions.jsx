@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux'
  */
 
 
-const UserPermissions = ({ auth, noAuth, children }) => {
+const UserPermissions = ({ auth, noAuth, orAuth, children }) => {
   // 从 Redux 获取用户权限列表和管理员状态
   const { parmission, isAdmin } = useSelector((state) => state.commonReducer)
 
@@ -35,6 +35,22 @@ const UserPermissions = ({ auth, noAuth, children }) => {
 
     // 无权限则显示子元素
     return hasNoPermission ? <>{children}</> : null
+  }
+
+  // 处理 orAuth 逻辑（有权限时显示）
+  if (orAuth && orAuth.length > 0) {
+    // 如果权限列表为空，显示无权限内容
+    if (!parmission || parmission.length === 0) {
+      return <>{children}</>
+    }
+
+    // 检查是否有任意一个权限匹配
+    const hasPermission = orAuth.some((permission) =>
+      parmission.includes(permission)
+    )
+
+    // 有权限则显示子元素，否则不显示
+    return hasPermission ? <>{children}</> : null
   }
 
   // 处理常规 auth 逻辑（有权限时显示）
