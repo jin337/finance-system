@@ -26,10 +26,11 @@ import {
   IconDelete,
   IconDownload,
   IconEdit,
+  IconExport,
   IconScan,
   IconSync,
   IconUnorderedList,
-  IconUpload,
+  IconUpload
 } from '@arco-design/web-react/icon'
 
 // 公共方法
@@ -42,9 +43,8 @@ import pdf from 'src/assets/images/pdf.png'
 import world from 'src/assets/images/world.png'
 import zip from 'src/assets/images/zip.png'
 
-const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }) => {
+const FileInfo = ({ onCancel, fileParams = {}, tableTyle = {} }) => {
   const [oaSelectForm] = Form.useForm()
-  const [visibleDrawer, setVisibleDrawer] = useState(false)
 
   const { currentCompany, pageHeight, account } = useSelector((state) => state.commonReducer)
   const { menuSelect } = useSelector((state) => state.homeReducer)
@@ -422,8 +422,8 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
       catid: menuSelect.catid,
       year: Number(fileParams?.year),
       month: Number(fileParams?.month),
-      pid: record.id,
-      sessionno: UUID,
+      pid: record?.id || null,
+      sessionno: fileParams.isdrawer === 1 ? UUID : null,
     }
 
     const { code, data } = await Http.post('/file/list', params)
@@ -439,164 +439,184 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
     setTableImgLoading(false)
   }
 
-  const handleCancel = () => {
-    setVisibleDrawer(false)
-    if (onCancel) onCancel(isSave)
+  // 生成财务报表
+  const buildTable = async () => {
+    const params = {
+      groupid: currentCompany?.id,
+      year: imgInfo.year,
+      month: imgInfo.month,
+      catid: menuSelect.catid,
+    }
+    const { code } = await Http.post('/report/build', params)
+    if (code === 200) {
+      Message.success('生成成功')
+    } else {
+      Message.error('生成失败')
+    }
   }
 
+
   useEffect(() => {
-    setVisibleDrawer(!!visible)
-    if (visible) {
-      setIsSave(false)
-      onImgInfo(fileParams)
+    setIsSave(false)
+    onImgInfo(fileParams)
+    return () => {
+      onCancel(isSave)
     }
-  }, [visible])
+  }, [])
 
   return (
     <>
-      <Drawer width={'50%'} title='附件清单' visible={visibleDrawer} footer={null} onCancel={handleCancel}>
-        <Layout>
-          <Layout.Header className='flex items-center justify-between border-b border-neutral-200 px-5 py-4'>
-            {selectImgList.length > 0 ? (
-              <Space size='large'>
+      <Layout>
+        <Layout.Header className='flex items-center justify-between border-b border-neutral-200 px-5 py-4'>
+          {selectImgList.length > 0 ? (
+            <Space size='large'>
+              {imgInfo?.isdrawer === 1 && <UserPermissions auth={['FileUpload']}>
                 <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
                   OA审批单
                 </Button>
-                {imgInfo.status !== 1 && (
-                  <Space size='large'>
-                    <UserPermissions auth={['FileDel']}>
-                      <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
-                        删除
-                      </Button>
-                    </UserPermissions>
-                    {selectImgList.length === 1 && (
-                      <UserPermissions auth={['FileRename']}>
-                        <Button shape='round' type='secondary' icon={<IconEdit />} onClick={editName}>
-                          重命名
-                        </Button>
-                      </UserPermissions>
-                    )}
-                  </Space>
-                )}
-                <UserPermissions auth={['FileRename']}>
-                  <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
-                    下载
-                  </Button>
-                </UserPermissions>
-              </Space>
-            ) : (
-              <Space size='large'>
-                {imgInfo.status !== 1 && (
-                  <Space size='large'>
-                    <UserPermissions auth={['FileScan']}>
-                      <Button shape='round' type='primary' icon={<IconScan />} disabled>
-                        扫描
-                      </Button>
-                    </UserPermissions>
-                    <UserPermissions auth={['FileUpload']}>
-                      <Button shape='round' type='primary' icon={<IconUpload />} onClick={() => setUploadVisible(true)}>
-                        上传
-                      </Button>
-                    </UserPermissions>
-                  </Space>
-                )}
-                {tableImgData.length > 0 && (
-                  <UserPermissions auth={['FileUpload']}>
-                    <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
-                      OA审批单
+              </UserPermissions>}
+              {imgInfo.status !== 1 && (
+                <Space size='large'>
+                  <UserPermissions auth={['FileDel']}>
+                    <Button shape='round' type='secondary' status='danger' icon={<IconDelete />} onClick={deleteItem}>
+                      删除
                     </Button>
                   </UserPermissions>
-                )}
-                <Button shape='round' type='outline' icon={<IconSync />} onClick={() => onImgInfo(imgInfo)}>
-                  刷新
+                  {selectImgList.length === 1 && (
+                    <UserPermissions auth={['FileRename']}>
+                      <Button shape='round' type='secondary' icon={<IconEdit />} onClick={editName}>
+                        重命名
+                      </Button>
+                    </UserPermissions>
+                  )}
+                </Space>
+              )}
+              <UserPermissions auth={['FileRename']}>
+                <Button shape='round' type='secondary' icon={<IconDownload />} onClick={downloadFiles}>
+                  下载
                 </Button>
-              </Space>
-            )}
+              </UserPermissions>
+            </Space>
+          ) : (
+            <Space size='large'>
+              {imgInfo.status !== 1 && (
+                <Space size='large'>
+                  <UserPermissions auth={['FileScan']}>
+                    <Button shape='round' type='primary' icon={<IconScan />} disabled>
+                      扫描
+                    </Button>
+                  </UserPermissions>
+                  <UserPermissions auth={['FileUpload']}>
+                    <Button shape='round' type='primary' icon={<IconUpload />} onClick={() => setUploadVisible(true)}>
+                      上传
+                    </Button>
+                  </UserPermissions>
+                </Space>
+              )}
+              {tableImgData.length > 0 && imgInfo?.isdrawer === 1 && (
+                <UserPermissions auth={['FileUpload']}>
+                  <Button shape='round' type='primary' icon={<IconCheckCircle />} onClick={onOA}>
+                    OA审批单
+                  </Button>
+                </UserPermissions>
+              )}
+              <Button shape='round' type='outline' icon={<IconSync />} onClick={() => onImgInfo(imgInfo)}>
+                刷新
+              </Button>
 
-            <Button.Group>
-              <Button
-                type={showType === 'list' ? 'primary' : 'secondary'}
-                icon={<IconApps />}
-                onClick={() => setShowType('list')}></Button>
-              <Button
-                type={showType === 'table' ? 'primary' : 'secondary'}
-                icon={<IconUnorderedList />}
-                onClick={() => setShowType('table')}></Button>
-            </Button.Group>
-          </Layout.Header>
-          <Layout.Content className='h-full overflow-auto'>
-            {tableImgData.length > 0 ? (
-              <>
-                {showType === 'list' && (
-                  <div className='flex flex-wrap'>
-                    <div className='w-full border-b border-neutral-200 p-2 select-none'>
-                      <Checkbox
-                        checked={selectImgList.length === tableImgData.length}
-                        indeterminate={selectImgList.length > 0 && tableImgData.length !== selectImgList.length}
-                        onChange={checkAll}>
-                        全选
-                        <span className='ml-2 text-neutral-400'>
-                          ({selectImgList.length}/{tableImgData.length})
-                        </span>
-                      </Checkbox>
-                    </div>
-                    <Checkbox.Group value={selectImgList} onChange={(values) => setSelectImgList(values)}>
-                      {tableImgData.map((item) => {
-                        let url = item.filepaththumb
-                        if (item.fileext === 'docx') {
-                          url = world
-                        }
-                        if (item.fileext === 'xlsx') {
-                          url = excel
-                        }
-                        if (item.fileext === 'pdf' || item.fileext === '.pdf') {
-                          url = pdf
-                        }
-                        if (item.fileext === 'zip' || item.fileext === 'rar') {
-                          url = zip
-                        }
-                        return (
-                          <Checkbox key={item.id} value={item.id}>
-                            {({ checked }) => {
-                              return (
-                                <div
-                                  className={`relative mt-5 flex w-29 cursor-pointer flex-col items-center gap-2 border border-white px-5 py-3 hover:border-blue-500 hover:bg-blue-100 ${checked ? 'border-blue-500! bg-blue-100' : ''}`}>
-                                  <img className='h-17 w-17' src={url} onClick={() => openPreview(item)} />
-                                  <div className='max-w-full truncate text-center'>{item.name}</div>
-                                  <div className='text-xs text-neutral-400'>{item.filesizecn}</div>
-                                </div>
-                              )
-                            }}
-                          </Checkbox>
-                        )
-                      })}
-                    </Checkbox.Group>
+              {menuSelect.catid === 1 && (
+                <UserPermissions auth={['DocCheckOut']}>
+                  <Button shape='round' type='outline' icon={<IconExport />} onClick={() => buildTable()}>
+                    生成财务报表
+                  </Button>
+                </UserPermissions>
+              )}
+            </Space>
+          )}
+
+          <Button.Group>
+            <Button
+              type={showType === 'list' ? 'primary' : 'secondary'}
+              icon={<IconApps />}
+              onClick={() => setShowType('list')}></Button>
+            <Button
+              type={showType === 'table' ? 'primary' : 'secondary'}
+              icon={<IconUnorderedList />}
+              onClick={() => setShowType('table')}></Button>
+          </Button.Group>
+        </Layout.Header>
+        <Layout.Content className='h-full overflow-auto'>
+          {tableImgData.length > 0 ? (
+            <>
+              {showType === 'list' && (
+                <div className='flex flex-wrap'>
+                  <div className='w-full border-b border-neutral-200 p-2 select-none'>
+                    <Checkbox
+                      checked={selectImgList.length === tableImgData.length}
+                      indeterminate={selectImgList.length > 0 && tableImgData.length !== selectImgList.length}
+                      onChange={checkAll}>
+                      全选
+                      <span className='ml-2 text-neutral-400'>
+                        ({selectImgList.length}/{tableImgData.length})
+                      </span>
+                    </Checkbox>
                   </div>
-                )}
-                {showType === 'table' && (
-                  <Table
-                    rowKey='id'
-                    size='small'
-                    border={{ wrapper: true, cell: true }}
-                    loading={tableImgLoading}
-                    data={tableImgData}
-                    columns={columnsImg}
-                    pagination={false}
-                    scroll={{ y: pageHeight - 114 }}
-                    rowSelection={{
-                      type: 'checkbox',
-                      selectedRowKeys: selectImgList,
-                      onChange: (selectedRowKeys) => setSelectImgList(selectedRowKeys),
-                    }}
-                  />
-                )}
-              </>
-            ) : (
-              <Empty className='flex h-full items-center' description='暂无文件，请扫描或者上传' />
-            )}
-          </Layout.Content>
-        </Layout>
-      </Drawer>
+                  <Checkbox.Group value={selectImgList} onChange={(values) => setSelectImgList(values)}>
+                    {tableImgData.map((item) => {
+                      let url = item.filepaththumb
+                      if (item.fileext === 'docx') {
+                        url = world
+                      }
+                      if (item.fileext === 'xlsx') {
+                        url = excel
+                      }
+                      if (item.fileext === 'pdf' || item.fileext === '.pdf') {
+                        url = pdf
+                      }
+                      if (item.fileext === 'zip' || item.fileext === 'rar') {
+                        url = zip
+                      }
+                      return (
+                        <Checkbox key={item.id} value={item.id}>
+                          {({ checked }) => {
+                            return (
+                              <div
+                                className={`relative mt-5 flex ${imgInfo?.isdrawer === 1 ? 'w-29' : 'w-38'} cursor-pointer flex-col items-center gap-2 border border-white px-5 py-3 hover:border-blue-500 hover:bg-blue-100 ${checked ? 'border-blue-500! bg-blue-100' : ''}`}>
+                                <img className={`${imgInfo?.isdrawer === 1 ? 'h-17 w-17' : 'h-21 w-21'}`} src={url} onClick={() => openPreview(item)} />
+                                <div className='max-w-full truncate text-center'>{item.name}</div>
+                                <div className='text-xs text-neutral-400'>{item.filesizecn}</div>
+                              </div>
+                            )
+                          }}
+                        </Checkbox>
+                      )
+                    })}
+                  </Checkbox.Group>
+                </div>
+              )}
+              {showType === 'table' && (
+                <Table
+                  rowKey='id'
+                  size='small'
+                  border={{ wrapper: true, cell: true }}
+                  loading={tableImgLoading}
+                  data={tableImgData}
+                  columns={columnsImg}
+                  pagination={false}
+                  scroll={{ y: pageHeight - 114 }}
+                  rowSelection={{
+                    type: 'checkbox',
+                    selectedRowKeys: selectImgList,
+                    onChange: (selectedRowKeys) => setSelectImgList(selectedRowKeys),
+                  }}
+                />
+              )}
+            </>
+          ) : (
+            <Empty className='flex h-full items-center' description='暂无文件，请扫描或者上传' />
+          )}
+        </Layout.Content>
+      </Layout>
 
       {/* 图片预览 */}
       <Image.PreviewGroup srcList={srcList} visible={visibleViewImg} onVisibleChange={setVisibleViewImg} />
@@ -639,6 +659,7 @@ const FileInfo = ({ visible = false, onCancel, fileParams = {}, tableTyle = {} }
           pagination={false}
         />
       </Drawer>
+
       {/* OA审批单据选择 */}
       <Drawer
         width={'100%'}

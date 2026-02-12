@@ -196,7 +196,10 @@ const Voucher = () => {
   }
   // 附件清单
   const onImgInfo = (record) => {
-    setItemInfo(record)
+    setItemInfo({
+      ...record,
+      isdrawer: 1
+    })
     setVisibleImg(true)
   }
 
@@ -1084,15 +1087,18 @@ const Voucher = () => {
       </Drawer>
 
       {/* 附件清单 */}
-      <FileInfo
-        visible={visibleImg}
-        fileParams={itemInfo}
-        tableTyle={tableTyle}
-        onCancel={(isSave) => {
-          setVisibleImg(false)
-          isSave && changeTableData(tableData.page, tableData.pageSize, searchData)
-        }}
-      />
+      <Drawer width={'50%'} title='附件清单' visible={visibleImg} footer={null} onCancel={() => setVisibleImg(false)}>
+        {
+          visibleImg && (
+            <FileInfo
+              fileParams={itemInfo}
+              tableTyle={tableTyle}
+              onCancel={(isSave) => isSave && changeTableData(tableData.page, tableData.pageSize, searchData)}
+            />
+          )
+        }
+      </Drawer>
+
 
       {/* 现金流量 */}
       <CashInfo

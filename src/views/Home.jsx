@@ -13,7 +13,7 @@ import { setCloseVoucherDetail, setMenuList, setMenuSelect } from 'src/store/red
 // 公共方法
 import { localClear, localGetItem } from 'src/utils/common'
 
-const HomeList = [
+const HomeListInit = [
   {
     title: '财务凭证',
     key: '1',
@@ -313,6 +313,7 @@ const HomeList = [
     havePermission: ['CashLimitConfig'],
   },
 ]
+let HomeList = []
 const sysList = [
   {
     title: '用户管理',
@@ -377,6 +378,20 @@ const findMenuItemByPath = (arr, path) => {
   return num
 }
 
+// 判断菜单项是否包含权限
+const hasPermission = (arr, isAdmin, parmission) => {
+  if (isAdmin) {
+    return arr
+  }
+
+  return arr.filter((item) => {
+    if (item?.havePermission && item.havePermission.length > 0) {
+      return item.havePermission.some((permission) => parmission?.includes(permission))
+    }
+    return true
+  })
+}
+
 const Home = () => {
   const [formPwd] = Form.useForm()
   const dispatch = useDispatch()
@@ -387,15 +402,6 @@ const Home = () => {
   const { menuSelect, menuList } = useSelector((state) => state.homeReducer)
   const [visible, setVisible] = useState(false)
 
-  // 判断是否登录
-  useEffect(() => {
-    const data = localGetItem('LOGINUSER_INFO')
-    if (data) {
-      dispatch(setAccount(data))
-    } else {
-      navigation('/login')
-    }
-  }, [location])
 
   // 获取组织列表
   const changeGroupList = async () => {
@@ -413,23 +419,38 @@ const Home = () => {
 
   // 获取权限
   const getParmission = async () => {
-    // 如果已经有公司数据，不再请求
+    // 当权限状态变时重新计算 HomeList
+    const newHomeList = hasPermission(HomeListInit, isAdmin, parmission)
+    const isHomeListChanged = JSON.stringify(HomeList) !== JSON.stringify(newHomeList)
+
+    if (isHomeListChanged) {
+      HomeList = newHomeList
+    }
+
+    // 如果是管理员，不再请求权限
+    if (isAdmin === 1) {
+      return
+    }
+    // 如果已经有权限数据，不再请求
     if (parmission && parmission.length > 0) {
       return
     }
     const { code, data } = await Http.post('/user/grant/list')
     if (code === 200) {
       const grant = (data?.grant[1] || '').split(',')
-      dispatch(setParmission(grant || []))
+      dispatch(setParmission(data?.grant[1] ? grant : []))
     }
   }
 
+  // 判断是否登录
   useEffect(() => {
-    if (account) {
-      getParmission()
-      changeGroupList()
+    const data = localGetItem('LOGINUSER_INFO')
+    if (data) {
+      dispatch(setAccount(data))
+    } else {
+      navigation('/login')
     }
-  }, [account])
+  }, [location])
 
   // 监听窗口大小改变
   Hooks.useWindowResize(() => {
@@ -449,7 +470,7 @@ const Home = () => {
 
   // 跳转首页
   const onBackHome = () => {
-    const targetList = hasPermission(HomeList)
+    const targetList = HomeList
     let selectedItem = targetList[0]
 
     if (!selectedItem) return
@@ -463,6 +484,7 @@ const Home = () => {
     }
     onMenuSelect(selectedItem)
   }
+
   // 默认跳转页面
   const onBackPage = () => {
     const pathname = location.pathname || ''
@@ -471,7 +493,7 @@ const Home = () => {
 
     // 检查是否为系统管理路径
     const isSys = findMenuItemByPath(sysList, pathname) !== -1
-    const targetList = isSys ? sysList : hasPermission(HomeList)
+    const targetList = isSys ? sysList : HomeList
     const index = findMenuItemByPath(targetList, pathname)
 
     // 获取选中的菜单项，如果未找到则默认选择第一个
@@ -489,19 +511,14 @@ const Home = () => {
     })
   }
 
-  // 判断菜单项是否包含权限
-  const hasPermission = (arr) => {
-    return arr.filter((item) => {
-      if (item?.havePermission && item.havePermission.length > 0) {
-        return item.havePermission.some((permission) => parmission.includes(permission))
-      }
-      return true
-    })
-  }
-
   useEffect(() => {
-    onBackPage()
-  }, [])
+    if (account && account.id) {
+      getParmission()
+      changeGroupList()
+
+      onBackPage()
+    }
+  }, [account?.id, isAdmin, parmission?.length])
 
   // 导航切换
   const onMenuItem = (e) => {
@@ -516,6 +533,7 @@ const Home = () => {
     }
     dispatch(setCloseVoucherDetail(true))
   }
+  // 点击子导航
   const onChildrenItem = (e) => {
     const findItem = (arr, key) => {
       for (const item of arr) {

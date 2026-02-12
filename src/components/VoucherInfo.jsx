@@ -1938,14 +1938,16 @@ const VoucherInfo = ({ voucherParams, onBack, onReview }) => {
       />
 
       {/* 附件清单 */}
-      <FileInfo
-        visible={visibleImg}
-        fileParams={pageProof}
-        tableTyle={{ finish: false, ischeckout: pageProof?.ischeckout, status: pageProof?.status }}
-        onCancel={() => {
-          setVisibleImg(false)
-        }}
-      />
+      <Drawer width={'50%'} title='附件清单' visible={visibleImg} footer={null} onCancel={() => setVisibleImg(false)}>
+        <FileInfo
+          fileParams={{
+            ...pageProof,
+            isdrawer: 1
+          }}
+          tableTyle={{ finish: false, ischeckout: pageProof?.ischeckout, status: pageProof?.status }}
+          onCancel={(isSave) => isSave && getFileCount()}
+        />
+      </Drawer>
 
       {/* 账单 */}
       <Drawer
