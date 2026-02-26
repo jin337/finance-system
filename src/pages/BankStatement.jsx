@@ -55,7 +55,7 @@ const BankStatement = () => {
     if (code === 200) {
       setMonthList(data?.list || [])
       // 默认选择第一个月份
-      onSelectMonth(String(dayjs().month() + 1), Number(value))
+      onSelectMonth(rangeValue.month || String(dayjs().month() + 1), Number(value))
     }
   }
 

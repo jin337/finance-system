@@ -10,7 +10,8 @@ import svgr from 'vite-plugin-svgr' // svg
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    port: 8080,
+    host: '0.0.0.0',
+    port: 8089,
     open: true,
     cors: true,
   },

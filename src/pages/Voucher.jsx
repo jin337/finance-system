@@ -847,19 +847,18 @@ const Voucher = () => {
     }
   }
   // 改变数据
-  const onChangeSearch = (items) => {
+  const onChangeSearch = (items, num) => {
     const values = {
       ...searchData,
       ...items,
     }
     setSearchData(values)
-    changeTableData(tableData.page, tableData.pageSize, values)
+    changeTableData(num || tableData.page, tableData.pageSize, values)
   }
 
   // 年份切换
   const onChangeYear = async (value) => {
     setSearchData((prev) => ({ ...prev, year: value }))
-
     const params = {
       catid: menuSelect.catid,
       groupid: currentCompany?.id,
@@ -869,7 +868,7 @@ const Voucher = () => {
     if (code === 200) {
       setMonthList(data?.list || [])
       // 默认选择第一个月份
-      onChangeSearch({ year: Number(value), month: String(dayjs().month() + 1) })
+      onChangeSearch({ year: Number(value), month: searchData.month || String(dayjs().month() + 1) }, 1)
     }
   }
 
@@ -901,7 +900,7 @@ const Voucher = () => {
               </Button>
             }
           />
-          <Menu selectedKeys={[searchData?.month]} onClickMenuItem={(e) => onChangeSearch({ year: searchData?.year, month: e })}>
+          <Menu selectedKeys={[searchData?.month]} onClickMenuItem={(e) => onChangeSearch({ year: searchData?.year, month: e }, 1)}>
             {monthList?.map((item) => (
               <Menu.Item key={item.month} className='flex items-center gap-1.5 leading-9!'>
                 {item.month}月份
