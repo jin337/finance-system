@@ -4,31 +4,22 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useLocation } from 'react-router'
 
-import {
-  Button,
-  DatePicker,
-  Layout,
-  Menu
-} from '@arco-design/web-react'
-import {
-  IconCalendar
-} from '@arco-design/web-react/icon'
+import { Button, DatePicker, Layout, Menu } from '@arco-design/web-react'
+import { IconCalendar } from '@arco-design/web-react/icon'
 
 import status from 'src/assets/images/status.png'
-
 
 // 组件
 import FileInfo from 'src/components/FileInfo'
 
 const BankStatement = () => {
   const location = useLocation()
-  const { currentCompany, } = useSelector((state) => state.commonReducer)
+  const { currentCompany } = useSelector((state) => state.commonReducer)
   const { menuSelect } = useSelector((state) => state.homeReducer)
   const [rangeValue, setRangeValue] = useState({})
   const [monthList, setMonthList] = useState([])
 
   const [fileParams, setFileParams] = useState({})
-
 
   // 月份切换
   const onSelectMonth = async (value, year) => {
@@ -37,7 +28,7 @@ const BankStatement = () => {
     const params = {
       year: Number(year),
       month: Number(value),
-      isdrawer: 0
+      isdrawer: 0,
     }
     setFileParams(params)
   }
@@ -55,7 +46,7 @@ const BankStatement = () => {
     if (code === 200) {
       setMonthList(data?.list || [])
       // 默认选择第一个月份
-      onSelectMonth(rangeValue.month || String(dayjs().month() + 1), Number(value))
+      onSelectMonth(rangeValue?.month || String(dayjs().month() + 1), Number(value))
     }
   }
 
@@ -90,15 +81,9 @@ const BankStatement = () => {
             ))}
           </Menu>
         </Layout.Sider>
-        {
-          fileParams?.year && fileParams?.month && (
-            <FileInfo
-              key={`${fileParams.year}-${fileParams.month}`}
-              fileParams={fileParams}
-              onCancel={() => { }}
-            />
-          )
-        }
+        {fileParams?.year && fileParams?.month && (
+          <FileInfo key={`${fileParams.year}-${fileParams.month}`} fileParams={fileParams} onCancel={() => {}} />
+        )}
       </Layout>
     </>
   )

@@ -391,7 +391,7 @@ const Balance = () => {
       const list = data?.list || []
       setMonthList(list)
       // 默认选择第一个月份
-      onSelectMonth(list[0].month, Number(value))
+      onSelectMonth(rangeValue?.month || String(dayjs().month() + 1), Number(value))
     }
   }
 
