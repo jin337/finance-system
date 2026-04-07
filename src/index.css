@@ -50,6 +50,9 @@ strong {
   height: 100%;
   padding: 0;
 }
+.balance-two-fixed {
+  padding: 0 16px !important;
+}
 .balance-two {
   position: relative;
   padding: 0 16px !important;

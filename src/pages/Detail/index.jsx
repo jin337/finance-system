@@ -138,6 +138,7 @@ const Detail = () => {
       dataIndex: 'period',
       align: 'center',
       width: 90,
+      fixed: 'left',
       render: (_, record) => (record.year ? `${record.year}.${record.month}` : ''),
     },
     {
@@ -145,6 +146,7 @@ const Detail = () => {
       dataIndex: 'vno',
       align: 'center',
       width: 140,
+      fixed: 'left',
     },
     {
       title: '科目代码',
@@ -176,6 +178,7 @@ const Detail = () => {
       dataIndex: 'borrow',
       align: 'center',
       width: 130,
+      fixed: 'right',
       render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
@@ -183,6 +186,7 @@ const Detail = () => {
       dataIndex: 'loan',
       align: 'center',
       width: 130,
+      fixed: 'right',
       render: (text) => !!text && <div className={`text-right ${text < 0 ? 'text-red-500' : ''}`}>{formatNumber(text)}</div>,
     },
     {
@@ -190,7 +194,8 @@ const Detail = () => {
       dataIndex: 'balance',
       align: 'center',
       width: 180,
-      className: 'balance-two',
+      fixed: 'right',
+      className: 'balance-two-fixed',
       render: (text, record) => (
         <div className='flex justify-between'>
           <div className='balance-two-line'>{record.direct}</div>
