@@ -101,6 +101,11 @@ const HomeListInit = [
         title: '资产',
         children: [
           {
+            key: '9-1-0',
+            title: '货币资金',
+            pathName: '/detail/bank-balance',
+          },
+          {
             key: '9-1-1',
             title: '应收票据',
             pathName: '/detail/bill-receive',
@@ -245,6 +250,7 @@ const HomeListInit = [
           {
             key: '9-2-7',
             title: '其他应付款',
+            pathName: '/detail/other-pay',
           },
         ],
       },
@@ -275,13 +281,6 @@ const HomeListInit = [
         ],
       },
     ],
-  },
-  {
-    title: '银行余额查询',
-    key: '10',
-    pathName: '/bankBalance',
-    siderWidth: 0,
-    havePermission: ['BankBalanceView'],
   },
   {
     title: '应收应付查询',
@@ -401,7 +400,6 @@ const Home = () => {
   const { company, parmission, currentCompany, account, pageHeight, isAdmin } = useSelector((state) => state.commonReducer)
   const { menuSelect, menuList } = useSelector((state) => state.homeReducer)
   const [visible, setVisible] = useState(false)
-
 
   // 获取组织列表
   const changeGroupList = async () => {
@@ -728,10 +726,7 @@ const Home = () => {
             </Layout.Sider>
             {menuSelect?.children?.length > 0 ? (
               <Layout.Sider width={menuSelect.siderWidth} className='h-full overflow-y-auto'>
-                <Menu
-                  autoOpen
-                  onClickMenuItem={onChildrenItem}
-                  selectedKeys={[menuSelect?.childrenSelect?.key]}>
+                <Menu autoOpen onClickMenuItem={onChildrenItem} selectedKeys={[menuSelect?.childrenSelect?.key]}>
                   {menuSelect?.children?.map((item) => {
                     const renderMenuItem = (menuItem) => {
                       if (menuItem.children && menuItem.children.length > 0) {

@@ -13,7 +13,6 @@ import UserManagement from 'src/pages/UserManagement'
 // 主页
 import Auxiliary from 'src/pages/Auxiliary'
 import Balance from 'src/pages/Balance'
-import BankBalance from 'src/pages/BankBalance'
 import CashFlow from 'src/pages/CashFlow'
 
 import BankStatement from 'src/pages/BankStatement'
@@ -25,6 +24,7 @@ import ProjectInventory from 'src/pages/Comprehensive/ProjectInventory'
 import ProjectTotal from 'src/pages/Comprehensive/ProjectTotal'
 
 import Detail from 'src/pages/Detail'
+import BankBalance from 'src/pages/Detail/BankBalance'
 import DetailStock from 'src/pages/Detail/Stock'
 import DetailStockIn from 'src/pages/Detail/Stock/StockIn'
 import DetailStockOut from 'src/pages/Detail/Stock/StockOut'
@@ -119,6 +119,10 @@ export const router = createBrowserRouter([
         path: '/detail',
         children: [
           {
+            path: '/detail/bank-balance',
+            element: <BankBalance />,
+          },
+          {
             path: '/detail/bill-receive',
             element: <Detail />,
           },
@@ -175,6 +179,10 @@ export const router = createBrowserRouter([
             element: <Detail />,
           },
           {
+            path: '/detail/other-pay',
+            element: <Detail />,
+          },
+          {
             path: '/detail/expense-sell',
             element: <Detail />,
           },
@@ -207,10 +215,6 @@ export const router = createBrowserRouter([
             element: <DetailAddTax />,
           },
         ],
-      },
-      {
-        path: '/bankBalance',
-        element: <BankBalance />,
       },
       {
         path: '/receivable',

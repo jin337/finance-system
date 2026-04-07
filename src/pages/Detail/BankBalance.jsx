@@ -208,7 +208,7 @@ const BankBalance = () => {
   return (
     <>
       <Layout className='h-full w-full'>
-        <Layout.Sider width={260} className='h-full border-r border-neutral-200' resizeDirections={['right']}>
+        <Layout.Sider width={260} className='h-full border-r border-neutral-200 shadow-none!'>
           <Tabs className='receivable-tabs h-full' justify defaultActiveTab='1'>
             <Tabs.TabPane
               key='1'
@@ -279,7 +279,13 @@ const BankBalance = () => {
         </Layout>
       </Layout>
 
-      <Drawer width='80%' title={null} footer={null} bodyStyle={{ padding: 0 }} visible={voucherVisible} onCancel={() => setVoucherVisible(false)}>
+      <Drawer
+        width='80%'
+        title={null}
+        footer={null}
+        bodyStyle={{ padding: 0 }}
+        visible={voucherVisible}
+        onCancel={() => setVoucherVisible(false)}>
         <VoucherInfo voucherParams={voucherParams} />
       </Drawer>
     </>
