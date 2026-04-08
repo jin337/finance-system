@@ -146,7 +146,7 @@ const Expense = () => {
             <Form.Item label='区间' field='date_range'>
               <DatePicker.RangePicker
                 style={{ width: 250 }}
-                disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+                disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
               />
             </Form.Item>
             <Form.Item label='经办人' field='receiver'>

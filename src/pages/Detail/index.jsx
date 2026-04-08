@@ -308,8 +308,8 @@ const Detail = () => {
       if (item) {
         const info = {
           ...item,
-          disabledDate: currentCompany.beginyearmonth,
-          selectData: [currentCompany.beginyearmonth, dayjs().format('YYYY-MM')],
+          disabledDate: currentCompany?.beginyearmonth,
+          selectData: [currentCompany?.beginyearmonth, dayjs().format('YYYY-MM')],
         }
         setSelectInfo(info)
         changeTab('0', info)

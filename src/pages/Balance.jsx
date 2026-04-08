@@ -408,7 +408,7 @@ const Balance = () => {
         <Layout.Sider width={114} className='h-full border-r border-neutral-200'>
           <DatePicker.YearPicker
             onChange={onChangeYear}
-            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
             value={String(rangeValue?.year)}
             triggerElement={
               <Button long>

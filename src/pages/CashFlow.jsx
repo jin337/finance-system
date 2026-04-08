@@ -173,7 +173,7 @@ const CashFlow = () => {
           <DatePicker.YearPicker
             value={String(rangeValue?.year)}
             onChange={onChangeYear}
-            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
             triggerElement={
               <Button long>
                 <IconCalendar />

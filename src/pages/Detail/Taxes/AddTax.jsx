@@ -175,8 +175,8 @@ const TemplateOne = () => {
       if (item) {
         const info = {
           ...item,
-          disabledDate: currentCompany.beginyearmonth,
-          selectData: [currentCompany.beginyearmonth, dayjs().format('YYYY-MM')],
+          disabledDate: currentCompany?.beginyearmonth,
+          selectData: [currentCompany?.beginyearmonth, dayjs().format('YYYY-MM')],
         }
         setSelectInfo(info)
         onSearch(info)

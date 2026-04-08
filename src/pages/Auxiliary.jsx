@@ -449,7 +449,7 @@ const Auxiliary = () => {
                   mode='month'
                   placeholder={['开始年月', '结束年月']}
                   separator='至'
-                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
                 />
               </Form.Item>
               <Form.Item label='辅助帐' field='assist'>

@@ -4,36 +4,36 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setCloseVoucherDetail } from 'src/store/reducers/home'
 
 import {
-  Button,
-  DatePicker,
-  Descriptions,
-  Drawer,
-  Dropdown,
-  Empty,
-  Form,
-  Input,
-  Layout,
-  Menu,
-  Message,
-  Modal,
-  Popconfirm,
-  Radio,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Timeline,
-  Typography
+    Button,
+    DatePicker,
+    Descriptions,
+    Drawer,
+    Dropdown,
+    Empty,
+    Form,
+    Input,
+    Layout,
+    Menu,
+    Message,
+    Modal,
+    Popconfirm,
+    Radio,
+    Select,
+    Space,
+    Table,
+    Tag,
+    Timeline,
+    Typography
 } from '@arco-design/web-react'
 import {
-  IconCalendar,
-  IconExport,
-  IconFile,
-  IconFilePdf,
-  IconPrinter,
-  IconRecord,
-  IconRedo,
-  IconSubscribeAdd,
+    IconCalendar,
+    IconExport,
+    IconFile,
+    IconFilePdf,
+    IconPrinter,
+    IconRecord,
+    IconRedo,
+    IconSubscribeAdd,
 } from '@arco-design/web-react/icon'
 
 // 公共方法
@@ -892,7 +892,7 @@ const Voucher = () => {
           <DatePicker.YearPicker
             value={String(searchData?.year)}
             onChange={onChangeYear}
-            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
             triggerElement={
               <Button long>
                 <IconCalendar />

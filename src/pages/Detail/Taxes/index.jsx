@@ -111,8 +111,8 @@ const Taxes = () => {
   useEffect(() => {
     if (currentCompany) {
       const item = {
-        disabledDate: currentCompany.beginyearmonth,
-        selectData: [currentCompany.beginyearmonth, dayjs().format('YYYY-MM')],
+        disabledDate: currentCompany?.beginyearmonth,
+        selectData: [currentCompany?.beginyearmonth, dayjs().format('YYYY-MM')],
       }
       setSelectInfo(item)
       onSearch(item)

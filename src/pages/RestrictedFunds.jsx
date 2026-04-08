@@ -3,19 +3,19 @@ import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import {
-  Button,
-  DatePicker,
-  Drawer,
-  Form,
-  Input,
-  InputNumber,
-  Layout,
-  Message,
-  Modal,
-  Popover,
-  Select,
-  Space,
-  Table,
+    Button,
+    DatePicker,
+    Drawer,
+    Form,
+    Input,
+    InputNumber,
+    Layout,
+    Message,
+    Modal,
+    Popover,
+    Select,
+    Space,
+    Table,
 } from '@arco-design/web-react'
 
 // 公共方法
@@ -225,7 +225,7 @@ const RestrictedFunds = () => {
       <Layout.Header className='flex items-center justify-between border-b border-neutral-200 px-5 py-4'>
         <Space size='large'>
           <DatePicker.YearPicker
-            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+            disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
             value={time?.year}
             onChange={(e) => changeTable(1, { year: e })}
           />
@@ -254,7 +254,7 @@ const RestrictedFunds = () => {
               <Space>
                 <DatePicker.YearPicker
                   size='small'
-                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
                   onChange={(e) => setYear(e)}
                 />
                 <Button type='primary' size='small' onClick={createBuild}>
@@ -310,7 +310,7 @@ const RestrictedFunds = () => {
           <div className='flex'>
             <Form.Item label='年' field='year' rules={[{ required: true }]}>
               <DatePicker.YearPicker
-                disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+                disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
                 style={{ width: '100%' }}
                 allowClear
               />

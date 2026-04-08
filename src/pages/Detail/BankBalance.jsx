@@ -243,7 +243,7 @@ const BankBalance = () => {
                   allowClear={false}
                   value={selectInfo?.selectData}
                   onChange={onChangeData}
-                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany.beginyearmonth))}
+                  disabledDate={(e) => e.isAfter(dayjs()) || e.isBefore(dayjs(currentCompany?.beginyearmonth))}
                 />
               </Form.Item>
               <Form.Item>
